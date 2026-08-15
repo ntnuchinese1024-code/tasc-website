@@ -1,0 +1,319 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+interface Member {
+  role: string;
+  name: string;
+}
+
+interface Term {
+  term: number;
+  current?: boolean;
+  members: Member[];
+}
+
+const terms: Term[] = [
+  {
+    term: 7,
+    current: true,
+    members: [
+      { role: "理事長", name: "林沛辰" },
+      { role: "常務理事", name: "簡苑玲" },
+      { role: "常務理事", name: "李翊平" },
+      { role: "理事", name: "吳凡" },
+      { role: "理事", name: "黃玟錦" },
+      { role: "理事", name: "謝宜潔" },
+      { role: "理事", name: "林榮哲" },
+      { role: "理事", name: "張毓玲" },
+      { role: "理事", name: "鄭伊婷" },
+      { role: "常務監事", name: "王嘉琪" },
+      { role: "監事", name: "周宗成" },
+      { role: "監事", name: "邱雅沂" },
+      { role: "秘書長", name: "陳慧珊" },
+      { role: "秘書", name: "楊庭瑄" },
+    ],
+  },
+  {
+    term: 6,
+    members: [
+      { role: "理事長", name: "李翊平" },
+      { role: "常務理事", name: "周宗成" },
+      { role: "常務理事", name: "李履前" },
+      { role: "理事", name: "邱雅沂" },
+      { role: "理事", name: "簡苑玲" },
+      { role: "理事", name: "謝宜潔" },
+      { role: "理事", name: "陳慧珊" },
+      { role: "理事", name: "許玉玲" },
+      { role: "理事", name: "薛卉芝" },
+      { role: "常務監事", name: "鄭慈蓉" },
+      { role: "監事", name: "王嘉琪" },
+      { role: "監事", name: "郭晏汝" },
+      { role: "秘書長", name: "林沛辰" },
+      { role: "秘書", name: "楊庭瑄" },
+    ],
+  },
+  {
+    term: 5,
+    members: [
+      { role: "理事長", name: "王嘉琪" },
+      { role: "常務理事", name: "李冠儀" },
+      { role: "常務理事", name: "周宗成" },
+      { role: "理事", name: "薛卉芝" },
+      { role: "理事", name: "黃怡禎" },
+      { role: "理事", name: "邱雅沂" },
+      { role: "理事", name: "李竹薇" },
+      { role: "理事", name: "許玉玲" },
+      { role: "理事", name: "李履前" },
+      { role: "常務監事", name: "蘇維凱" },
+      { role: "監事", name: "陳慧珊" },
+      { role: "監事", name: "邱似齡" },
+      { role: "秘書長", name: "李翊平" },
+      { role: "秘書", name: "楊庭瑄" },
+    ],
+  },
+  {
+    term: 4,
+    members: [
+      { role: "理事長", name: "王嘉琪" },
+      { role: "常務理事", name: "黃怡禎" },
+      { role: "常務理事", name: "陳姿曄" },
+      { role: "理事", name: "周宗成" },
+      { role: "理事", name: "張純吉" },
+      { role: "理事", name: "邱雅沂" },
+      { role: "理事", name: "李竹薇" },
+      { role: "理事", name: "邱似齡" },
+      { role: "理事", name: "郭晏汝" },
+      { role: "常務監事", name: "鄭慈蓉" },
+      { role: "監事", name: "蘇維凱" },
+      { role: "監事", name: "朱柏翰" },
+      { role: "秘書長", name: "李翊平" },
+      { role: "秘書", name: "楊庭瑄" },
+    ],
+  },
+  {
+    term: 3,
+    members: [
+      { role: "理事長", name: "邱雅沂" },
+      { role: "常務理事", name: "李翊平" },
+      { role: "常務理事", name: "黃怡禎" },
+      { role: "理事", name: "陳姿曄" },
+      { role: "理事", name: "邱似齡" },
+      { role: "理事", name: "劉威成" },
+      { role: "理事", name: "蘇維凱" },
+      { role: "理事", name: "鄭慈蓉" },
+      { role: "理事", name: "余仁龍" },
+      { role: "常務監事", name: "李政達" },
+      { role: "監事", name: "朱柏翰" },
+      { role: "監事", name: "洪儷軒" },
+      { role: "秘書長", name: "王嘉琪" },
+      { role: "秘書", name: "劉子菡" },
+    ],
+  },
+  {
+    term: 2,
+    members: [
+      { role: "理事長", name: "呂嘉惠" },
+      { role: "常務理事", name: "葉致芬" },
+      { role: "常務理事", name: "黃柏嘉" },
+      { role: "理事", name: "龍冠華" },
+      { role: "理事", name: "曾美鳳" },
+      { role: "理事", name: "李翊平" },
+      { role: "理事", name: "江欣怡" },
+      { role: "理事", name: "林佩諭" },
+      { role: "理事", name: "余仁龍" },
+      { role: "常務監事", name: "朱柏翰" },
+      { role: "監事", name: "李政達" },
+      { role: "監事", name: "何禮恩" },
+      { role: "秘書長", name: "邱雅沂" },
+      { role: "副秘書長", name: "王嘉琪" },
+      { role: "秘書", name: "羅怡如" },
+    ],
+  },
+  {
+    term: 1,
+    members: [
+      { role: "理事長", name: "呂嘉惠" },
+      { role: "常務理事", name: "龍冠華" },
+      { role: "常務理事", name: "李翊平" },
+      { role: "理事", name: "何禮恩" },
+      { role: "理事", name: "許玉玲" },
+      { role: "理事", name: "黃柏嘉" },
+      { role: "理事", name: "葉致芬" },
+      { role: "理事", name: "黃怡禎" },
+      { role: "理事", name: "王嘉琪" },
+      { role: "常務監事", name: "曾美鳳" },
+      { role: "監事", name: "李政達" },
+      { role: "監事", name: "朱柏翰" },
+      { role: "秘書長", name: "邱雅沂" },
+      { role: "秘書", name: "林佩諭" },
+    ],
+  },
+];
+
+const numerals = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+---
+
+<BaseLayout title="歷屆理監事" description="台灣性諮商學會歷屆理事會、監事會與秘書處名單。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow"><a href="/about">關於我們</a> · 歷屆理監事</span>
+      <h1>七屆以來，一起把學會撐起來的人</h1>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="term-list">
+        {terms.map((t) => {
+          const leader = t.members.find((m) => m.role === "理事長");
+          return (
+            <details class="term-card" open={t.current}>
+              <summary>
+                <span class="term-label">
+                  第{numerals[t.term]}屆
+                  {t.current && <span class="current-badge">現任</span>}
+                </span>
+                <span class="term-leader">理事長・{leader?.name}</span>
+              </summary>
+              <div class="member-grid">
+                {t.members.map((m) => (
+                  <div class="member-row">
+                    <span class="member-role">{m.role}</span>
+                    <span class="member-name">{m.name}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero .eyebrow a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .page-hero .eyebrow a:hover {
+    text-decoration: underline;
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+    line-height: 1.5;
+    max-width: 30rem;
+  }
+
+  .section {
+    padding: 40px 0 56px;
+  }
+
+  .term-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .term-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .term-card[open] {
+    border-color: color-mix(in srgb, var(--blue) 35%, var(--line));
+  }
+
+  .term-card summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 22px;
+    cursor: pointer;
+    list-style: none;
+    flex-wrap: wrap;
+  }
+
+  .term-card summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .term-label {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .current-badge {
+    font-family: var(--font-body);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #fff;
+    background: var(--blue-deep);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .term-leader {
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  .member-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    padding: 4px 22px 20px;
+  }
+
+  @media (max-width: 560px) {
+    .member-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .member-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+
+  .member-row:hover {
+    background: var(--bg-alt);
+  }
+
+  .member-role {
+    flex: 0 0 5.2em;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+  }
+
+  .member-name {
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+</style>

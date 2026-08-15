@@ -1,26 +1,30 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Logo from "../components/Logo.astro";
+import LogoRingDecoration from "../components/LogoRingDecoration.astro";
 import { wrapHeadingHtml } from "../lib/wrap-heading";
 
 const pillars = [
   {
     color: "var(--blue)",
+    colorText: "var(--blue-deep)",
     title: "推廣性諮商、性教育專業工作",
     body: "促進社會大眾對性諮商及性教育之知識及態度。",
   },
   {
     color: "var(--red)",
+    colorText: "var(--red-deep)",
     title: "辦理專業訓練課程",
     body: "培訓專業人員，提升性諮商服務品質。",
   },
   {
     color: "var(--magenta)",
+    colorText: "var(--magenta-deep)",
     title: "增進專業人員聯繫合作",
     body: "凝聚性諮商相關工作者的交流與支持網絡。",
   },
   {
     color: "var(--green)",
+    colorText: "var(--green-deep)",
     title: "建立專業倫理基準",
     body: "維持性諮商領域可信賴的實務標準。",
   },
@@ -29,6 +33,7 @@ const pillars = [
 const events = [
   {
     color: "var(--blue)",
+    colorText: "var(--blue-deep)",
     tag: "線上講座",
     date: "8月16日（日）",
     title: "當代性別事件行為人諮商處遇實務經驗分享交流",
@@ -37,6 +42,7 @@ const events = [
   },
   {
     color: "var(--red)",
+    colorText: "var(--red-deep)",
     tag: "走讀活動",
     date: "8月22日（六）",
     title: "夜遊林森北路：從四大鬼樓反思性產業與性相關法規",
@@ -45,6 +51,7 @@ const events = [
   },
   {
     color: "var(--green)",
+    colorText: "var(--green-deep)",
     tag: "線上講座",
     date: "9月5日（六）",
     title: "當身體遇見社會：讓月經被好好說出來",
@@ -56,7 +63,7 @@ const events = [
 
 <BaseLayout title="首頁" description="台灣性諮商學會由一群關心性諮商發展的性諮商師、心理師與相關專業人士組成，推動性諮商之專業發展。">
   <header class="hero">
-    <Logo size={420} class="hero-ring" />
+    <LogoRingDecoration class="hero-ring" />
     <div class="wrap">
       <div class="hero-inner">
         <span class="eyebrow">TASC・台灣性諮商學會</span>
@@ -80,7 +87,7 @@ const events = [
       </div>
       <div class="pillar-grid">
         {pillars.map((p, i) => (
-          <div class="pillar" style={`--dot: ${p.color}`}>
+          <div class="pillar" style={`--dot: ${p.color}; --dot-text: ${p.colorText}`}>
             <span class="num">0{i + 1}</span>
             <h3>{p.title}</h3>
             <p>{p.body}</p>
@@ -101,7 +108,7 @@ const events = [
       </div>
       <div class="event-grid">
         {events.map((e) => (
-          <article class="event-card" style={`--dot: ${e.color}`}>
+          <article class="event-card" style={`--dot: ${e.color}; --dot-text: ${e.colorText}`}>
             <span class="event-tag">{e.tag}</span>
             <span class="event-date">{e.date}</span>
             <h3 set:html={wrapHeadingHtml(e.title)} />
@@ -124,6 +131,8 @@ const events = [
 
   .hero :global(.hero-ring) {
     position: absolute;
+    width: 420px;
+    height: 420px;
     top: -90px;
     right: -110px;
     opacity: 0.9;
@@ -236,7 +245,7 @@ const events = [
     font-family: var(--font-display);
     font-size: 1.5rem;
     font-weight: 800;
-    color: var(--dot);
+    color: var(--dot-text);
     display: block;
     margin-bottom: 8px;
   }
@@ -281,7 +290,7 @@ const events = [
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.02em;
-    color: var(--dot);
+    color: var(--dot-text);
     background: color-mix(in srgb, var(--dot) 14%, var(--card));
     padding: 3px 10px;
     border-radius: 999px;

@@ -1,0 +1,29 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+---
+
+{/*
+  Large-scale decorative echo of the logo's ring motif, in the four brand
+  colors. Kept as hand-drawn vector (not the real logo.png) because this is
+  used at big sizes for background flourish where a ~100px source raster
+  would look blurry — the real logo.png is what actually represents the
+  brand mark, used in Logo.astro for nav/footer/etc.
+*/}
+<svg
+  class={className}
+  viewBox="0 0 100 100"
+  fill="none"
+  aria-hidden="true"
+>
+  <path d="M52 8 A40 40 0 0 1 90 44" stroke="var(--red)" stroke-width="11" stroke-linecap="round" />
+  <circle cx="52" cy="7" r="7.5" fill="var(--red)" />
+  <path d="M90 46 A40 40 0 0 1 58 92" stroke="var(--blue)" stroke-width="11" stroke-linecap="round" />
+  <circle cx="92" cy="48" r="7.5" fill="var(--blue)" />
+  <path d="M56 92 A40 40 0 0 1 12 56" stroke="var(--gold)" stroke-width="11" stroke-linecap="round" />
+  <circle cx="55" cy="93" r="7.5" fill="var(--gold)" />
+  <path d="M10 54 A40 40 0 0 1 48 9" stroke="var(--green)" stroke-width="11" stroke-linecap="round" />
+  <circle cx="9" cy="52" r="7.5" fill="var(--green)" />
+</svg>

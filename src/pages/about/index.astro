@@ -1,0 +1,409 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const missionPoints = [
+  "推廣性諮商、性教育專業工作，促進社會大眾對性諮商及性教育之知識及態度。",
+  "辦理專業人員之性諮商相關訓練課程，培訓專業人員及提升性諮商服務品質。",
+  "增進性諮商相關之專業工作人員之聯繫與合作。",
+  "建立並維持性諮商專業倫理基準。",
+];
+
+const charterChapters = [
+  {
+    title: "第一章　總則",
+    articles: [
+      "第一條：本會名稱為台灣性諮商學會(以下簡稱本會)，英文譯名為『Taiwan Association of Sexuality Counseling』簡寫為TASC。",
+      "第二條：本會為依法設立之社會團體，非以營利為目的。本會以促進台灣性諮商之專業發展，以性諮商、性教育的專業工作，提供社會大眾整體性健康服務為宗旨。",
+      "第三條：本會以全國行政區域為組織區域。",
+      "第四條：本會會址設於主管機關所在地區，並得報經主管機關核准設『分支機構(或辦事處)』。",
+      "第五條：本會之任務如下：一、建立並維持性諮商專業倫理基準。二、辦理專業人員之性諮商相關訓練課程，培訓專業人員及提升性諮商服務品質。三、推廣性諮商、性教育專業工作，促進社會大眾對性諮商及性教育之知識及態度。四、增進性諮商相關之專業工作人員之聯繫與合作。五、其它有助於達成本會宗旨之事項。",
+      "第六條：本會之主管機關為內政部，目的事業主管機關為行政院衛生署，其目的事業應受該事業主管機關之指導、監督。",
+    ],
+  },
+  {
+    title: "第二章　會員",
+    articles: [
+      "第七條：本會會員申請資格須贊同本會宗旨、年滿二十歲，分為專業會員、一般會員、贊助會員、團體會員、名譽會員、學生會員六類，詳細資格見「會員申請」頁。",
+      "第八條：會員(會員代表)有違反法令、章程或不遵守會員大會決議時，得經理事會決議，予以警告或停權處分，情節重大者得經會員大會決議除名。",
+      "第九條：會員有喪失會員資格、經除名決議、或連續二年未繳會費者，視為出會。",
+      "第十條：會員得以書面並敘明理由向本會聲明退會。",
+      "第十一條：會員經出會或退會，已繳納之各項費用不予退還。",
+      "第十二條：會員(會員代表)有表決權、選舉權、被選舉權與罷免權；贊助會員、名譽會員、學生會員無上項權利。",
+      "第十三條：會員有遵守本會章程、決議、及繳納會費之義務。",
+    ],
+  },
+  {
+    title: "第三章　組織及職權",
+    articles: [
+      "第十四條：本會以會員(會員代表)為最高權利機構，會員大會閉會期間由理事會代行職權，監事會為監察機關。",
+      "第十五條：會員大會之職權包含訂定與變更章程、選舉或罷免理事監事、議決會費數額、議決年度計畫與預決算、議決除名處分、議決財產處分、議決團體解散等重大事項。",
+      "第十六條：本會置理事九人，監事三人，由會員選舉之，分別成立理事會、監事會，並得同時選出候補理事三人、候補監事一人。",
+      "第十七條：理事會之職權包含召開會員大會、審定會員資格、選舉罷免常務理事及理事長、聘免工作人員、擬定年度計畫與預決算等。",
+      "第十八條：理事會置常務理事三人，由理事互選之；並由理事就常務理事中選舉一人為理事長，對內綜理督導會務、對外代表本會。",
+      "第十九條：監事會之職權包含監察理事會工作執行、審核年度決算、選舉罷免常務監事等。",
+      "第廿條：監事會置常務監事一人，由監事互選之，監察日常會務。",
+      "第廿一條：理事、監事之任期二年，連選得連任；理事長連選得連任乙次。",
+      "第廿二條：理事、監事均為無給職。",
+      "第廿三條：理事、監事有喪失會員資格、辭職經核准、被罷免、或停權逾任期二分之一者，應即解任。",
+      "第廿四條：本會置秘書長一人，承理事長之命處理本會事務，其他工作人員若干人，由理事長提名經理事會通過後聘免之。",
+      "第廿五條：本會得依業務需要設置委員會或小組，其組織規則另訂之。",
+      "第廿六條：本會得由理事長聘請名譽理事長一人、名譽理事、顧問各若干人。",
+    ],
+  },
+  {
+    title: "第四章　會議",
+    articles: [
+      "第廿七條：會員大會分定期會議與臨時會議兩種，由理事長召集；定期會議每年召開一次。",
+      "第廿八條：會員不能親自出席會員大會時，得以書面委託其他會員代理，每一會員以代理一人為限。",
+      "第廿九條：會員大會之決議，以會員過半數之出席，章程之變更以出席人數四分之三以上之同意行之。",
+      "第卅條：理事會、監事會至少每六個月各舉行會議一次，必要時得召開聯席會議或臨時會議。",
+      "第卅一條：理事、監事應出席理、監事會議，不得委託出席；連續二次無故缺席者，視同辭職。",
+    ],
+  },
+  {
+    title: "第五章　經費及預算",
+    articles: [
+      "第卅二條：本會經費來源包含入會費、常年會費、事業費、會員捐款、委託收益、基金及其孳息、其他收入。入會費新台幣壹仟元；常年會費一般為壹仟元（學生會員陸佰元，名譽會員免繳），團體會員參仟元。",
+      "第卅三條：本會會計年度自每年一月一日起至十二月三十一日止。",
+      "第卅四條：本會每年編造預(決)算報告，經理事會審查，提會員大會通過，並報主管機關核備。",
+      "第卅五條：本會於解散後，剩餘財產歸屬所在地之地方自治團體或主管機關指定之機關團體所有。",
+    ],
+  },
+  {
+    title: "第六章　附則",
+    articles: [
+      "第卅六條：本章程未規定事項，悉依有關法令規定辦理。",
+      "第卅七條：本會辦事細則，由理事會訂定之。",
+      "第卅八條：本章程經本會一〇二年九月七日第一屆第一次會員大會通過，報請內政部一〇二年十一月二十九日台內團字第1020325348號函准予備查，其後歷經105年、109年、110年、111年四次修訂。",
+    ],
+  },
+];
+---
+
+<BaseLayout title="關於我們" description="台灣性諮商學會的創會理念、使命任務、法規章程與組織架構。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">關於我們</span>
+      <h1>從一群關心性議題的助人工作者開始</h1>
+    </div>
+  </header>
+
+  <nav class="section-nav wrap" aria-label="頁內導覽">
+    <a href="#belief">創會理念</a>
+    <a href="#mission">使命與任務</a>
+    <a href="#charter">法規章程</a>
+    <a href="#structure">組織架構</a>
+    <a href="/about/board">歷屆理監事</a>
+  </nav>
+
+  <section id="belief" class="section">
+    <div class="wrap prose">
+      <h2>創會理念</h2>
+      <p>
+        2013年，一群盡力投入面對性議題的心理師，希望能集結關心性議題的助人工作者，一起持續關注與投入性的領域，建構適合台灣本土文化與制度的性諮商工作。
+      </p>
+      <p>
+        因著這個理念，大家持續的在自己的工作崗位上，不斷的探索著、研究著、實務上面精進著、尋找著能更貼近受眾的方法，找到個人的專業方向與風格外，也拓展出台灣本土性諮商領域。
+      </p>
+      <p>
+        而性諮商專業發展，最重要的核心目的，是為了能藉由性諮商專業的觸角，支持在性上面受苦的人們，因此，更希望藉由性諮商學會集結眾人的力量，能為台灣社會推動平權盡一份心力。
+      </p>
+      <p>這是台灣性諮商學會創會會員的理念，至今我們仍持續的前進著，而對於未來我們有更多的盼望。</p>
+    </div>
+  </section>
+
+  <section id="mission" class="section section-alt">
+    <div class="wrap">
+      <h2>使命與任務</h2>
+      <ol class="mission-list">
+        {missionPoints.map((point) => (
+          <li>{point}</li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section id="charter" class="section">
+    <div class="wrap">
+      <h2>法規章程</h2>
+      <p class="section-note">台灣性諮商學會組織章程，102年9月7日通過、內政部核准立案，歷經105、109、110、111年四次修訂。以下依章節收合，點擊展開閱讀。</p>
+      <div class="charter-list">
+        {charterChapters.map((chapter, i) => (
+          <details class="charter-item" open={i === 0}>
+            <summary>{chapter.title}</summary>
+            <div class="charter-body">
+              {chapter.articles.map((a) => <p>{a}</p>)}
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="structure" class="section section-alt">
+    <div class="wrap">
+      <h2>組織架構</h2>
+      <p class="section-note">依本會章程第十四～廿六條整理。</p>
+      <div class="org-chart">
+        <div class="org-node org-top">
+          <span class="org-role">會員大會</span>
+          <span class="org-desc">最高權力機構，選舉理監事、議決章程與重大事項</span>
+        </div>
+        <div class="org-branches">
+          <div class="org-branch">
+            <div class="org-node">
+              <span class="org-role">理事會</span>
+              <span class="org-desc">理事 9 人（含常務理事 3 人），互選 1 人為理事長，對內綜理會務、對外代表本會</span>
+            </div>
+            <div class="org-node org-sub">
+              <span class="org-role">秘書處</span>
+              <span class="org-desc">秘書長 1 人，承理事長之命處理會務；工作人員若干人</span>
+            </div>
+          </div>
+          <div class="org-branch">
+            <div class="org-node">
+              <span class="org-role">監事會</span>
+              <span class="org-desc">監事 3 人（含常務監事 1 人），監察理事會工作執行、審核年度決算</span>
+            </div>
+          </div>
+        </div>
+        <div class="org-node org-committees">
+          <span class="org-role">委員會 / 工作小組</span>
+          <span class="org-desc">依業務需要設置，如推廣課程組、公關組、性諮商師認證委員會、倫理委員會等</span>
+        </div>
+      </div>
+      <p class="section-note">
+        想看每一屆理監事的實際名單嗎？請見<a href="/about/board" class="inline-link">歷屆理監事</a>。
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+    line-height: 1.5;
+    max-width: 30rem;
+  }
+
+  .section-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section-nav a {
+    font-size: 0.86rem;
+    text-decoration: none;
+    color: var(--ink-soft);
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+  }
+
+  .section-nav a:hover {
+    color: var(--blue-deep);
+    border-color: var(--blue);
+  }
+
+  .section {
+    padding: 44px 0;
+  }
+
+  .section-alt {
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section h2 {
+    font-size: clamp(1.15rem, 3vw, 1.4rem);
+    margin-bottom: 20px;
+  }
+
+  .prose p {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+  }
+
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-note {
+    font-size: 0.86rem;
+    color: var(--ink-faint);
+    margin: -8px 0 20px;
+  }
+
+  .mission-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    counter-reset: mission;
+  }
+
+  .mission-list li {
+    counter-increment: mission;
+    position: relative;
+    padding: 16px 18px 16px 46px;
+    background: var(--bg-alt);
+    border-radius: 12px;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .mission-list li::before {
+    content: counter(mission);
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: var(--blue-deep);
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: 640px) {
+    .mission-list {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .charter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .charter-item {
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 4px 18px;
+  }
+
+  .charter-item summary {
+    padding: 14px 0;
+    font-weight: 700;
+    font-family: var(--font-display);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .charter-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .charter-item summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 8px;
+    color: var(--blue-deep);
+    transition: transform 0.15s ease;
+  }
+
+  .charter-item[open] summary::before {
+    transform: rotate(90deg);
+  }
+
+  .charter-body {
+    padding-bottom: 16px;
+  }
+
+  .charter-body p {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin: 0 0 12px;
+    line-height: 1.75;
+  }
+
+  .charter-body p:last-child {
+    margin-bottom: 0;
+  }
+
+  .org-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .org-node {
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 22rem;
+  }
+
+  .org-top {
+    background: color-mix(in srgb, var(--blue) 10%, var(--card));
+    border-color: color-mix(in srgb, var(--blue) 35%, var(--line));
+  }
+
+  .org-role {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  .org-desc {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .org-branches {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .org-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .org-sub {
+    font-size: 0.9em;
+  }
+
+  .org-committees {
+    max-width: 30rem;
+    border-style: dashed;
+  }
+
+  .inline-link {
+    color: var(--blue-deep);
+    font-weight: 700;
+    text-decoration: underline;
+  }
+</style>

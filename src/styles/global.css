@@ -7,12 +7,21 @@
   --ink-faint: #988A74;
   --line: #DED5C0;
 
-  --blue: #2F8FD6;
-  --blue-deep: #1D6CB0;
-  --red: #E0472E;
-  --magenta: #D6337D;
-  --green: #3FAA66;
-  --gold: #F0B429;
+  /* Sampled directly from the association's logo.png pixels (2026-08-15).
+     Each hue has a vivid "true" value (for the logo itself, borders, dots,
+     small tag fills) and a darkened "-deep" value that actually passes
+     WCAG AA as text/button color on white — the vivid values mostly don't
+     (e.g. raw blue/green are ~3:1 against white, too low for text). */
+  --blue: #009FE8;
+  --blue-deep: #046492;
+  --red: #E73828;
+  --red-deep: #AD2513;
+  --magenta: #E71374;
+  --magenta-deep: #A20E53;
+  --green: #1EAB39;
+  --green-deep: #0F7325;
+  --gold: #FFF000;
+  --orange: #EB5613;
 
   --shadow: 0 1px 2px rgba(33, 27, 20, 0.05), 0 10px 28px -14px rgba(33, 27, 20, 0.22);
 
@@ -96,9 +105,9 @@ img, svg {
 }
 
 .btn-primary {
-  background: var(--blue);
+  background: var(--blue-deep);
   color: #fff;
-  box-shadow: 0 8px 20px -8px rgba(47, 143, 214, 0.55);
+  box-shadow: 0 8px 20px -8px rgba(4, 100, 146, 0.45);
 }
 
 .btn-ghost {

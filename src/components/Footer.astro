@@ -1,0 +1,65 @@
+---
+import Logo from "./Logo.astro";
+---
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <Logo size={30} />
+      <span>台灣性諮商學會</span>
+    </div>
+    <div class="footer-col">
+      <div>231 新北市新店區北新路一段337號2樓</div>
+      <div>02-2914-3527</div>
+      <div><a href="mailto:tasc.tw@gmail.com">tasc.tw@gmail.com</a></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="footer-legal">立案字號 台內團字第1020325348 ｜ © 台灣性諮商學會</div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--bg-alt);
+    border-top: 1px solid var(--line);
+    padding: 32px 0;
+  }
+
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .footer-col div {
+    margin-bottom: 4px;
+  }
+
+  .footer-col a {
+    text-decoration: none;
+  }
+
+  .footer-col a:hover {
+    color: var(--blue-deep);
+  }
+
+  .footer-legal {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+  }
+</style>

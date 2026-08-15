@@ -1,17 +1,330 @@
 ---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Logo from "../components/Logo.astro";
+import { wrapHeadingHtml } from "../lib/wrap-heading";
 
+const pillars = [
+  {
+    color: "var(--blue)",
+    title: "推廣性諮商、性教育專業工作",
+    body: "促進社會大眾對性諮商及性教育之知識及態度。",
+  },
+  {
+    color: "var(--red)",
+    title: "辦理專業訓練課程",
+    body: "培訓專業人員，提升性諮商服務品質。",
+  },
+  {
+    color: "var(--magenta)",
+    title: "增進專業人員聯繫合作",
+    body: "凝聚性諮商相關工作者的交流與支持網絡。",
+  },
+  {
+    color: "var(--green)",
+    title: "建立專業倫理基準",
+    body: "維持性諮商領域可信賴的實務標準。",
+  },
+];
+
+const events = [
+  {
+    color: "var(--blue)",
+    tag: "線上講座",
+    date: "8月16日（日）",
+    title: "當代性別事件行為人諮商處遇實務經驗分享交流",
+    body: "從助人者角度理解偷窺與偷拍事件行為人可能經驗到的內在狀態與歷程。",
+    meta: "會員 100 元／非會員 400 元",
+  },
+  {
+    color: "var(--red)",
+    tag: "走讀活動",
+    date: "8月22日（六）",
+    title: "夜遊林森北路：從四大鬼樓反思性產業與性相關法規",
+    body: "走讀林森北路，反思都市傳說背後的性產業結構性困境與助人專業的連結。",
+    meta: "實體・限額 12 人",
+  },
+  {
+    color: "var(--green)",
+    tag: "線上講座",
+    date: "9月5日（六）",
+    title: "當身體遇見社會：讓月經被好好說出來",
+    body: "理解月經貧窮與污名、台灣與全球行動經驗，打開更多對話的可能。",
+    meta: "講師 鄭涵馨",
+  },
+];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="首頁" description="台灣性諮商學會由一群關心性諮商發展的性諮商師、心理師與相關專業人士組成，推動性諮商之專業發展。">
+  <header class="hero">
+    <Logo size={420} class="hero-ring" />
+    <div class="wrap">
+      <div class="hero-inner">
+        <span class="eyebrow">TASC・台灣性諮商學會</span>
+        <h1 set:html={wrapHeadingHtml("集結性議題專長的心理師，共同促進台灣社會的性健康福祉")} />
+        <p class="lead">
+          台灣性諮商學會由一群關心性諮商發展的性諮商師、心理師與相關專業人士組成，建構全人性發展觀點的性諮商領域，關注從幼兒到老人、一般發展到各類特殊族群的性議題。
+        </p>
+        <div class="hero-actions">
+          <a href="/counselors/certification" class="btn btn-primary">認識性諮商師認證</a>
+          <a href="/news" class="btn btn-ghost">查看近期課程</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="pillars">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">使命與任務</span>
+        <h2>我們持續在做的四件事</h2>
+      </div>
+      <div class="pillar-grid">
+        {pillars.map((p, i) => (
+          <div class="pillar" style={`--dot: ${p.color}`}>
+            <span class="num">0{i + 1}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="events">
+    <div class="wrap">
+      <div class="section-head events-head">
+        <div>
+          <span class="eyebrow">近期課程</span>
+          <h2>最新消息</h2>
+        </div>
+        <a href="/news" class="more">查看全部 →</a>
+      </div>
+      <div class="event-grid">
+        {events.map((e) => (
+          <article class="event-card" style={`--dot: ${e.color}`}>
+            <span class="event-tag">{e.tag}</span>
+            <span class="event-date">{e.date}</span>
+            <h3 set:html={wrapHeadingHtml(e.title)} />
+            <p>{e.body}</p>
+            <div class="event-meta">{e.meta}</div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    position: relative;
+    padding: 48px 0 40px;
+    overflow: hidden;
+    background: var(--bg-alt);
+  }
+
+  .hero :global(.hero-ring) {
+    position: absolute;
+    top: -90px;
+    right: -110px;
+    opacity: 0.9;
+    z-index: 0;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 42rem;
+  }
+
+  .hero .eyebrow {
+    display: block;
+    margin-bottom: 14px;
+    color: var(--blue-deep);
+  }
+
+  .hero h1 {
+    /* Each clause is locked with white-space:nowrap (see wrapHeadingHtml), so
+       the font size must stay small enough that the longest clause never
+       exceeds the viewport width, or it will get clipped instead of wrapping. */
+    font-size: clamp(1.1rem, 5.6vw, 2.5rem);
+    line-height: 1.48;
+    font-weight: 800;
+  }
+
+  .hero .lead {
+    margin: 18px 0 26px;
+    color: var(--ink-soft);
+    font-size: 1rem;
+    max-width: 46rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 700px) {
+    .hero {
+      padding-top: 40px;
+    }
+    .hero :global(.hero-ring) {
+      width: 150px;
+      height: 150px;
+      top: -20px;
+      right: -40px;
+      opacity: 0.55;
+    }
+  }
+
+  @media (min-width: 701px) {
+    .hero h1 {
+      line-height: 1.42;
+    }
+  }
+
+  .section-head {
+    margin-bottom: 28px;
+  }
+
+  .section-head .eyebrow {
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .section-head h2 {
+    font-size: clamp(1.15rem, 3vw, 1.4rem);
+  }
+
+  .events-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .events-head .more {
+    font-size: 0.86rem;
+    color: var(--blue-deep);
+    text-decoration: none;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .pillars {
+    padding: 48px 0;
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .pillar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .pillar {
+    padding: 18px 18px 20px;
+    border-radius: 12px;
+    border-top: 3px solid var(--dot);
+    background: color-mix(in srgb, var(--dot) 6%, var(--card));
+  }
+
+  .pillar .num {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--dot);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .pillar h3 {
+    font-size: 0.96rem;
+    margin-bottom: 6px;
+    line-height: 1.55;
+    font-weight: 700;
+  }
+
+  .pillar p {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .events {
+    padding: 48px 0 56px;
+  }
+
+  .event-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+
+  .event-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--dot);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .event-tag {
+    display: inline-flex;
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--dot);
+    background: color-mix(in srgb, var(--dot) 14%, var(--card));
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .event-date {
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+
+  .event-card h3 {
+    font-size: 1rem;
+    line-height: 1.55;
+    font-weight: 700;
+  }
+
+  .event-card p {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .event-meta {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+  }
+
+  @media (max-width: 860px) {
+    .pillar-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .event-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .pillar-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

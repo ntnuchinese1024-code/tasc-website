@@ -1,0 +1,31 @@
+---
+interface Props {
+  size?: number;
+  class?: string;
+}
+const { size = 40, class: className = "" } = Astro.props;
+---
+
+{/*
+  Placeholder redraw of the association's ring-of-four-figures mark, built
+  from the colors read off the real logo. Swap for the real vector file
+  (AI/SVG) once the association provides it — see docs/維護手冊.md.
+*/}
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 100 100"
+  fill="none"
+  role="img"
+  aria-label="台灣性諮商學會 TASC 標誌"
+>
+  <path d="M52 8 A40 40 0 0 1 90 44" stroke="var(--red)" stroke-width="11" stroke-linecap="round" />
+  <circle cx="52" cy="7" r="7.5" fill="var(--red)" />
+  <path d="M90 46 A40 40 0 0 1 58 92" stroke="var(--blue)" stroke-width="11" stroke-linecap="round" />
+  <circle cx="92" cy="48" r="7.5" fill="var(--blue)" />
+  <path d="M56 92 A40 40 0 0 1 12 56" stroke="var(--gold)" stroke-width="11" stroke-linecap="round" />
+  <circle cx="55" cy="93" r="7.5" fill="var(--gold)" />
+  <path d="M10 54 A40 40 0 0 1 48 9" stroke="var(--green)" stroke-width="11" stroke-linecap="round" />
+  <circle cx="9" cy="52" r="7.5" fill="var(--green)" />
+</svg>

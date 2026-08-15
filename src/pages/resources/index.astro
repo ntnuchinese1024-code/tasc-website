@@ -1,0 +1,303 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const bookCategories = [
+  {
+    name: "兒童性教育",
+    color: "var(--blue)",
+    colorText: "var(--blue-deep)",
+    books: [
+      { title: "阿光小芸的日常嘰哩呱拉", authors: "王嘉琪, 陳姿曄, 楊舒聿", publisher: "荷光性諮商專業訓練中心" },
+      { title: "跟著小劉醫師，來玩性教育翻翻書", authors: "劉宗瑀", publisher: "親子天下" },
+      { title: "建立身體意識！孩子的性別啟蒙繪本四部曲", authors: "波琳．奧德", publisher: "水滴文化" },
+      { title: "蝴蝶朵朵", authors: "幸佳慧", publisher: "字畝文化" },
+    ],
+  },
+  {
+    name: "青少年性教育",
+    color: "var(--red)",
+    colorText: "var(--red-deep)",
+    books: [
+      { title: "青春期教育完全讀本（四冊一套）", authors: "日本WILL兒童智育研究所", publisher: "親子天下" },
+      { title: "來去子宮！青春期初經寶典", authors: "谷慕慕", publisher: "尖端出版社" },
+      { title: "愛情必修學分：Z世代的情感和性別關鍵字", authors: "陳維平、徐婕、袁詠蓁、李王瀚、翁智琦、蔡孟哲", publisher: "國立陽明交通大學" },
+      { title: "西斯的101號房間", authors: "臺灣吧", publisher: "臺灣吧" },
+      { title: "男孩與性：改變青少年一生的九場對話", authors: "佩吉．奧倫斯坦", publisher: "高寶出版社" },
+      { title: "女孩與性：好想告訴妳，卻不知道怎麼開口的事", authors: "佩吉．奧倫斯坦", publisher: "高寶出版社" },
+      { title: "愛與放手：親職性教育生涯規劃11堂課", authors: "呂嘉惠", publisher: "荷光性諮商專業訓練中心" },
+      { title: "歡迎來到性諮商室：三位少男和他們的心理師", authors: "呂嘉惠", publisher: "心靈工坊" },
+    ],
+  },
+  {
+    name: "親職教育",
+    color: "var(--green)",
+    colorText: "var(--green-deep)",
+    books: [
+      { title: "爸媽的第一本不尷尬性教育指南", authors: "盧河延, 申淵淀, 李水智, Lala School", publisher: "台灣廣廈" },
+      { title: "不怕小孩問（新版）：寫給父母的親子性教育指南", authors: "賈斯汀．里查森, 馬克．查斯特", publisher: "大辣" },
+    ],
+  },
+  {
+    name: "成人",
+    color: "var(--magenta)",
+    colorText: "var(--magenta-deep)",
+    books: [
+      { title: "都是李雅莉：「約會暴力」──誰都可能受害，卻誰也不敢說", authors: "李雅莉", publisher: "寶瓶文化" },
+      { title: "性的解析 美國大學性教育講義1：身體、性別與各年齡層的性", authors: "威廉．亞伯, 芭芭拉．薩雅德", publisher: "大家出版" },
+      { title: "性的解析 美國大學性教育講義2：性愛與溝通、性表現、性犯罪與性產業", authors: "威廉．亞伯, 芭芭拉．薩雅德", publisher: "大家出版" },
+      { title: "性的解析 美國大學性教育講義3：懷孕、生產、性的醫療與健康", authors: "威廉．亞伯, 芭芭拉．薩雅德", publisher: "大家出版" },
+      { title: "性愛好科學：掙脫迷思、用自己的方式高潮", authors: "艾蜜莉．納高斯基", publisher: "行人文化實驗室" },
+      { title: "愛的終極指南", authors: "Anne Hooper", publisher: "正傳有限公司" },
+      { title: "心理師，救救我的色鬼老爸！", authors: "呂嘉惠", publisher: "心靈工坊" },
+      { title: "金賽性學報告：男性性行為篇", authors: "阿爾弗雷德．查爾斯．金賽", publisher: "海鴿" },
+      { title: "金賽性學報告：女性性行為篇", authors: "阿爾弗雷德．查爾斯．金賽", publisher: "海鴿" },
+      { title: "聰明性愛", authors: "馬特．克雷恩", publisher: "晨星" },
+      { title: "馬斯特與瓊生性學報告", authors: "威廉．馬斯特，維吉尼亞．瓊生，羅伯特．克洛迪尼", publisher: "張老師文化" },
+    ],
+  },
+];
+
+const podcastSeasons = [
+  {
+    title: "第一季　性愛夏令營",
+    desc: "推薦每個人必備的性健康知識，陪伴大家認識性發展歷程，從自慰、性反應談到初體驗，也討論性偏好與性騷擾。",
+  },
+  {
+    title: "第二季　被窩裡的伴侶關係",
+    desc: "進階到伴侶性議題：性溝通、性愛頻率不協調、外遇、性功能障礙與同性伴侶性關係，邀請荷光伴侶性諮商師一同對談。",
+  },
+  {
+    title: "第三季　書架角落的性",
+    desc: "透過介紹不同性主題的書籍認識多元族群的性議題，從女性身體經驗、男子氣概到親職性教育、開放式關係、跨性別議題等。",
+  },
+  {
+    title: "第四季　沒有主題之回歸初衷",
+    desc: "更彈性的主持方式，搭配性相關的電影、漫畫與書籍，分享網路交友、性成癮、性與焦慮等主題。",
+  },
+];
+---
+
+<BaseLayout title="相關資源" description="台灣性諮商學會精選書籍推薦與性諮商 Podcast。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">相關資源</span>
+      <h1>推薦閱讀與收聽</h1>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>精選書籍</h2>
+      <div class="book-sections">
+        {bookCategories.map((cat) => (
+          <div class="book-cat">
+            <div class="book-cat-head" style={`--dot: ${cat.color}; --dot-text: ${cat.colorText}`}>
+              <span class="book-cat-dot"></span>
+              <h3>{cat.name}</h3>
+            </div>
+            <ul class="book-list">
+              {cat.books.map((b) => (
+                <li>
+                  <span class="book-title">{b.title}</span>
+                  <span class="book-meta">{b.authors}　／　{b.publisher}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap">
+      <h2>性諮商 Podcast</h2>
+      <div class="podcast-card">
+        <div class="podcast-head">
+          <h3>SEX CAFÉ 性諮商特調</h3>
+          <a href="https://beone-sexcafe.firstory.io/" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+            前往收聽 →
+          </a>
+        </div>
+        <p class="podcast-lead">
+          面對眾多的性知識、性資訊內容不知如何取捨嗎？由荷光性諮商專業訓練中心團隊、台灣性諮商學會會員郝柏瑋與李竹薇心理師主持製作，從性諮商的角度跟大家輕鬆聊聊性與心理。
+        </p>
+        <div class="season-grid">
+          {podcastSeasons.map((s) => (
+            <div class="season-tile">
+              <h4>{s.title}</h4>
+              <p>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+        <p class="podcast-credit">製作團隊：荷光性諮商專業訓練中心　主講心理師：郝柏瑋、李竹薇　製作人：陳曼荷、郝柏瑋、李竹薇</p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+  }
+
+  .section {
+    padding: 44px 0;
+  }
+
+  .section-alt {
+    background: var(--card);
+    border-top: 1px solid var(--line);
+  }
+
+  .section h2 {
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+    margin-bottom: 24px;
+  }
+
+  .book-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px 40px;
+  }
+
+  @media (max-width: 800px) {
+    .book-sections {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .book-cat-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .book-cat-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--dot);
+  }
+
+  .book-cat-head h3 {
+    font-size: 0.98rem;
+    color: var(--dot-text);
+  }
+
+  .book-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .book-list li {
+    padding: 9px 4px;
+    border-bottom: 1px dashed var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .book-list li:last-child {
+    border-bottom: none;
+  }
+
+  .book-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .book-meta {
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+  }
+
+  .podcast-card {
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px;
+  }
+
+  .podcast-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .podcast-head h3 {
+    font-size: 1.15rem;
+    margin: 0;
+  }
+
+  .podcast-lead {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    max-width: 62ch;
+    margin: 0 0 24px;
+  }
+
+  .season-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 700px) {
+    .season-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .season-tile {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+
+  .season-tile h4 {
+    font-family: var(--font-display);
+    font-size: 0.92rem;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+
+  .season-tile p {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .podcast-credit {
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    margin: 0;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+  }
+</style>

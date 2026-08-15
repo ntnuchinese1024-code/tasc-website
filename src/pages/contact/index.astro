@@ -1,0 +1,155 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const infoRows = [
+  { label: "會址", value: "231 新北市新店區北新路一段337號2樓" },
+  { label: "電話", value: "02-2914-3527" },
+  { label: "E-MAIL", value: "tasc.tw@gmail.com" },
+  { label: "聯絡人", value: "楊小姐" },
+  { label: "Facebook", value: "台灣性諮商學會" },
+  { label: "立案字號", value: "台內團字第1020325348" },
+  { label: "統一編號", value: "02952742" },
+];
+---
+
+<BaseLayout title="聯絡我們" description="台灣性諮商學會聯絡方式：地址、電話、E-MAIL。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">聯絡我們</span>
+      <h1>有任何建議或想法，歡迎與我們聯絡</h1>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap two-col">
+      <div class="mail-card">
+        <p class="mail-lead">最快的聯絡方式，是直接寄信給我們</p>
+        <a href="mailto:tasc.tw@gmail.com" class="btn btn-primary mail-btn">
+          寄信到 tasc.tw@gmail.com
+        </a>
+        <p class="mail-note">點擊後會用您電腦或手機上設定好的信箱程式開啟新郵件，不需要另外登入本網站的任何系統。</p>
+      </div>
+
+      <div class="info-card">
+        <h2>聯絡資訊</h2>
+        <dl class="info-list">
+          {infoRows.map((row) => (
+            <div class="info-row">
+              <dt>{row.label}</dt>
+              <dd>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+    max-width: 28rem;
+  }
+
+  .section {
+    padding: 48px 0 56px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  @media (max-width: 760px) {
+    .two-col {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .mail-card {
+    background: color-mix(in srgb, var(--blue) 8%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--blue) 30%, var(--line));
+    border-radius: 16px;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+  }
+
+  .mail-lead {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  .mail-btn {
+    align-self: center;
+  }
+
+  .mail-note {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  .info-card {
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px;
+  }
+
+  .info-card h2 {
+    font-size: 1rem;
+    margin-bottom: 16px;
+  }
+
+  .info-list {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .info-row {
+    display: flex;
+    gap: 14px;
+    font-size: 0.9rem;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .info-row dt {
+    flex: 0 0 5.5em;
+    color: var(--ink-faint);
+    font-size: 0.82rem;
+  }
+
+  .info-row dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--ink);
+  }
+</style>

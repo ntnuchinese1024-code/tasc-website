@@ -79,6 +79,15 @@ const sections = [
     ],
   },
 ];
+
+const stats = [
+  { value: "1年+", unit: "實務經驗", desc: "取得心理師執照後，250小時直接服務證明", color: "var(--blue)", colorText: "var(--blue-deep)" },
+  { value: "48", unit: "小時", desc: "人類性學相關教育（36必修＋12選修）", color: "var(--magenta)", colorText: "var(--magenta-deep)" },
+  { value: "60", unit: "小時", desc: "性諮商專業訓練", color: "var(--green)", colorText: "var(--green-deep)" },
+  { value: "56", unit: "小時", desc: "性態度與價值觀訓練（50小時團體＋6小時SAR）", color: "var(--orange)", colorText: "var(--orange-deep)" },
+  { value: "90", unit: "小時", desc: "臨床實務與督導（60小時接案＋30小時督導）", color: "var(--blue)", colorText: "var(--blue-deep)" },
+  { value: "6年", unit: "一次", desc: "取得認證後的換證週期", color: "var(--red)", colorText: "var(--red-deep)" },
+];
 ---
 
 <BaseLayout title="性諮商師認證辦法" description="台灣性諮商學會性諮商師認證辦法全文。">
@@ -86,12 +95,32 @@ const sections = [
     <div class="wrap">
       <span class="eyebrow"><a href="/counselors">性諮商師</a> · 認證辦法</span>
       <h1>性諮商師認證辦法</h1>
-      <p class="lead">民國111年1月23日台灣性諮商學會理監事會議通過。點擊展開各段落閱讀。</p>
+      <p class="lead">民國111年1月23日台灣性諮商學會理監事會議通過。</p>
+      <a href="/downloads/性諮商師認證辦法.txt" download class="btn btn-ghost download-btn">下載全文（.txt）</a>
     </div>
   </header>
 
+  <section class="section stats-section">
+    <div class="wrap">
+      <h2>六個數字，看懂整個認證門檻</h2>
+      <p class="section-note">申請人須先是有效會員、通過心理師高考，並遵守本會倫理守則，再累積以下時數。</p>
+      <div class="stats-grid">
+        {stats.map((s) => (
+          <div class="stat-tile" style={`--dot: ${s.color}; --dot-text: ${s.colorText}`}>
+            <div class="stat-value">{s.value}<span class="stat-unit">{s.unit}</span></div>
+            <p class="stat-desc">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
   <section class="section">
     <div class="wrap">
+      <div class="section-head-row">
+        <h2>完整條文</h2>
+        <span class="section-note">點擊展開各段落閱讀</span>
+      </div>
       <DocAccordion sections={sections} />
       <div class="contact-note">
         <p>台灣性諮商學會聯繫方式</p>
@@ -133,8 +162,101 @@ const sections = [
     font-size: 0.9rem;
   }
 
+  .download-btn {
+    display: inline-block;
+    margin-top: 18px;
+    font-size: 0.84rem;
+    padding: 9px 20px;
+  }
+
   .section {
     padding: 44px 0 56px;
+  }
+
+  .stats-section {
+    padding-bottom: 8px;
+  }
+
+  .stats-section h2 {
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+    margin-bottom: 8px;
+  }
+
+  .section-note {
+    font-size: 0.84rem;
+    color: var(--ink-faint);
+    margin: 0 0 22px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 760px) {
+    .stats-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .stat-tile {
+    background: color-mix(in srgb, var(--dot) 8%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--dot) 30%, var(--line));
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--dot-text);
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-unit {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .stat-desc {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .section-head-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .section-head-row h2 {
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+    margin: 0;
+  }
+
+  .section-head-row .section-note {
+    margin: 0;
   }
 
   .contact-note {

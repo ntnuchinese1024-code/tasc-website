@@ -1,0 +1,351 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const categories = [
+  {
+    name: "專業會員",
+    desc: "領有諮商心理師、臨床心理師執照，並曾修習性諮商相關專業課程至少六十小時者。",
+    color: "var(--blue)",
+    colorText: "var(--blue-deep)",
+  },
+  {
+    name: "一般會員",
+    desc: "教育部承認之國內外大學校院畢業，在醫學、護理、社工、教育或輔導等相關領域，對性諮商有興趣者。",
+    color: "var(--red)",
+    colorText: "var(--red-deep)",
+  },
+  {
+    name: "學生會員",
+    desc: "凡就讀於醫學、護理、心理、教育、社會等相關科系三年級以上之學生。",
+    color: "var(--green)",
+    colorText: "var(--green-deep)",
+  },
+  {
+    name: "贊助會員",
+    desc: "對性諮商感到興趣或願意支持本會之運作及維持功能者。",
+    color: "var(--magenta)",
+    colorText: "var(--magenta-deep)",
+  },
+  {
+    name: "團體會員",
+    desc: "凡政府立案之相關機構或團體，對性諮商專業有興趣者。",
+    color: "var(--orange)",
+    colorText: "var(--orange-deep)",
+  },
+  {
+    name: "名譽會員",
+    desc: "對性諮商專業有重大貢獻之個人或團體，經理事會推薦者。",
+    color: "var(--blue)",
+    colorText: "var(--blue-deep)",
+  },
+];
+
+const benefits = [
+  "得出席本會會員大會，具有本會會務投票權，參與會務決策。",
+  "報名參加本會課程得享有優惠價格。",
+  "報名參加荷光性諮商專業訓練中心課程部分得享有優惠價格。",
+  "加入本會信箱群組，即時獲得本會最新資訊。",
+];
+
+const fees = [
+  { label: "入會費", value: "新台幣 1,000 元", note: "入會時繳納一次" },
+  { label: "常年會費・一般", value: "新台幣 1,000 元", note: "每年度一至二月繳納" },
+  { label: "常年會費・學生", value: "新台幣 600 元", note: "優惠價" },
+  { label: "常年會費・團體", value: "新台幣 3,000 元", note: "單位內 3 位成員可享會員優惠價" },
+];
+
+const steps = [
+  "詳閱本會章程，了解相關資訊。",
+  "下載「入會申請書」填寫，將電子檔寄至 tasc.tw@gmail.com，或以書面寄至新北市新店區北新路一段337號2樓。",
+  "本會收到資料後會於理監事會議上提出並進行審查，審查通過後便會通知繳費事宜，即成為本會會員。",
+];
+---
+
+<BaseLayout title="會員申請" description="台灣性諮商學會會員申請資格、權益義務與入會流程。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">會員申請</span>
+      <h1>加入台灣性諮商學會</h1>
+      <p class="lead">本會會員申請資格須贊同本會宗旨、年滿二十歲，依身分分為以下六類。</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>申請資格</h2>
+      <div class="category-grid">
+        {categories.map((c) => (
+          <div class="category-card" style={`--dot: ${c.color}; --dot-text: ${c.colorText}`}>
+            <span class="category-name">{c.name}</span>
+            <p class="category-desc">{c.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap two-col">
+      <div>
+        <h2>會員權益</h2>
+        <ul class="benefit-list">
+          {benefits.map((b) => <li>{b}</li>)}
+        </ul>
+        <p class="section-note">會員義務：遵守本會章程、決議，及繳納會費之義務。</p>
+      </div>
+      <div>
+        <h2>費用</h2>
+        <div class="fee-list">
+          {fees.map((f) => (
+            <div class="fee-row">
+              <span class="fee-label">{f.label}</span>
+              <span class="fee-value">{f.value}</span>
+              <span class="fee-note">{f.note}</span>
+            </div>
+          ))}
+        </div>
+        <p class="section-note">個人會員一次繳清十年會費（新台幣 1 萬元整）則終身免再繳常年會費。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>入會流程</h2>
+      <ol class="step-list">
+        {steps.map((s, i) => (
+          <li>
+            <span class="step-num">{i + 1}</span>
+            <span>{s}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div class="info-panel">
+        <div>
+          <h3>銀行轉帳帳戶</h3>
+          <p>戶名：社團法人臺灣性諮商學會</p>
+          <p>中國信託－北新分行（代碼 822）　帳號：772-540167870</p>
+        </div>
+        <div>
+          <h3>入會申請書</h3>
+          <p>原站提供的申請書 PDF 檔尚待學會提供最新版本重新上架；在此之前，歡迎先寄信到 <a href="mailto:tasc.tw@gmail.com">tasc.tw@gmail.com</a> 索取申請表。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+  }
+
+  .page-hero .lead {
+    margin: 14px 0 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    max-width: 56ch;
+  }
+
+  .section {
+    padding: 44px 0;
+  }
+
+  .section-alt {
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section h2 {
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+    margin-bottom: 20px;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  @media (max-width: 860px) {
+    .category-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .category-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .category-card {
+    background: var(--bg-alt);
+    border-top: 3px solid var(--dot);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+
+  .category-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: var(--dot-text);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .category-desc {
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+
+  @media (max-width: 760px) {
+    .two-col {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+  }
+
+  .benefit-list {
+    margin: 0 0 16px;
+    padding-left: 20px;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+
+  .benefit-list li {
+    margin-bottom: 6px;
+  }
+
+  .section-note {
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  .fee-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .fee-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    background: var(--bg-alt);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  .fee-label {
+    font-weight: 700;
+    font-size: 0.88rem;
+    flex: 0 0 auto;
+  }
+
+  .fee-value {
+    font-variant-numeric: tabular-nums;
+    color: var(--blue-deep);
+    font-weight: 700;
+    font-size: 0.88rem;
+  }
+
+  .fee-note {
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    margin-left: auto;
+  }
+
+  .step-list {
+    list-style: none;
+    margin: 0 0 32px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 44rem;
+  }
+
+  .step-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  .step-num {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--blue-deep);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.85rem;
+  }
+
+  .info-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    background: var(--bg-alt);
+    border: 1px dashed var(--line);
+    border-radius: 14px;
+    padding: 22px;
+  }
+
+  @media (max-width: 700px) {
+    .info-panel {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .info-panel h3 {
+    font-size: 0.92rem;
+    margin-bottom: 8px;
+  }
+
+  .info-panel p {
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    margin: 0 0 4px;
+    line-height: 1.6;
+  }
+
+  .info-panel a {
+    color: var(--blue-deep);
+    font-weight: 700;
+  }
+</style>

@@ -1,6 +1,14 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
+const workingGroups = [
+  { name: "倫理委員會", href: "/about/groups/ethics" },
+  { name: "認證委員會", href: "/about/groups/certification" },
+  { name: "公關組", href: "/about/groups/pr" },
+  { name: "課程推廣組", href: "/about/groups/course-promotion" },
+  { name: "課程認證組", href: "/about/groups/course-certification" },
+];
+
 const missionPoints = [
   "推廣性諮商、性教育專業工作，促進社會大眾對性諮商及性教育之知識及態度。",
   "辦理專業人員之性諮商相關訓練課程，培訓專業人員及提升性諮商服務品質。",
@@ -11,6 +19,8 @@ const missionPoints = [
 const charterChapters = [
   {
     title: "第一章　總則",
+    color: "var(--blue)",
+    colorText: "var(--blue-deep)",
     articles: [
       "第一條：本會名稱為台灣性諮商學會(以下簡稱本會)，英文譯名為『Taiwan Association of Sexuality Counseling』簡寫為TASC。",
       "第二條：本會為依法設立之社會團體，非以營利為目的。本會以促進台灣性諮商之專業發展，以性諮商、性教育的專業工作，提供社會大眾整體性健康服務為宗旨。",
@@ -22,6 +32,8 @@ const charterChapters = [
   },
   {
     title: "第二章　會員",
+    color: "var(--red)",
+    colorText: "var(--red-deep)",
     articles: [
       "第七條：本會會員申請資格須贊同本會宗旨、年滿二十歲，分為專業會員、一般會員、贊助會員、團體會員、名譽會員、學生會員六類，詳細資格見「會員申請」頁。",
       "第八條：會員(會員代表)有違反法令、章程或不遵守會員大會決議時，得經理事會決議，予以警告或停權處分，情節重大者得經會員大會決議除名。",
@@ -34,6 +46,8 @@ const charterChapters = [
   },
   {
     title: "第三章　組織及職權",
+    color: "var(--magenta)",
+    colorText: "var(--magenta-deep)",
     articles: [
       "第十四條：本會以會員(會員代表)為最高權利機構，會員大會閉會期間由理事會代行職權，監事會為監察機關。",
       "第十五條：會員大會之職權包含訂定與變更章程、選舉或罷免理事監事、議決會費數額、議決年度計畫與預決算、議決除名處分、議決財產處分、議決團體解散等重大事項。",
@@ -52,6 +66,8 @@ const charterChapters = [
   },
   {
     title: "第四章　會議",
+    color: "var(--green)",
+    colorText: "var(--green-deep)",
     articles: [
       "第廿七條：會員大會分定期會議與臨時會議兩種，由理事長召集；定期會議每年召開一次。",
       "第廿八條：會員不能親自出席會員大會時，得以書面委託其他會員代理，每一會員以代理一人為限。",
@@ -62,6 +78,8 @@ const charterChapters = [
   },
   {
     title: "第五章　經費及預算",
+    color: "var(--orange)",
+    colorText: "var(--orange-deep)",
     articles: [
       "第卅二條：本會經費來源包含入會費、常年會費、事業費、會員捐款、委託收益、基金及其孳息、其他收入。入會費新台幣壹仟元；常年會費一般為壹仟元（學生會員陸佰元，名譽會員免繳），團體會員參仟元。",
       "第卅三條：本會會計年度自每年一月一日起至十二月三十一日止。",
@@ -71,6 +89,8 @@ const charterChapters = [
   },
   {
     title: "第六章　附則",
+    color: "var(--blue)",
+    colorText: "var(--blue-deep)",
     articles: [
       "第卅六條：本章程未規定事項，悉依有關法令規定辦理。",
       "第卅七條：本會辦事細則，由理事會訂定之。",
@@ -129,10 +149,23 @@ const charterChapters = [
       <p class="section-note">台灣性諮商學會組織章程，102年9月7日通過、內政部核准立案，歷經105、109、110、111年四次修訂。以下依章節收合，點擊展開閱讀。</p>
       <div class="charter-list">
         {charterChapters.map((chapter, i) => (
-          <details class="charter-item" open={i === 0}>
-            <summary>{chapter.title}</summary>
+          <details class="charter-item" style={`--chapter: ${chapter.color}; --chapter-text: ${chapter.colorText}`} open={i === 0}>
+            <summary>
+              <span class="chapter-dot"></span>
+              {chapter.title}
+            </summary>
             <div class="charter-body">
-              {chapter.articles.map((a) => <p>{a}</p>)}
+              {chapter.articles.map((a) => {
+                const sep = a.indexOf("：");
+                const num = sep === -1 ? "" : a.slice(0, sep);
+                const text = sep === -1 ? a : a.slice(sep + 1);
+                return (
+                  <div class="article-row">
+                    <span class="article-num">{num}</span>
+                    <p>{text}</p>
+                  </div>
+                );
+              })}
             </div>
           </details>
         ))}
@@ -143,33 +176,55 @@ const charterChapters = [
   <section id="structure" class="section section-alt">
     <div class="wrap">
       <h2>組織架構</h2>
-      <p class="section-note">依本會章程第十四～廿六條整理。</p>
-      <div class="org-chart">
-        <div class="org-node org-top">
-          <span class="org-role">會員大會</span>
-          <span class="org-desc">最高權力機構，選舉理監事、議決章程與重大事項</span>
-        </div>
-        <div class="org-branches">
-          <div class="org-branch">
-            <div class="org-node">
-              <span class="org-role">理事會</span>
-              <span class="org-desc">理事 9 人（含常務理事 3 人），互選 1 人為理事長，對內綜理會務、對外代表本會</span>
-            </div>
-            <div class="org-node org-sub">
-              <span class="org-role">秘書處</span>
-              <span class="org-desc">秘書長 1 人，承理事長之命處理會務；工作人員若干人</span>
-            </div>
-          </div>
-          <div class="org-branch">
-            <div class="org-node">
-              <span class="org-role">監事會</span>
-              <span class="org-desc">監事 3 人（含常務監事 1 人），監察理事會工作執行、審核年度決算</span>
-            </div>
-          </div>
-        </div>
-        <div class="org-node org-committees">
-          <span class="org-role">委員會 / 工作小組</span>
-          <span class="org-desc">依業務需要設置，如推廣課程組、公關組、性諮商師認證委員會、倫理委員會等</span>
+      <p class="section-note">依本會章程第十四～廿六條整理；橘色的工作小組可以點進去看各小組在做什麼。</p>
+      <div class="org-scroll">
+        <div class="org-tree">
+          <ul>
+            <li>
+              <span class="org-node tier-assembly">
+                <span class="org-role">會員大會</span>
+                <span class="org-desc">最高權力機構</span>
+              </span>
+              <ul>
+                <li>
+                  <span class="org-node tier-board">
+                    <span class="org-role">理事會</span>
+                    <span class="org-desc">理事 9 人</span>
+                  </span>
+                  <ul>
+                    <li>
+                      <span class="org-node tier-chair">
+                        <span class="org-role">理事長</span>
+                      </span>
+                      <ul>
+                        <li>
+                          <span class="org-node tier-secretariat">
+                            <span class="org-role">秘書處／秘書長</span>
+                          </span>
+                          <ul>
+                            {workingGroups.map((g) => (
+                              <li>
+                                <a class="org-node tier-group" href={g.href}>
+                                  <span class="org-role">{g.name}</span>
+                                  <span class="org-go">看小組運作 →</span>
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <span class="org-node tier-board">
+                    <span class="org-role">監事會</span>
+                    <span class="org-desc">監事 3 人</span>
+                  </span>
+                </li>
+              </ul>
+            </li>
+          </ul>
         </div>
       </div>
       <p class="section-note">
@@ -299,6 +354,7 @@ const charterChapters = [
   .charter-item {
     background: var(--bg-alt);
     border: 1px solid var(--line);
+    border-left: 3px solid var(--chapter);
     border-radius: 12px;
     padding: 4px 18px;
   }
@@ -309,21 +365,32 @@ const charterChapters = [
     font-family: var(--font-display);
     cursor: pointer;
     list-style: none;
+    display: flex;
+    align-items: center;
   }
 
   .charter-item summary::-webkit-details-marker {
     display: none;
   }
 
-  .charter-item summary::before {
+  .chapter-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--chapter);
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  .charter-item summary::after {
     content: "▸";
     display: inline-block;
-    margin-right: 8px;
-    color: var(--blue-deep);
+    margin-left: auto;
+    color: var(--chapter-text);
     transition: transform 0.15s ease;
   }
 
-  .charter-item[open] summary::before {
+  .charter-item[open] summary::after {
     transform: rotate(90deg);
   }
 
@@ -331,74 +398,176 @@ const charterChapters = [
     padding-bottom: 16px;
   }
 
-  .charter-body p {
-    font-size: 0.88rem;
-    color: var(--ink-soft);
-    margin: 0 0 12px;
-    line-height: 1.75;
+  .article-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
   }
 
-  .charter-body p:last-child {
+  .article-row:last-child {
     margin-bottom: 0;
   }
 
-  .org-chart {
+  .article-num {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--chapter-text);
+    background: color-mix(in srgb, var(--chapter) 14%, var(--card));
+    border-radius: 999px;
+    padding: 3px 11px;
+    white-space: nowrap;
+  }
+
+  .article-row p {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.75;
+  }
+
+  /* ---------- Org chart: pure-CSS connector tree ---------- */
+  .org-scroll {
+    overflow-x: auto;
+    padding: 8px 4px 20px;
+    margin: 0 -4px;
+  }
+
+  .org-tree,
+  .org-tree ul {
+    display: flex;
+    justify-content: center;
+  }
+
+  .org-tree ul {
+    padding-top: 26px;
+    position: relative;
+  }
+
+  .org-tree li {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    list-style: none;
+    position: relative;
+    padding: 26px 14px 0;
+  }
+
+  .org-tree li::before,
+  .org-tree li::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 50%;
+    width: 51%;
+    height: 26px;
+    border-top: 2px solid var(--line);
+  }
+
+  .org-tree li::after {
+    right: auto;
+    left: 50%;
+    border-left: 2px solid var(--line);
+  }
+
+  .org-tree li:only-child {
+    padding-top: 0;
+  }
+
+  .org-tree li:only-child::before,
+  .org-tree li:only-child::after {
+    display: none;
+  }
+
+  .org-tree li:first-child::before,
+  .org-tree li:last-child::after {
+    border: 0 none;
+  }
+
+  .org-tree li:last-child::before {
+    border-right: 2px solid var(--line);
+    border-radius: 0 8px 0 0;
+  }
+
+  .org-tree li:first-child::after {
+    border-radius: 8px 0 0 0;
+  }
+
+  .org-tree ul ul::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border-left: 2px solid var(--line);
+    width: 0;
+    height: 26px;
   }
 
   .org-node {
-    background: var(--bg-alt);
+    background: var(--card);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 14px 20px;
+    padding: 12px 18px;
     text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    max-width: 22rem;
-  }
-
-  .org-top {
-    background: color-mix(in srgb, var(--blue) 10%, var(--card));
-    border-color: color-mix(in srgb, var(--blue) 35%, var(--line));
+    gap: 2px;
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow: var(--shadow);
   }
 
   .org-role {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 1rem;
+    font-size: 0.94rem;
+    color: var(--ink);
   }
 
   .org-desc {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: var(--ink-soft);
-    line-height: 1.6;
   }
 
-  .org-branches {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
+  .tier-assembly {
+    background: color-mix(in srgb, var(--blue) 12%, var(--card));
+    border-color: color-mix(in srgb, var(--blue) 40%, var(--line));
   }
 
-  .org-branch {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
+  .tier-board {
+    background: color-mix(in srgb, var(--magenta) 10%, var(--card));
+    border-color: color-mix(in srgb, var(--magenta) 35%, var(--line));
   }
 
-  .org-sub {
-    font-size: 0.9em;
+  .tier-chair {
+    background: color-mix(in srgb, var(--gold) 22%, var(--card));
+    border-color: color-mix(in srgb, var(--orange) 40%, var(--line));
   }
 
-  .org-committees {
-    max-width: 30rem;
-    border-style: dashed;
+  .tier-secretariat {
+    background: color-mix(in srgb, var(--green) 10%, var(--card));
+    border-color: color-mix(in srgb, var(--green) 35%, var(--line));
+  }
+
+  .tier-group {
+    background: color-mix(in srgb, var(--orange) 10%, var(--card));
+    border-color: color-mix(in srgb, var(--orange) 40%, var(--line));
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .tier-group:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px -10px color-mix(in srgb, var(--orange) 50%, transparent);
+    border-color: var(--orange);
+  }
+
+  .org-go {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--orange-deep);
   }
 
   .inline-link {

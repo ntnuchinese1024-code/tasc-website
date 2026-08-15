@@ -1,0 +1,95 @@
+---
+interface Section {
+  title: string;
+  color: string;
+  colorText: string;
+  paragraphs: string[];
+}
+
+interface Props {
+  sections: Section[];
+}
+
+const { sections } = Astro.props;
+---
+
+<div class="doc-accordion">
+  {sections.map((section, i) => (
+    <details class="doc-item" style={`--chapter: ${section.color}; --chapter-text: ${section.colorText}`} open={i === 0}>
+      <summary>
+        <span class="chapter-dot"></span>
+        {section.title}
+      </summary>
+      <div class="doc-body">
+        {section.paragraphs.map((p) => <p>{p}</p>)}
+      </div>
+    </details>
+  ))}
+</div>
+
+<style>
+  .doc-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .doc-item {
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--chapter);
+    border-radius: 12px;
+    padding: 4px 18px;
+  }
+
+  .doc-item summary {
+    padding: 14px 0;
+    font-weight: 700;
+    font-family: var(--font-display);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .doc-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .chapter-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--chapter);
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  .doc-item summary::after {
+    content: "▸";
+    display: inline-block;
+    margin-left: auto;
+    color: var(--chapter-text);
+    transition: transform 0.15s ease;
+  }
+
+  .doc-item[open] summary::after {
+    transform: rotate(90deg);
+  }
+
+  .doc-body {
+    padding-bottom: 16px;
+  }
+
+  .doc-body p {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin: 0 0 12px;
+    line-height: 1.8;
+    white-space: pre-line;
+  }
+
+  .doc-body p:last-child {
+    margin-bottom: 0;
+  }
+</style>

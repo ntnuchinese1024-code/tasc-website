@@ -1,0 +1,114 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import DocAccordion from "../../components/DocAccordion.astro";
+
+const sections = [
+  {
+    title: "壹～參　辦理單位與認證理念",
+    color: "var(--blue)",
+    colorText: "var(--blue-deep)",
+    paragraphs: [
+      "壹、由台灣性諮商學會（本學會）成立性諮商師專業認證委員會（以下簡稱本會）授證。",
+      "貳、本學會對認證之理念：本學會核發證照給符合認證資格之會員，以認可其 (1)以性諮商為其專業領域；(2)承諾維持專業訓練及遵守倫理標準。",
+      "參、證照有效期限：性諮商師認證資格每六年換證一次。",
+    ],
+  },
+  {
+    title: "肆～伍　資格與倫理標準",
+    color: "var(--red)",
+    colorText: "var(--red-deep)",
+    paragraphs: [
+      "肆、有效之會員身分：申請換證之性諮商師必須是本學會有效會員（完成歷年會費繳交）。",
+      "伍、倫理守則標準：換證申請者不得違反本學會之倫理守則。",
+    ],
+  },
+  {
+    title: "陸　專業繼續教育",
+    color: "var(--green)",
+    colorText: "var(--green-deep)",
+    paragraphs: [
+      "換證申請者必須於六年內完成專業繼續教育至少60小時，性諮商專業督導至少24小時。",
+      "一、完成至少60小時繼續教育課程：(一)參與本學會舉辦或本會認可之人類性學相關教育、性諮商訓練課程，課程項目可參考本會公告之性諮商師認證辦法所列之相關必修、選修課程。(二)設計或指導本學會舉辦或協辦之性諮商相關訓練課程。",
+      "二、完成至少24小時性諮商專業督導：(一)接受台灣性諮商學會認證性諮商師或性議題專長之心理師個別督導。以團體督導/課程督導等形式申請者，時數需折半計算，換算後至多佔申請總時數12小時。(二)擔任心理師/性諮商師之性議題/性諮商專業督導。",
+    ],
+  },
+  {
+    title: "柒　文件與申請費",
+    color: "var(--orange)",
+    colorText: "var(--orange-deep)",
+    paragraphs: [
+      "一、文件部分：(一)會員必須提供自己專業繼續教育的所有紀錄。(二)專業繼續教育活動逐項填寫在換證申請表上，最後並簽名表示確認。(三)學會將不定期查核申請資料，以確認其真實性，若經查證有所不符，學會將進一步送性諮商師專業認證委員會處理。",
+      "二、申請換證費用新台幣1500元。",
+    ],
+  },
+];
+---
+
+<BaseLayout title="性諮商師換證辦法" description="台灣性諮商學會性諮商師換證辦法全文。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow"><a href="/counselors">性諮商師</a> · 換證辦法</span>
+      <h1>性諮商師換證辦法</h1>
+      <p class="lead">民國一百一十一年一月四日性諮商師專業認證委員會會議修訂。</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <DocAccordion sections={sections} />
+      <div class="contact-note">
+        <p>台灣性諮商學會聯繫方式</p>
+        <p>會址：231 新北市新店區北新路一段337號2樓　電話：02-2914-3527　E-MAIL：tasc.tw@gmail.com</p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero .eyebrow a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .page-hero .eyebrow a:hover {
+    text-decoration: underline;
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+  }
+
+  .page-hero .lead {
+    margin: 12px 0 0;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+  }
+
+  .section {
+    padding: 44px 0 56px;
+  }
+
+  .contact-note {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+  }
+
+  .contact-note p {
+    margin: 0 0 4px;
+  }
+</style>

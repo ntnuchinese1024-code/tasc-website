@@ -1,0 +1,151 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import DocAccordion from "../../components/DocAccordion.astro";
+
+const sections = [
+  {
+    title: "壹～參　辦理單位與基本資格",
+    color: "var(--blue)",
+    colorText: "var(--blue-deep)",
+    paragraphs: [
+      "壹. 由台灣性諮商學會成立性諮商師專業認證委員會（以下簡稱本會）辦理認證。",
+      "貳. 申請人須為台灣性諮商學會之有效會員。",
+      "參. 同意接受並遵守「台灣性諮商學會專業倫理守則」之規定。",
+    ],
+  },
+  {
+    title: "肆　學術與諮商經驗",
+    color: "var(--red)",
+    colorText: "var(--red-deep)",
+    paragraphs: [
+      "一、通過中華民國考選部專門職業及技術人員高等考試之心理師考試（諮商或臨床），或領有其他國家等同於心理師之政府證照。",
+      "二、取得心理師執照後有一年諮商實務工作經驗，並提供至少250小時諮商直接服務證明。",
+    ],
+  },
+  {
+    title: "伍　人類性學相關教育（48 小時）",
+    color: "var(--magenta)",
+    colorText: "var(--magenta-deep)",
+    paragraphs: [
+      "申請人必須參與至少48小時的性知識核心課程之教育訓練活動，包含課程、工作坊、研討會、演講等，證明具有性諮商專業所需之廣泛人類性學知識，分為 A. 36小時必修領域課程與 B. 12小時選修領域課程。",
+      "A. 必修課程（每個主題最少3小時，最多認證12小時）涵蓋：性諮商倫理守則與行為、全人性發展、國家政策與性價值關聯、性取向與性別認同、兒少親職性教育、性與生殖解剖生理學、影響性健康之醫學因子、性功能與性反應、性功能障礙診斷標準、親密關係與家庭動力等11個領域。",
+      "B. 選修課程（至少選修5個主題，每主題最少2小時，最多認證6小時）涵蓋：多元性慾與生活型態、性剝削、性創傷、性與生育、媒體網路與性、性產業、性與物質使用、性與法律、更年期與老年性、疾病與障礙的性、性教育媒材專題、性學研究方法等12個領域。",
+    ],
+  },
+  {
+    title: "陸　性諮商訓練（60 小時）",
+    color: "var(--green)",
+    colorText: "var(--green-deep)",
+    paragraphs: [
+      "申請人必須透過親自參與課程、工作坊、研討會等，接受至少60小時的性諮商訓練，以下各領域至少選修8個主題，每個主題最少5小時，最多12小時：性諮商治療理論與方法、性議題與性人格評估技巧、性功能障礙的診斷與醫療介入方法、性教練操作技巧與教導策略、性諮商技巧與演練、性諮商個案研究與性心理動力解析、性與伴侶關係評估與處遇、兒童親職性諮商理論與實務、青少年性諮商理論與實務、系統合作於性諮商的應用。",
+    ],
+  },
+  {
+    title: "柒　性態度與性價值觀訓練",
+    color: "var(--orange)",
+    colorText: "var(--orange-deep)",
+    paragraphs: [
+      "一、參加至少50小時的性自我探索與整合團體，包含性多元媒材減敏感、性自我探索、性歷史整理、身體意象重建、性價值觀澄清等課程內容，需繳交上課證明文件與心得報告400-600字。",
+      "二、接受至少6小時以上的獨立專題性價值觀重建工作坊(SAR)，需繳交上課證明文件與心得報告100-300字。",
+      "三、提供一頁有關個人性諮商專業的理念與未來所欲發展的性諮商專業領域說明300-500字。",
+    ],
+  },
+  {
+    title: "捌　臨床性諮商實務",
+    color: "var(--blue)",
+    colorText: "var(--blue-deep)",
+    paragraphs: [
+      "一、性諮商接案實務：60小時（需於申請前3年內完成）。形式包含個別性諮商(兒童、青少年、成人)/伴侶性諮商，以面對面於諮商架構下進行之接案時數至少45小時；網路諮商/電話諮商/教育諮詢/小團體等其他形式，以時數折半計算，至多佔申請總時數15小時。",
+      "二、接受性諮商督導：30小時。接受台灣性諮商學會認證之性諮商師督導至少30小時，其中個別督導時數至少佔申請總時數20小時，以團體督導/課程督導等形式申請者，時數折半計算，至多佔申請總時數10小時。",
+    ],
+  },
+  {
+    title: "玖　申請與核可過程",
+    color: "var(--red)",
+    colorText: "var(--red-deep)",
+    paragraphs: [
+      "繳交以下文件予本會審核，所有申請文件均為本會財產：一、填寫「性諮商師申請表」並簽名。二、執照證書影本。三、完成48小時人類性學教育與60小時性諮商訓練之相關證明文件。四、參與個人性自我探索與整合團體、SAR工作坊之正式文件與心得報告。五、性諮商實習與督導證明。六、費用：資料審核費新台幣1,000元，核定後授證費用台幣1,500元（戶名：社團法人臺灣性諮商學會，中國信託－北新店分行代碼822，帳號772-540167870）。七、隨申請表附上個人一吋證件照片一張及相關文件電子檔。",
+    ],
+  },
+  {
+    title: "拾　其他",
+    color: "var(--green)",
+    colorText: "var(--green-deep)",
+    paragraphs: [
+      "一、合格會員均應遵守本學會訂定之專業倫理守則。",
+      "二、審核通過後，申請者會收到本學會合格性諮商師之證明。此資格證明為每六年換證一次。",
+      "三、每位合格會員均會列在本學會合格性諮商師名錄中。",
+      "四、合格者必須為每年繳費有效會員或終身會員，如果當年非有效會員，則資格暫停至成為有效會員止。",
+    ],
+  },
+];
+---
+
+<BaseLayout title="性諮商師認證辦法" description="台灣性諮商學會性諮商師認證辦法全文。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow"><a href="/counselors">性諮商師</a> · 認證辦法</span>
+      <h1>性諮商師認證辦法</h1>
+      <p class="lead">民國111年1月23日台灣性諮商學會理監事會議通過。點擊展開各段落閱讀。</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <DocAccordion sections={sections} />
+      <div class="contact-note">
+        <p>台灣性諮商學會聯繫方式</p>
+        <p>會址：231 新北市新店區北新路一段337號2樓　電話：02-2914-3527　E-MAIL：tasc.tw@gmail.com</p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero .eyebrow a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .page-hero .eyebrow a:hover {
+    text-decoration: underline;
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+  }
+
+  .page-hero .lead {
+    margin: 12px 0 0;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+  }
+
+  .section {
+    padding: 44px 0 56px;
+  }
+
+  .contact-note {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+  }
+
+  .contact-note p {
+    margin: 0 0 4px;
+  }
+</style>

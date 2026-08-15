@@ -1,0 +1,219 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Logo from "../../components/Logo.astro";
+
+const roster = [
+  "呂嘉惠", "邱雅沂", "黃怡禎", "江欣怡", "王嘉琪", "李竹薇",
+  "李翊平", "陳姿曄", "楊舒聿", "朱柏翰", "黃柏嘉", "劉承駿",
+  "薛卉芝", "謝宜潔", "張維真", "簡苑玲", "許庭韶",
+];
+
+const links = [
+  {
+    href: "/counselors/certification",
+    title: "性諮商師認證辦法",
+    desc: "資格條件、48 小時人類性學教育、60 小時性諮商訓練、臨床實務與督導時數等完整申請標準。",
+    color: "var(--blue)",
+    colorText: "var(--blue-deep)",
+  },
+  {
+    href: "/counselors/renewal",
+    title: "性諮商師換證辦法",
+    desc: "認證資格每六年換證一次，需完成 60 小時繼續教育與 24 小時專業督導。",
+    color: "var(--green)",
+    colorText: "var(--green-deep)",
+  },
+  {
+    href: "/counselors/ethics",
+    title: "性諮商師倫理規範",
+    desc: "台灣性諮商學會專業倫理守則全文，涵蓋能力誠正、服務對象福祉等五大行為守則原則。",
+    color: "var(--magenta)",
+    colorText: "var(--magenta-deep)",
+  },
+];
+---
+
+<BaseLayout title="性諮商師" description="台灣性諮商學會合格性諮商師名單，以及認證、換證、倫理規範相關辦法。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">性諮商師</span>
+      <h1>經過認證，才能掛上「性諮商師」這個頭銜</h1>
+      <p class="lead">
+        在台灣性諮商師的認證有不同的系統，本會是以台灣性教育學會制定的認證系統為準。合格性諮商師均會列在本學會合格性諮商師名錄中，資格證明每六年換證一次。
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="roster-head">
+        <h2>合格性諮商師名單</h2>
+        <span class="updated-badge">2024年9月更新</span>
+      </div>
+      <ul class="roster-grid">
+        {roster.map((name) => (
+          <li>
+            <Logo size={20} />
+            {name}
+          </li>
+        ))}
+      </ul>
+      <p class="section-note">
+        依《性諮商師認證辦法》第十條，認證審核通過後，申請者會收到本學會合格性諮商師之證明，並列入此名錄。
+      </p>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap">
+      <h2>認證相關辦法</h2>
+      <div class="link-grid">
+        {links.map((l) => (
+          <a href={l.href} class="link-card" style={`--dot: ${l.color}; --dot-text: ${l.colorText}`}>
+            <span class="link-title">{l.title}</span>
+            <span class="link-desc">{l.desc}</span>
+            <span class="link-go">閱讀全文 →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+    line-height: 1.5;
+    max-width: 32rem;
+  }
+
+  .page-hero .lead {
+    margin: 16px 0 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    max-width: 56ch;
+  }
+
+  .section {
+    padding: 44px 0;
+  }
+
+  .section-alt {
+    background: var(--card);
+    border-top: 1px solid var(--line);
+  }
+
+  .section h2 {
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+  }
+
+  .roster-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .updated-badge {
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 10px;
+  }
+
+  .roster-grid {
+    list-style: none;
+    margin: 0 0 20px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .roster-grid li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-alt);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 760px) {
+    .roster-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .section-note {
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  .link-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 860px) {
+    .link-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .link-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--dot);
+    border-radius: 14px;
+    padding: 20px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .link-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .link-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--ink);
+  }
+
+  .link-desc {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .link-go {
+    margin-top: auto;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--dot-text);
+  }
+</style>

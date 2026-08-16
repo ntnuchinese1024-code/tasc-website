@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHero from "../../../components/PageHero.astro";
 
 export const groups = [
   {
@@ -37,12 +38,7 @@ const { name, summary } = Astro.props;
 ---
 
 <BaseLayout title={name} description={`台灣性諮商學會 - ${name}`}>
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow"><a href="/about#structure">關於我們・組織架構</a></span>
-      <h1>{name}</h1>
-    </div>
-  </header>
+  <PageHero eyebrow="關於我們・組織架構" eyebrowHref="/about#structure" title={name} />
 
   <section class="section">
     <div class="wrap prose">
@@ -56,31 +52,6 @@ const { name, summary } = Astro.props;
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero .eyebrow a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .page-hero .eyebrow a:hover {
-    text-decoration: underline;
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-  }
-
   .section {
     padding: 44px 0 56px;
   }

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Logo from "../../components/Logo.astro";
+import PageHero from "../../components/PageHero.astro";
 
 const roster = [
   "呂嘉惠", "邱雅沂", "黃怡禎", "江欣怡", "王嘉琪", "李竹薇",
@@ -34,15 +35,11 @@ const links = [
 ---
 
 <BaseLayout title="性諮商師" description="台灣性諮商學會合格性諮商師名單，以及認證、換證、倫理規範相關辦法。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow">性諮商師</span>
-      <h1>經過認證，才能掛上「性諮商師」這個頭銜</h1>
-      <p class="lead">
-        在台灣性諮商師的認證有不同的系統，本會是以台灣性教育學會制定的認證系統為準。合格性諮商師均會列在本學會合格性諮商師名錄中，資格證明每六年換證一次。
-      </p>
-    </div>
-  </header>
+  <PageHero
+    eyebrow="性諮商師"
+    title="經過認證，才能掛上「性諮商師」這個頭銜"
+    lead="在台灣性諮商師的認證有不同的系統，本會是以台灣性教育學會制定的認證系統為準。合格性諮商師均會列在本學會合格性諮商師名錄中，資格證明每六年換證一次。"
+  />
 
   <section class="section">
     <div class="wrap">
@@ -81,31 +78,6 @@ const links = [
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-    line-height: 1.5;
-    max-width: 32rem;
-  }
-
-  .page-hero .lead {
-    margin: 16px 0 0;
-    color: var(--ink-soft);
-    font-size: 0.95rem;
-    max-width: 56ch;
-  }
-
   .section {
     padding: 44px 0;
   }

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import FacebookBadge from "../../components/FacebookBadge.astro";
+import PageHero from "../../components/PageHero.astro";
 
 const workingGroups = [
   { name: "倫理委員會", href: "/about/groups/ethics" },
@@ -102,15 +103,9 @@ const charterChapters = [
 ---
 
 <BaseLayout title="關於我們" description="台灣性諮商學會的創會理念、使命任務、法規章程與組織架構。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow">關於我們</span>
-      <h1>從一群關心性議題的助人工作者開始</h1>
-      <div class="hero-fb">
-        <FacebookBadge compact />
-      </div>
-    </div>
-  </header>
+  <PageHero eyebrow="關於我們" title="從一群關心性議題的助人工作者開始">
+    <FacebookBadge compact />
+  </PageHero>
 
   <nav class="section-nav wrap" aria-label="頁內導覽">
     <a href="#belief">創會理念</a>
@@ -239,28 +234,6 @@ const charterChapters = [
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-    line-height: 1.5;
-    max-width: 30rem;
-  }
-
-  .hero-fb {
-    margin-top: 18px;
-  }
-
   .section-nav {
     display: flex;
     flex-wrap: wrap;

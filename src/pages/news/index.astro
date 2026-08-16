@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
 import { wrapHeadingHtml } from "../../lib/wrap-heading";
 
 interface EventItem {
@@ -113,17 +114,16 @@ const past: EventItem[] = [
 ---
 
 <BaseLayout title="最新消息" description="台灣性諮商學會近期與歷年課程、講座、年會活動公告。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow">最新消息</span>
-      <h1>近期課程與活動</h1>
-      <p class="lead">會員身分享有課程優惠價，報名前請確認當年度會費是否已繳交。</p>
-      <div class="hero-links">
-        <a href="/annual">年會專區 →</a>
-        <a href="/news/reports">課程報導 →</a>
-      </div>
+  <PageHero
+    eyebrow="最新消息"
+    title="近期課程與活動"
+    lead="會員身分享有課程優惠價，報名前請確認當年度會費是否已繳交。"
+  >
+    <div class="hero-links">
+      <a href="/annual">年會專區 →</a>
+      <a href="/news/reports">課程報導 →</a>
     </div>
-  </header>
+  </PageHero>
 
   <section class="section">
     <div class="wrap">
@@ -165,32 +165,9 @@ const past: EventItem[] = [
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-  }
-
-  .page-hero .lead {
-    margin: 14px 0 0;
-    color: var(--ink-soft);
-    font-size: 0.95rem;
-  }
-
   .hero-links {
     display: flex;
     gap: 16px;
-    margin-top: 16px;
   }
 
   .hero-links a {

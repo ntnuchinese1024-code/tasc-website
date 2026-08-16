@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
 
 const bookCategories = [
   {
@@ -78,12 +79,7 @@ const podcastSeasons = [
 ---
 
 <BaseLayout title="相關資源" description="台灣性諮商學會精選書籍推薦與性諮商 Podcast。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow">相關資源</span>
-      <h1>推薦閱讀與收聽</h1>
-    </div>
-  </header>
+  <PageHero eyebrow="相關資源" title="推薦閱讀與收聽" />
 
   <section class="section">
     <div class="wrap">
@@ -137,22 +133,6 @@ const podcastSeasons = [
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-  }
-
   .section {
     padding: 44px 0;
   }

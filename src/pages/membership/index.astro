@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
 
 const categories = [
   {
@@ -62,13 +63,11 @@ const steps = [
 ---
 
 <BaseLayout title="會員申請" description="台灣性諮商學會會員申請資格、權益義務與入會流程。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow">會員申請</span>
-      <h1>加入台灣性諮商學會</h1>
-      <p class="lead">本會會員申請資格須贊同本會宗旨、年滿二十歲，依身分分為以下六類。</p>
-    </div>
-  </header>
+  <PageHero
+    eyebrow="會員申請"
+    title="加入台灣性諮商學會"
+    lead="本會會員申請資格須贊同本會宗旨、年滿二十歲，依身分分為以下六類。"
+  />
 
   <section class="section">
     <div class="wrap">
@@ -137,28 +136,6 @@ const steps = [
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-  }
-
-  .page-hero .lead {
-    margin: 14px 0 0;
-    color: var(--ink-soft);
-    font-size: 0.95rem;
-    max-width: 56ch;
-  }
 
   .section {
     padding: 44px 0;

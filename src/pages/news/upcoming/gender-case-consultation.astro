@@ -1,19 +1,19 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import RegistrationForm from "../../../components/RegistrationForm.astro";
+import PageHero from "../../../components/PageHero.astro";
 
 const courseName = "當代性別事件行為人諮商處遇實務經驗分享交流";
 const courseDate = "8月16日（日）13：00－15：00";
 ---
 
 <BaseLayout title={courseName} description={`台灣性諮商學會課程報名｜${courseName}`}>
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow"><a href="/news">最新消息</a> · 線上講座</span>
-      <h1>{courseName}</h1>
-      <p class="lead">從助人者角度理解偷窺與偷拍事件行為人可能經驗到的內在狀態與歷程。</p>
-    </div>
-  </header>
+  <PageHero
+    breadcrumb={{ label: "最新消息", href: "/news" }}
+    eyebrow="線上講座"
+    title={courseName}
+    lead="從助人者角度理解偷窺與偷拍事件行為人可能經驗到的內在狀態與歷程。"
+  />
 
   <section class="section">
     <div class="wrap two-col">
@@ -39,38 +39,6 @@ const courseDate = "8月16日（日）13：00－15：00";
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero .eyebrow a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .page-hero .eyebrow a:hover {
-    text-decoration: underline;
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.3rem, 3.6vw, 1.75rem);
-    max-width: 34rem;
-  }
-
-  .page-hero .lead {
-    margin: 14px 0 0;
-    color: var(--ink-soft);
-    font-size: 0.95rem;
-  }
-
   .section {
     padding: 44px 0 56px;
   }

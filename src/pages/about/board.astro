@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
 
 interface Member {
   role: string;
@@ -154,12 +155,11 @@ const numerals = ["", "一", "二", "三", "四", "五", "六", "七", "八", "�
 ---
 
 <BaseLayout title="歷屆理監事" description="台灣性諮商學會歷屆理事會、監事會與秘書處名單。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow"><a href="/about">關於我們</a> · 歷屆理監事</span>
-      <h1>七屆以來，一起把學會撐起來的人</h1>
-    </div>
-  </header>
+  <PageHero
+    breadcrumb={{ label: "關於我們", href: "/about" }}
+    eyebrow="歷屆理監事"
+    title="七屆以來，一起把學會撐起來的人"
+  />
 
   <section class="section">
     <div class="wrap">
@@ -192,33 +192,6 @@ const numerals = ["", "一", "二", "三", "四", "五", "六", "七", "八", "�
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero .eyebrow a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .page-hero .eyebrow a:hover {
-    text-decoration: underline;
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-    line-height: 1.5;
-    max-width: 30rem;
-  }
-
   .section {
     padding: 40px 0 56px;
   }

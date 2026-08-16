@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import DocAccordion from "../../components/DocAccordion.astro";
+import PageHero from "../../components/PageHero.astro";
 
 const sections = [
   {
@@ -80,13 +81,12 @@ const sections = [
 ---
 
 <BaseLayout title="性諮商師倫理規範" description="台灣性諮商學會專業倫理守則全文。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow"><a href="/counselors">性諮商師</a> · 倫理規範</span>
-      <h1>台灣性諮商學會專業倫理守則</h1>
-      <p class="lead">民國一一一年五月一日倫理委員會會議通過。</p>
-    </div>
-  </header>
+  <PageHero
+    breadcrumb={{ label: "性諮商師", href: "/counselors" }}
+    eyebrow="倫理規範"
+    title="台灣性諮商學會專業倫理守則"
+    lead="民國一一一年五月一日倫理委員會會議通過。"
+  />
 
   <section class="section">
     <div class="wrap">
@@ -100,36 +100,6 @@ const sections = [
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero .eyebrow a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .page-hero .eyebrow a:hover {
-    text-decoration: underline;
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-  }
-
-  .page-hero .lead {
-    margin: 12px 0 0;
-    color: var(--ink-soft);
-    font-size: 0.9rem;
-  }
 
   .section {
     padding: 44px 0 56px;

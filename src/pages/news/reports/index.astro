@@ -1,17 +1,17 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHero from "../../../components/PageHero.astro";
 import { wrapHeadingHtml } from "../../../lib/wrap-heading";
 import { courseReports } from "../../../data/course-reports";
 ---
 
 <BaseLayout title="課程報導" description="台灣性諮商學會已開設課程的課後報導與側記。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow"><a href="/news">最新消息</a> · 課程報導</span>
-      <h1>上完課之後，我們寫下了這些</h1>
-      <p class="lead">每場課程結束後，由參與的心理師撰寫課後側記，記錄講座中的核心觀點與現場的真實回饋。</p>
-    </div>
-  </header>
+  <PageHero
+    breadcrumb={{ label: "最新消息", href: "/news" }}
+    eyebrow="課程報導"
+    title="上完課之後，我們寫下了這些"
+    lead="每場課程結束後，由參與的心理師撰寫課後側記，記錄講座中的核心觀點與現場的真實回饋。"
+  />
 
   <section class="section">
     <div class="wrap">
@@ -32,37 +32,6 @@ import { courseReports } from "../../../data/course-reports";
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero .eyebrow a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .page-hero .eyebrow a:hover {
-    text-decoration: underline;
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-  }
-
-  .page-hero .lead {
-    margin: 14px 0 0;
-    color: var(--ink-soft);
-    font-size: 0.95rem;
-    max-width: 56ch;
-  }
 
   .section {
     padding: 44px 0 56px;

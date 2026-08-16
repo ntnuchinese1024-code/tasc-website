@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
 import { wrapHeadingHtml } from "../../lib/wrap-heading";
 import { conferences } from "../../data/annual-conferences";
 
@@ -9,13 +10,11 @@ const past = conferences.filter((c) => c.status === "past" && c.year !== 2026);
 ---
 
 <BaseLayout title="年會專區" description="台灣性諮商學會歷屆年會主題與活動報導。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow">年會專區</span>
-      <h1>學會每年最重要的一天</h1>
-      <p class="lead">每年一次的年會暨主題式工作坊，是全體會員齊聚、交流實務經驗的年度大事。以下收錄歷屆年會的主題與活動報導。</p>
-    </div>
-  </header>
+  <PageHero
+    eyebrow="年會專區"
+    title="學會每年最重要的一天"
+    lead="每年一次的年會暨主題式工作坊，是全體會員齊聚、交流實務經驗的年度大事。以下收錄歷屆年會的主題與活動報導。"
+  />
 
   {upcoming.map((c) => (
     <section class="section building-section">
@@ -60,29 +59,6 @@ const past = conferences.filter((c) => c.status === "past" && c.year !== 2026);
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-  }
-
-  .page-hero .lead {
-    margin: 14px 0 0;
-    color: var(--ink-soft);
-    font-size: 0.95rem;
-    max-width: 56ch;
-  }
-
   .section {
     padding: 40px 0;
   }

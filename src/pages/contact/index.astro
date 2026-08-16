@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import FacebookBadge from "../../components/FacebookBadge.astro";
+import PageHero from "../../components/PageHero.astro";
 
 const infoRows = [
   { label: "會址", value: "231 新北市新店區北新路一段337號2樓" },
@@ -13,12 +14,7 @@ const infoRows = [
 ---
 
 <BaseLayout title="聯絡我們" description="台灣性諮商學會聯絡方式：地址、電話、E-MAIL。">
-  <header class="page-hero">
-    <div class="wrap">
-      <span class="eyebrow">聯絡我們</span>
-      <h1>有任何建議或想法，歡迎與我們聯絡</h1>
-    </div>
-  </header>
+  <PageHero eyebrow="聯絡我們" title="有任何建議或想法，歡迎與我們聯絡" />
 
   <section class="section">
     <div class="wrap two-col">
@@ -47,23 +43,6 @@ const infoRows = [
 </BaseLayout>
 
 <style>
-  .page-hero {
-    background: var(--bg-alt);
-    padding: 44px 0 36px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .page-hero .eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--blue-deep);
-  }
-
-  .page-hero h1 {
-    font-size: clamp(1.35rem, 4vw, 1.9rem);
-    max-width: 28rem;
-  }
-
   .section {
     padding: 48px 0 56px;
   }

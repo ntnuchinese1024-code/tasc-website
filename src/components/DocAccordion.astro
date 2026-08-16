@@ -43,9 +43,11 @@ const { sections } = Astro.props;
   }
 
   .doc-item summary {
-    padding: 14px 0;
+    padding: 16px 0;
+    font-size: 1.05rem;
     font-weight: 700;
     font-family: var(--font-display);
+    color: var(--ink);
     cursor: pointer;
     list-style: none;
     display: flex;
@@ -78,14 +80,15 @@ const { sections } = Astro.props;
   }
 
   .doc-body {
-    padding-bottom: 16px;
+    padding-bottom: 20px;
   }
 
   .doc-body p {
-    font-size: 0.88rem;
-    color: var(--ink-soft);
-    margin: 0 0 12px;
-    line-height: 1.8;
+    font-size: 0.98rem;
+    color: var(--ink);
+    max-width: 68ch;
+    margin: 0 0 16px;
+    line-height: 1.85;
     white-space: pre-line;
   }
 

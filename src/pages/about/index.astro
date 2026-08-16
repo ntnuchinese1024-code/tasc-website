@@ -341,9 +341,11 @@ const charterChapters = [
   }
 
   .charter-item summary {
-    padding: 14px 0;
+    padding: 16px 0;
+    font-size: 1.05rem;
     font-weight: 700;
     font-family: var(--font-display);
+    color: var(--ink);
     cursor: pointer;
     list-style: none;
     display: flex;
@@ -392,7 +394,7 @@ const charterChapters = [
 
   .article-num {
     flex: 0 0 auto;
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.02em;
     color: var(--chapter-text);
@@ -403,10 +405,11 @@ const charterChapters = [
   }
 
   .article-row p {
-    font-size: 0.88rem;
-    color: var(--ink-soft);
+    font-size: 0.98rem;
+    color: var(--ink);
+    max-width: 66ch;
     margin: 0;
-    line-height: 1.75;
+    line-height: 1.85;
   }
 
   /* ---------- Org chart: pure-CSS connector tree ---------- */

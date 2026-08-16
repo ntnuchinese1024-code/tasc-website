@@ -1,0 +1,129 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import RegistrationForm from "../../../components/RegistrationForm.astro";
+
+const courseName = "當代性別事件行為人諮商處遇實務經驗分享交流";
+const courseDate = "8月16日（日）13：00－15：00";
+---
+
+<BaseLayout title={courseName} description={`台灣性諮商學會課程報名｜${courseName}`}>
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow"><a href="/news">最新消息</a> · 線上講座</span>
+      <h1>{courseName}</h1>
+      <p class="lead">從助人者角度理解偷窺與偷拍事件行為人可能經驗到的內在狀態與歷程。</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap two-col">
+      <div class="detail-col">
+        <h2>課程簡介</h2>
+        <p>
+          眾多與性相關連的事件與案件當中，偷窺與偷拍一直佔據相當程度的比重，助人工作者面對此一議題的困難是，案件數量不少，對此的了解卻十分有限。我們將在有限的時間內、從助人者的角度、嘗試理解偷窺與偷拍事件以及行為人可能經驗到的內在狀態與歷程，講座目的不在獵奇、不是為了短時間習得介入與處遇的能力，而在嘗試回應聽者提出或未提出的，心中或許存在已久的困惑。
+        </p>
+
+        <dl class="detail-list">
+          <div><dt>講師</dt><dd>龍冠華 臨床心理師</dd></div>
+          <div><dt>時間</dt><dd>{courseDate}</dd></div>
+          <div><dt>地點</dt><dd>線上舉辦（將使用 ZOOM 系統）</dd></div>
+          <div><dt>費用</dt><dd>會員 100 元／非會員 400 元</dd></div>
+        </dl>
+      </div>
+
+      <div class="form-col">
+        <RegistrationForm courseName={courseName} courseDate={courseDate} />
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero .eyebrow a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .page-hero .eyebrow a:hover {
+    text-decoration: underline;
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.3rem, 3.6vw, 1.75rem);
+    max-width: 34rem;
+  }
+
+  .page-hero .lead {
+    margin: 14px 0 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  .section {
+    padding: 44px 0 56px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  @media (max-width: 800px) {
+    .two-col {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+  }
+
+  .detail-col h2 {
+    font-size: 1.05rem;
+    margin-bottom: 14px;
+  }
+
+  .detail-col p {
+    font-size: 0.94rem;
+    color: var(--ink-soft);
+    line-height: 1.85;
+    margin: 0 0 24px;
+  }
+
+  .detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+  }
+
+  .detail-list > div {
+    display: flex;
+    gap: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+    font-size: 0.9rem;
+  }
+
+  .detail-list dt {
+    flex: 0 0 4em;
+    color: var(--ink-faint);
+    font-size: 0.82rem;
+  }
+
+  .detail-list dd {
+    margin: 0;
+    font-weight: 700;
+  }
+</style>

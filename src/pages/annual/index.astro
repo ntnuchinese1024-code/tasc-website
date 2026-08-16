@@ -1,0 +1,223 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { wrapHeadingHtml } from "../../lib/wrap-heading";
+import { conferences } from "../../data/annual-conferences";
+
+const upcoming = conferences.filter((c) => c.status === "building");
+const featured = conferences.find((c) => c.year === 2026);
+const past = conferences.filter((c) => c.status === "past" && c.year !== 2026);
+---
+
+<BaseLayout title="年會專區" description="台灣性諮商學會歷屆年會主題與活動報導。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">年會專區</span>
+      <h1>學會每年最重要的一天</h1>
+      <p class="lead">每年一次的年會暨主題式工作坊，是全體會員齊聚、交流實務經驗的年度大事。以下收錄歷屆年會的主題與活動報導。</p>
+    </div>
+  </header>
+
+  {upcoming.map((c) => (
+    <section class="section building-section">
+      <div class="wrap">
+        <div class="building-card">
+          <span class="eyebrow">下一屆・建置中</span>
+          <h2 set:html={wrapHeadingHtml(`${c.year}年會`)} />
+          <p>{c.intro}</p>
+        </div>
+      </div>
+    </section>
+  ))}
+
+  {featured && (
+    <section class="section featured-section">
+      <div class="wrap">
+        <span class="eyebrow">最近一屆</span>
+        <a href={`/annual/${featured.year}`} class="featured-card" style={`--dot: ${featured.color}; --dot-text: ${featured.colorText}`}>
+          <span class="featured-year">{featured.year} 年會</span>
+          <h2 set:html={wrapHeadingHtml(featured.theme)} />
+          <p>{featured.intro}</p>
+          <span class="featured-meta">{featured.date}　・　{featured.location}</span>
+          <span class="featured-go">看完整報導 →</span>
+        </a>
+      </div>
+    </section>
+  )}
+
+  <section class="section">
+    <div class="wrap">
+      <h2>歷屆年會</h2>
+      <div class="year-grid">
+        {past.map((c) => (
+          <a href={`/annual/${c.year}`} class="year-card" style={`--dot: ${c.color}; --dot-text: ${c.colorText}`}>
+            <span class="year-num">{c.year}</span>
+            <span class="year-theme">{c.theme}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+  }
+
+  .page-hero .lead {
+    margin: 14px 0 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    max-width: 56ch;
+  }
+
+  .section {
+    padding: 40px 0;
+  }
+
+  .building-section {
+    padding-bottom: 0;
+  }
+
+  .building-card {
+    border: 1px dashed var(--line);
+    border-radius: 16px;
+    padding: 22px 26px;
+    background: var(--card);
+  }
+
+  .building-card .eyebrow {
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .building-card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+
+  .building-card p {
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .featured-section .eyebrow {
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  .featured-card {
+    display: block;
+    background: color-mix(in srgb, var(--dot) 8%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--dot) 30%, var(--line));
+    border-radius: 18px;
+    padding: 32px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .featured-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .featured-year {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--dot-text);
+    letter-spacing: 0.04em;
+  }
+
+  .featured-card h2 {
+    font-size: clamp(1.2rem, 3.2vw, 1.6rem);
+    margin: 10px 0 12px;
+    max-width: 36rem;
+  }
+
+  .featured-card p {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    max-width: 56ch;
+    margin: 0 0 16px;
+    line-height: 1.7;
+  }
+
+  .featured-meta {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+  }
+
+  .featured-go {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--dot-text);
+  }
+
+  .section h2 {
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+    margin-bottom: 20px;
+  }
+
+  .year-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  @media (max-width: 760px) {
+    .year-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .year-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .year-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--bg-alt);
+    border-top: 3px solid var(--dot);
+    border-radius: 12px;
+    padding: 16px 18px;
+    text-decoration: none;
+  }
+
+  .year-card:hover {
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .year-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--dot-text);
+  }
+
+  .year-theme {
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+</style>

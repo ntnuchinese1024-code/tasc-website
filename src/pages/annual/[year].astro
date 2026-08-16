@@ -1,0 +1,77 @@
+---
+import ArticleLayout from "../../layouts/ArticleLayout.astro";
+import RegistrationForm from "../../components/RegistrationForm.astro";
+import { conferences } from "../../data/annual-conferences";
+
+export function getStaticPaths() {
+  return conferences.map((c) => ({
+    params: { year: String(c.year) },
+    props: c,
+  }));
+}
+
+const { year, status, date, location, theme, intro, talks, color, colorText } = Astro.props;
+---
+
+{status === "building" ? (
+  <ArticleLayout
+    title={`${year}年會・建置中`}
+    eyebrow="年會專區"
+    eyebrowHref="/annual"
+    accent={color}
+    accentText={colorText}
+  >
+    <div class="building-block">
+      <p>{intro}</p>
+      <p>想第一時間收到公告？歡迎關注學會 Facebook 或訂閱最新消息頁面。</p>
+      <a href="/annual" class="btn btn-ghost">回年會專區</a>
+    </div>
+  </ArticleLayout>
+) : (
+  <ArticleLayout
+    title={theme}
+    eyebrow="年會專區"
+    eyebrowHref="/annual"
+    date={date}
+    meta={[location]}
+    accent={color}
+    accentText={colorText}
+  >
+    <p class="intro-lead">{intro}</p>
+
+    {talks.map((talk: any) => (
+      <>
+        <h2>{talk.topic}</h2>
+        <p class="byline">
+          講者・{talk.speaker}
+          {talk.writer && <>　｜　撰文・{talk.writer}</>}
+        </p>
+        {talk.paragraphs.map((p: string) => <p>{p}</p>)}
+      </>
+    ))}
+
+    {year === 2026 && (
+      <div class="reg-slot">
+        <RegistrationForm courseName={`${year}年會暨主題式工作坊`} courseDate={date} />
+      </div>
+    )}
+  </ArticleLayout>
+)}
+
+<style>
+  .intro-lead {
+    font-size: 1.05rem !important;
+    color: var(--ink) !important;
+  }
+
+  .building-block p {
+    font-size: 1rem;
+    color: var(--ink-soft);
+    line-height: 1.9;
+    margin: 0 0 20px;
+  }
+
+  .reg-slot {
+    margin-top: 40px;
+  }
+</style>

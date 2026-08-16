@@ -1,0 +1,134 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { wrapHeadingHtml } from "../../../lib/wrap-heading";
+import { courseReports } from "../../../data/course-reports";
+---
+
+<BaseLayout title="課程報導" description="台灣性諮商學會已開設課程的課後報導與側記。">
+  <header class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow"><a href="/news">最新消息</a> · 課程報導</span>
+      <h1>上完課之後，我們寫下了這些</h1>
+      <p class="lead">每場課程結束後，由參與的心理師撰寫課後側記，記錄講座中的核心觀點與現場的真實回饋。</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="report-grid">
+        {courseReports.map((r) => (
+          <a href={`/news/reports/${r.slug}`} class="report-card" style={`--dot: ${r.color}; --dot-text: ${r.colorText}`}>
+            <time>{r.date}</time>
+            <h2 set:html={wrapHeadingHtml(r.title)} />
+            <p>{r.lead}</p>
+            <div class="report-tags">
+              {r.tags.map((t) => <span>#{t}</span>)}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero {
+    background: var(--bg-alt);
+    padding: 44px 0 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-hero .eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+
+  .page-hero .eyebrow a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .page-hero .eyebrow a:hover {
+    text-decoration: underline;
+  }
+
+  .page-hero h1 {
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+  }
+
+  .page-hero .lead {
+    margin: 14px 0 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    max-width: 56ch;
+  }
+
+  .section {
+    padding: 44px 0 56px;
+  }
+
+  .report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 760px) {
+    .report-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .report-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--dot);
+    border-radius: 14px;
+    padding: 22px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .report-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .report-card time {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+
+  .report-card h2 {
+    font-size: 1.05rem;
+    line-height: 1.55;
+  }
+
+  .report-card p {
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .report-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 10px;
+  }
+
+  .report-tags span {
+    font-size: 0.72rem;
+    color: var(--dot-text);
+    background: color-mix(in srgb, var(--dot) 12%, var(--card));
+    padding: 2px 9px;
+    border-radius: 999px;
+  }
+</style>

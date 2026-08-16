@@ -1,0 +1,44 @@
+---
+const FB_URL = "https://www.facebook.com/profile.php?id=100064880040204";
+
+interface Props {
+  class?: string;
+  compact?: boolean;
+}
+const { class: className = "", compact = false } = Astro.props;
+---
+
+<a href={FB_URL} target="_blank" rel="noopener noreferrer" class={`fb-badge ${compact ? "is-compact" : ""} ${className}`}>
+  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.89h2.78l-.44 2.91h-2.34V22c4.78-.79 8.44-4.94 8.44-9.94Z"
+    />
+  </svg>
+  <span>台灣性諮商學會 Facebook</span>
+</a>
+
+<style>
+  .fb-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    text-decoration: none;
+    padding: 7px 16px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--blue) 35%, var(--line));
+    background: color-mix(in srgb, var(--blue) 8%, var(--card));
+  }
+
+  .fb-badge:hover {
+    background: color-mix(in srgb, var(--blue) 16%, var(--card));
+  }
+
+  .fb-badge.is-compact {
+    font-size: 0.76rem;
+    padding: 5px 12px;
+  }
+</style>

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import FacebookBadge from "../../components/FacebookBadge.astro";
 
 const workingGroups = [
   { name: "倫理委員會", href: "/about/groups/ethics" },
@@ -105,6 +106,9 @@ const charterChapters = [
     <div class="wrap">
       <span class="eyebrow">關於我們</span>
       <h1>從一群關心性議題的助人工作者開始</h1>
+      <div class="hero-fb">
+        <FacebookBadge compact />
+      </div>
     </div>
   </header>
 
@@ -251,6 +255,10 @@ const charterChapters = [
     font-size: clamp(1.35rem, 4vw, 1.9rem);
     line-height: 1.5;
     max-width: 30rem;
+  }
+
+  .hero-fb {
+    margin-top: 18px;
   }
 
   .section-nav {

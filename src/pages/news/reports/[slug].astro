@@ -1,0 +1,59 @@
+---
+import ArticleLayout from "../../../layouts/ArticleLayout.astro";
+import { courseReports } from "../../../data/course-reports";
+
+export function getStaticPaths() {
+  return courseReports.map((r) => ({
+    params: { slug: r.slug },
+    props: r,
+  }));
+}
+
+const { title, date, speaker, writer, tags, color, colorText, lead, sections } = Astro.props;
+---
+
+<ArticleLayout
+  title={title}
+  eyebrow="課程報導"
+  eyebrowHref="/news/reports"
+  date={date}
+  meta={[`講師 ${speaker}`]}
+  accent={color}
+  accentText={colorText}
+>
+  <p class="lead-para">{lead}</p>
+  <p class="byline">撰文・{writer}</p>
+
+  {sections.map((s: { heading?: string; paragraphs: string[] }) => (
+    <>
+      {s.heading && <h2>{s.heading}</h2>}
+      {s.paragraphs.map((p: string) => <p>{p}</p>)}
+    </>
+  ))}
+
+  <div class="tag-row">
+    {tags.map((t: string) => <span>#{t}</span>)}
+  </div>
+</ArticleLayout>
+
+<style>
+  .lead-para {
+    font-size: 1.08rem !important;
+    color: var(--ink) !important;
+    font-weight: 600;
+  }
+
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .tag-row span {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+  }
+</style>

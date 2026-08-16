@@ -1,0 +1,140 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import { wrapHeadingHtml } from "../lib/wrap-heading";
+
+interface Props {
+  title: string;
+  eyebrow: string;
+  eyebrowHref?: string;
+  date?: string;
+  meta?: string[];
+  accent?: string;
+  accentText?: string;
+}
+
+const {
+  title,
+  eyebrow,
+  eyebrowHref,
+  date,
+  meta = [],
+  accent = "var(--blue)",
+  accentText = "var(--blue-deep)",
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={`${eyebrow}｜${title}`}>
+  <article class="article" style={`--accent: ${accent}; --accent-text: ${accentText}`}>
+    <header class="article-header">
+      <div class="wrap">
+        {eyebrowHref ? (
+          <a href={eyebrowHref} class="eyebrow article-eyebrow">{eyebrow}</a>
+        ) : (
+          <span class="eyebrow article-eyebrow">{eyebrow}</span>
+        )}
+        <h1 set:html={wrapHeadingHtml(title)} />
+        {(date || meta.length > 0) && (
+          <div class="article-meta">
+            {date && <time>{date}</time>}
+            {meta.map((m) => <span class="meta-item">{m}</span>)}
+          </div>
+        )}
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="article-body">
+        <slot />
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .article-header {
+    background: var(--bg-alt);
+    border-bottom: 1px solid var(--line);
+    padding: 40px 0 32px;
+    border-top: 4px solid var(--accent);
+  }
+
+  .article-eyebrow {
+    color: var(--accent-text);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  a.article-eyebrow:hover {
+    text-decoration: underline;
+  }
+
+  .article-header h1 {
+    font-size: clamp(1.4rem, 4vw, 2.1rem);
+    line-height: 1.5;
+    max-width: 38rem;
+  }
+
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 16px;
+    font-size: 0.84rem;
+    color: var(--ink-faint);
+  }
+
+  .article-meta time {
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .article-body {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: 40px 0 64px;
+  }
+
+  .article-body :global(h2) {
+    font-size: 1.15rem;
+    margin: 36px 0 14px;
+    padding-top: 4px;
+  }
+
+  .article-body :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .article-body :global(p) {
+    font-size: 1rem;
+    line-height: 1.95;
+    color: var(--ink-soft);
+    margin: 0 0 20px;
+  }
+
+  .article-body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .article-body :global(strong) {
+    color: var(--ink);
+  }
+
+  .article-body :global(.byline) {
+    font-size: 0.86rem;
+    color: var(--ink-faint);
+    margin: -8px 0 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .article-body :global(.pull-note) {
+    background: color-mix(in srgb, var(--accent) 8%, var(--card));
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin: 24px 0;
+  }
+</style>

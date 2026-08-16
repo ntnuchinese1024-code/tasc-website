@@ -1,12 +1,12 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import FacebookBadge from "../../components/FacebookBadge.astro";
 
 const infoRows = [
   { label: "會址", value: "231 新北市新店區北新路一段337號2樓" },
   { label: "電話", value: "02-2914-3527" },
   { label: "E-MAIL", value: "tasc.tw@gmail.com" },
   { label: "聯絡人", value: "楊小姐" },
-  { label: "Facebook", value: "台灣性諮商學會" },
   { label: "立案字號", value: "台內團字第1020325348" },
   { label: "統一編號", value: "02952742" },
 ];
@@ -28,6 +28,7 @@ const infoRows = [
           寄信到 tasc.tw@gmail.com
         </a>
         <p class="mail-note">點擊後會用您電腦或手機上設定好的信箱程式開啟新郵件，不需要另外登入本網站的任何系統。</p>
+        <FacebookBadge />
       </div>
 
       <div class="info-card">

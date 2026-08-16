@@ -11,6 +11,7 @@ interface EventItem {
   title: string;
   body: string;
   meta: string;
+  href?: string;
 }
 
 const upcoming: EventItem[] = [
@@ -43,6 +44,7 @@ const upcoming: EventItem[] = [
     title: "當代性別事件行為人諮商處遇實務經驗分享交流",
     body: "從助人者角度理解偷窺與偷拍事件行為人可能經驗到的內在狀態與歷程。",
     meta: "講師 龍冠華　會員 100 元／非會員 400 元",
+    href: "/news/upcoming/gender-case-consultation",
   },
 ];
 
@@ -116,6 +118,10 @@ const past: EventItem[] = [
       <span class="eyebrow">最新消息</span>
       <h1>近期課程與活動</h1>
       <p class="lead">會員身分享有課程優惠價，報名前請確認當年度會費是否已繳交。</p>
+      <div class="hero-links">
+        <a href="/annual">年會專區 →</a>
+        <a href="/news/reports">課程報導 →</a>
+      </div>
     </div>
   </header>
 
@@ -123,15 +129,19 @@ const past: EventItem[] = [
     <div class="wrap">
       <h2>近期活動</h2>
       <div class="event-grid">
-        {upcoming.map((e) => (
-          <article class="event-card" style={`--dot: ${e.color}; --dot-text: ${e.colorText}`}>
-            <span class="event-tag">{e.tag}</span>
-            <span class="event-date">{e.date}</span>
-            <h3 set:html={wrapHeadingHtml(e.title)} />
-            <p>{e.body}</p>
-            <div class="event-meta">{e.meta}</div>
-          </article>
-        ))}
+        {upcoming.map((e) => {
+          const Tag = e.href ? "a" : "article";
+          return (
+            <Tag class="event-card" href={e.href} style={`--dot: ${e.color}; --dot-text: ${e.colorText}`}>
+              <span class="event-tag">{e.tag}</span>
+              <span class="event-date">{e.date}</span>
+              <h3 set:html={wrapHeadingHtml(e.title)} />
+              <p>{e.body}</p>
+              <div class="event-meta">{e.meta}</div>
+              {e.href && <span class="event-register">線上報名 →</span>}
+            </Tag>
+          );
+        })}
       </div>
     </div>
   </section>
@@ -177,6 +187,23 @@ const past: EventItem[] = [
     font-size: 0.95rem;
   }
 
+  .hero-links {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .hero-links a {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    text-decoration: none;
+  }
+
+  .hero-links a:hover {
+    text-decoration: underline;
+  }
+
   .section {
     padding: 44px 0;
   }
@@ -212,6 +239,19 @@ const past: EventItem[] = [
     display: flex;
     flex-direction: column;
     gap: 10px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  a.event-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .event-register {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--dot-text);
   }
 
   .section-alt .event-card {

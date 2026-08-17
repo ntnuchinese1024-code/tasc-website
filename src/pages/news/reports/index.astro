@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHero from "../../../components/PageHero.astro";
+import CoursePoster from "../../../components/CoursePoster.astro";
 import { wrapHeadingHtml } from "../../../lib/wrap-heading";
 import { courseReports } from "../../../data/course-reports";
 ---
@@ -18,6 +19,9 @@ import { courseReports } from "../../../data/course-reports";
       <div class="report-grid">
         {courseReports.map((r) => (
           <a href={`/news/reports/${r.slug}`} class="report-card" style={`--dot: ${r.color}; --dot-text: ${r.colorText}`}>
+            {r.poster && (
+              <CoursePoster src={r.poster} alt={`${r.title} 課程海報`} variant="thumb" linkToFull={false} />
+            )}
             <time>{r.date}</time>
             <h2 set:html={wrapHeadingHtml(r.title)} />
             <p>{r.lead}</p>

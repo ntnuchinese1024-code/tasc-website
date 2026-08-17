@@ -1,6 +1,7 @@
 ---
 import ArticleLayout from "../../layouts/ArticleLayout.astro";
 import RegistrationForm from "../../components/RegistrationForm.astro";
+import CoursePoster from "../../components/CoursePoster.astro";
 import { conferences } from "../../data/annual-conferences";
 
 export function getStaticPaths() {
@@ -10,7 +11,7 @@ export function getStaticPaths() {
   }));
 }
 
-const { year, status, date, location, theme, intro, talks, color, colorText } = Astro.props;
+const { year, status, date, location, theme, intro, talks, color, colorText, poster } = Astro.props;
 ---
 
 {status === "building" ? (
@@ -37,6 +38,8 @@ const { year, status, date, location, theme, intro, talks, color, colorText } = 
     accent={color}
     accentText={colorText}
   >
+    {poster && <CoursePoster src={poster} alt={`${year}年會海報`} />}
+
     <p class="intro-lead">{intro}</p>
 
     {talks.map((talk: any) => (

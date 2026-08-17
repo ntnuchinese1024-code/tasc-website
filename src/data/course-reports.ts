@@ -8,12 +8,15 @@ export interface CourseReport {
   color: string;
   colorText: string;
   lead: string;
+  /** 課程海報／活動宣傳圖，放在 public/images/courses/ 底下 */
+  poster?: string;
   sections: { heading?: string; paragraphs: string[] }[];
 }
 
 export const courseReports: CourseReport[] = [
   {
     slug: "sex-industry-exploration",
+    poster: "/images/courses/2026-05-03-個案性產業探索.jpg",
     title: "個案・性產業探索──性諮商實務中需面對的真實世界之一",
     date: "2026年5月3日",
     speaker: "CL（金派經紀人）",
@@ -46,6 +49,7 @@ export const courseReports: CourseReport[] = [
   },
   {
     slug: "ethics-ai-salon",
+    poster: "/images/courses/2026-04-19-倫理沙龍.jpg",
     title: "性諮商倫理的藝術與邊界——實務工作者的互動沙龍",
     date: "2026年4月19日",
     speaker: "薛卉芝、李翊平、林榮哲、林沛辰、陳慧珊",
@@ -78,6 +82,7 @@ export const courseReports: CourseReport[] = [
   },
   {
     slug: "desire-mismatch-nlp",
+    poster: "/images/courses/2026-01-11-性需求不同步.jpg",
     title: "你想要、我不想要──當性需求不同步時該怎麼辦",
     date: "2026年1月11日",
     speaker: "許庭韶 心理師／性諮商師",

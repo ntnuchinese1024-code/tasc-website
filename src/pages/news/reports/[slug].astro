@@ -1,5 +1,6 @@
 ---
 import ArticleLayout from "../../../layouts/ArticleLayout.astro";
+import CoursePoster from "../../../components/CoursePoster.astro";
 import { courseReports } from "../../../data/course-reports";
 
 export function getStaticPaths() {
@@ -9,7 +10,7 @@ export function getStaticPaths() {
   }));
 }
 
-const { title, date, speaker, writer, tags, color, colorText, lead, sections } = Astro.props;
+const { title, date, speaker, writer, tags, color, colorText, lead, poster, sections } = Astro.props;
 ---
 
 <ArticleLayout
@@ -21,6 +22,8 @@ const { title, date, speaker, writer, tags, color, colorText, lead, sections } =
   accent={color}
   accentText={colorText}
 >
+  {poster && <CoursePoster src={poster} alt={`${title} 課程海報`} />}
+
   <p class="lead-para">{lead}</p>
   <p class="byline">撰文・{writer}</p>
 

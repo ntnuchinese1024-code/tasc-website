@@ -1,0 +1,104 @@
+---
+/**
+ * 課程海報 / 活動宣傳圖。
+ *
+ * 圖檔放在 public/images/courses/，檔名用「日期-課程簡稱」的格式，
+ * 例如 /images/courses/2026-08-22-夜遊林森北路.jpg。
+ *
+ * 三種用法：
+ *   variant="thumb"   —— 卡片上方的縮圖（會裁切成統一比例，只保留海報上半部的標題區）
+ *   variant="full"    —— 課程頁／報導頁裡的完整海報（不裁切，維持原始比例）
+ *   variant="natural" —— 不裁切、也不限制大小，整張塞滿外層容器（用在窄欄位，例如年會卡片左側）
+ *
+ * linkToFull 會把圖片包成連結、點了開原尺寸圖。
+ * ⚠️ 如果外層卡片本身已經是一個連結（<a class="event-card">），
+ *    要傳 linkToFull={false}，因為 HTML 不允許連結裡面再包連結。
+ */
+interface Props {
+  src: string;
+  alt: string;
+  variant?: "thumb" | "full" | "natural";
+  linkToFull?: boolean;
+}
+
+const { src, alt, variant = "full", linkToFull = variant === "full" } = Astro.props;
+const Wrapper = linkToFull ? "a" : "div";
+const wrapperProps = linkToFull
+  ? { href: src, target: "_blank", rel: "noopener", title: "點圖看原尺寸海報" }
+  : {};
+---
+
+<figure class:list={["poster", `poster-${variant}`]}>
+  <Wrapper class="poster-frame" {...wrapperProps}>
+    <img src={src} alt={alt} loading="lazy" decoding="async" />
+  </Wrapper>
+  {variant === "full" && linkToFull && <figcaption>點圖可看原尺寸海報</figcaption>}
+</figure>
+
+<style>
+  .poster {
+    margin: 0;
+  }
+
+  .poster-frame {
+    display: block;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    line-height: 0;
+  }
+
+  .poster-frame img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* 縮圖：統一 16:10，從頂部開始裁切——海報的標題幾乎都在上方 */
+  .poster-thumb .poster-frame {
+    aspect-ratio: 16 / 10;
+    border: none;
+  }
+
+  .poster-thumb .poster-frame img {
+    object-fit: cover;
+    object-position: center top;
+    transition: transform 0.3s ease;
+  }
+
+  .poster-thumb .poster-frame:hover img {
+    transform: scale(1.03);
+  }
+
+  /* 完整海報：維持原始比例，不裁切 */
+  .poster-full {
+    margin: 0 0 28px;
+  }
+
+  /* 直式海報（A4 比例）如果直接撐滿欄寬會高得誇張，
+     所以用 inline-block 讓外框縮到圖片大小，再同時限制寬與高。 */
+  .poster-full .poster-frame {
+    display: inline-block;
+    max-width: min(34rem, 100%);
+  }
+
+  .poster-full .poster-frame img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 74vh;
+  }
+
+  /* 塞滿容器：由外層決定寬度，圖片維持原始比例 */
+  .poster-natural .poster-frame img {
+    width: 100%;
+    height: auto;
+  }
+
+  .poster-full figcaption {
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    margin-top: 8px;
+  }
+</style>

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHero from "../../components/PageHero.astro";
+import CoursePoster from "../../components/CoursePoster.astro";
 import { wrapHeadingHtml } from "../../lib/wrap-heading";
 
 interface EventItem {
@@ -13,12 +14,15 @@ interface EventItem {
   body: string;
   meta: string;
   href?: string;
+  /** 課程海報，放在 public/images/courses/ 底下；沒有海報就不用寫這一行 */
+  poster?: string;
 }
 
 const upcoming: EventItem[] = [
   {
     date: "9月5日（六）",
     sortKey: "2026-09-05",
+    poster: "/images/courses/2026-09-05-月經平權.jpg",
     tag: "線上講座",
     color: "var(--blue)",
     colorText: "var(--blue-deep)",
@@ -29,6 +33,7 @@ const upcoming: EventItem[] = [
   {
     date: "8月22日（六）",
     sortKey: "2026-08-22",
+    poster: "/images/courses/2026-08-22-夜遊林森北路.jpg",
     tag: "走讀活動",
     color: "var(--red)",
     colorText: "var(--red-deep)",
@@ -39,6 +44,7 @@ const upcoming: EventItem[] = [
   {
     date: "8月16日（日）",
     sortKey: "2026-08-16",
+    poster: "/images/courses/2026-08-16-性別事件行為人.jpg",
     tag: "線上講座",
     color: "var(--green)",
     colorText: "var(--green-deep)",
@@ -53,6 +59,7 @@ const past: EventItem[] = [
   {
     date: "8月15日（六）",
     sortKey: "2026-08-15",
+    poster: "/images/courses/2026-08-15-寄養家庭性議題.jpg",
     tag: "實體工作坊",
     color: "var(--magenta)",
     colorText: "var(--magenta-deep)",
@@ -63,6 +70,7 @@ const past: EventItem[] = [
   {
     date: "8月7日（五）",
     sortKey: "2026-08-07",
+    poster: "/images/courses/2026-08-07-夜遊三流艋舺.jpg",
     tag: "走讀活動",
     color: "var(--orange)",
     colorText: "var(--orange-deep)",
@@ -73,6 +81,7 @@ const past: EventItem[] = [
   {
     date: "6月6日（六）",
     sortKey: "2026-06-06",
+    poster: "/images/annual/2026-年會-性諮商佇台灣.jpg",
     tag: "年度大會",
     color: "var(--blue)",
     colorText: "var(--blue-deep)",
@@ -83,6 +92,7 @@ const past: EventItem[] = [
   {
     date: "5月3日（日）",
     sortKey: "2026-05-03",
+    poster: "/images/courses/2026-05-03-個案性產業探索.jpg",
     tag: "線上講座",
     color: "var(--green)",
     colorText: "var(--green-deep)",
@@ -93,6 +103,7 @@ const past: EventItem[] = [
   {
     date: "4月19日",
     sortKey: "2026-04-19",
+    poster: "/images/courses/2026-04-19-倫理沙龍.jpg",
     tag: "會員限定",
     color: "var(--magenta)",
     colorText: "var(--magenta-deep)",
@@ -103,6 +114,7 @@ const past: EventItem[] = [
   {
     date: "1月11日（日）",
     sortKey: "2026-01-11",
+    poster: "/images/courses/2026-01-11-性需求不同步.jpg",
     tag: "線上講座",
     color: "var(--red)",
     colorText: "var(--red-deep)",
@@ -133,6 +145,9 @@ const past: EventItem[] = [
           const Tag = e.href ? "a" : "article";
           return (
             <Tag class="event-card" href={e.href} style={`--dot: ${e.color}; --dot-text: ${e.colorText}`}>
+              {e.poster && (
+                <CoursePoster src={e.poster} alt={`${e.title} 課程海報`} variant="thumb" linkToFull={!e.href} />
+              )}
               <span class="event-tag">{e.tag}</span>
               <span class="event-date">{e.date}</span>
               <h3 set:html={wrapHeadingHtml(e.title)} />
@@ -152,6 +167,9 @@ const past: EventItem[] = [
       <div class="event-grid">
         {past.map((e) => (
           <article class="event-card is-past" style={`--dot: ${e.color}; --dot-text: ${e.colorText}`}>
+            {e.poster && (
+              <CoursePoster src={e.poster} alt={`${e.title} 課程海報`} variant="thumb" />
+            )}
             <span class="event-tag">{e.tag}</span>
             <span class="event-date">{e.date}</span>
             <h3 set:html={wrapHeadingHtml(e.title)} />

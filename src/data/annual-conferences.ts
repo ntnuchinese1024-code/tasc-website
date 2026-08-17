@@ -15,6 +15,8 @@ export interface ConferenceYear {
   talks: ConferenceTalk[];
   color: string;
   colorText: string;
+  /** 年會海報，放在 public/images/annual/ 底下 */
+  poster?: string;
 }
 
 export const conferences: ConferenceYear[] = [
@@ -32,6 +34,7 @@ export const conferences: ConferenceYear[] = [
   {
     year: 2026,
     status: "past",
+    poster: "/images/annual/2026-年會-性諮商佇台灣.jpg",
     date: "115年6月6日（六）",
     location: "台北市中山區松江路101號4樓（松江南京捷運站4號出口）",
     theme: "性諮商，佇台灣（TĪ TÂI-UÂN）：本土文化中的實務經驗與對話",

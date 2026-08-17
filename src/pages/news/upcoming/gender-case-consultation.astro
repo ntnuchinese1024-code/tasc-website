@@ -2,6 +2,7 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import RegistrationForm from "../../../components/RegistrationForm.astro";
 import PageHero from "../../../components/PageHero.astro";
+import CoursePoster from "../../../components/CoursePoster.astro";
 
 const courseName = "當代性別事件行為人諮商處遇實務經驗分享交流";
 const courseDate = "8月16日（日）13：00－15：00";
@@ -18,6 +19,11 @@ const courseDate = "8月16日（日）13：00－15：00";
   <section class="section">
     <div class="wrap two-col">
       <div class="detail-col">
+        <CoursePoster
+          src="/images/courses/2026-08-16-性別事件行為人.jpg"
+          alt={`${courseName} 課程海報`}
+        />
+
         <h2>課程簡介</h2>
         <p>
           眾多與性相關連的事件與案件當中，偷窺與偷拍一直佔據相當程度的比重，助人工作者面對此一議題的困難是，案件數量不少，對此的了解卻十分有限。我們將在有限的時間內、從助人者的角度、嘗試理解偷窺與偷拍事件以及行為人可能經驗到的內在狀態與歷程，講座目的不在獵奇、不是為了短時間習得介入與處遇的能力，而在嘗試回應聽者提出或未提出的，心中或許存在已久的困惑。

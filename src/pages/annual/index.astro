@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHero from "../../components/PageHero.astro";
+import CoursePoster from "../../components/CoursePoster.astro";
 import { wrapHeadingHtml } from "../../lib/wrap-heading";
 import { conferences } from "../../data/annual-conferences";
 
@@ -33,11 +34,18 @@ const past = conferences.filter((c) => c.status === "past" && c.year !== 2026);
       <div class="wrap">
         <span class="eyebrow">最近一屆</span>
         <a href={`/annual/${featured.year}`} class="featured-card" style={`--dot: ${featured.color}; --dot-text: ${featured.colorText}`}>
-          <span class="featured-year">{featured.year} 年會</span>
-          <h2 set:html={wrapHeadingHtml(featured.theme)} />
-          <p>{featured.intro}</p>
-          <span class="featured-meta">{featured.date}　・　{featured.location}</span>
-          <span class="featured-go">看完整報導 →</span>
+          {featured.poster && (
+            <div class="featured-poster">
+              <CoursePoster src={featured.poster} alt={`${featured.year}年會海報`} variant="natural" linkToFull={false} />
+            </div>
+          )}
+          <div class="featured-text">
+            <span class="featured-year">{featured.year} 年會</span>
+            <h2 set:html={wrapHeadingHtml(featured.theme)} />
+            <p>{featured.intro}</p>
+            <span class="featured-meta">{featured.date}　・　{featured.location}</span>
+            <span class="featured-go">看完整報導 →</span>
+          </div>
         </a>
       </div>
     </section>
@@ -97,7 +105,10 @@ const past = conferences.filter((c) => c.status === "past" && c.year !== 2026);
   }
 
   .featured-card {
-    display: block;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 28px;
+    align-items: start;
     background: color-mix(in srgb, var(--dot) 8%, var(--card));
     border: 1px solid color-mix(in srgb, var(--dot) 30%, var(--line));
     border-radius: 18px;
@@ -109,6 +120,22 @@ const past = conferences.filter((c) => c.status === "past" && c.year !== 2026);
   .featured-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow);
+  }
+
+  /* 沒有海報的年份（例如還沒公告的那一屆）就讓文字佔滿整張卡片 */
+  .featured-card:not(:has(.featured-poster)) {
+    grid-template-columns: 1fr;
+  }
+
+  @media (max-width: 700px) {
+    .featured-card {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .featured-poster {
+      max-width: 240px;
+    }
   }
 
   .featured-year {

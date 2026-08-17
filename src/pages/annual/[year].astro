@@ -2,6 +2,7 @@
 import ArticleLayout from "../../layouts/ArticleLayout.astro";
 import RegistrationForm from "../../components/RegistrationForm.astro";
 import CoursePoster from "../../components/CoursePoster.astro";
+import PhotoGallery from "../../components/PhotoGallery.astro";
 import { conferences } from "../../data/annual-conferences";
 
 export function getStaticPaths() {
@@ -11,7 +12,7 @@ export function getStaticPaths() {
   }));
 }
 
-const { year, status, date, location, theme, intro, talks, color, colorText, poster } = Astro.props;
+const { year, status, date, location, theme, intro, talks, color, colorText, poster, photos = [] } = Astro.props;
 ---
 
 {status === "building" ? (
@@ -52,6 +53,8 @@ const { year, status, date, location, theme, intro, talks, color, colorText, pos
         {talk.paragraphs.map((p: string) => <p>{p}</p>)}
       </>
     ))}
+
+    <PhotoGallery photos={photos} label={`${year}年會`} />
 
     {year === 2026 && (
       <div class="reg-slot">

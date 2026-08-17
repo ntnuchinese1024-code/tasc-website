@@ -24,7 +24,7 @@ interface Props {
 const { src, alt, variant = "full", linkToFull = variant === "full" } = Astro.props;
 const Wrapper = linkToFull ? "a" : "div";
 const wrapperProps = linkToFull
-  ? { href: src, target: "_blank", rel: "noopener", title: "點圖看原尺寸海報" }
+  ? { href: src, target: "_blank", rel: "noopener", title: "點圖看原尺寸圖片" }
   : {};
 ---
 
@@ -32,7 +32,7 @@ const wrapperProps = linkToFull
   <Wrapper class="poster-frame" {...wrapperProps}>
     <img src={src} alt={alt} loading="lazy" decoding="async" />
   </Wrapper>
-  {variant === "full" && linkToFull && <figcaption>點圖可看原尺寸海報</figcaption>}
+  {variant === "full" && linkToFull && <figcaption>點圖可看原尺寸圖片</figcaption>}
 </figure>
 
 <style>

@@ -1,16 +1,19 @@
 ---
 import ArticleLayout from "../../../layouts/ArticleLayout.astro";
 import CoursePoster from "../../../components/CoursePoster.astro";
-import { courseReports } from "../../../data/course-reports";
+import { allCourseReports } from "../../../data/course-reports";
 
 export function getStaticPaths() {
-  return courseReports.map((r) => ({
+  return allCourseReports.map((r) => ({
     params: { slug: r.slug },
     props: r,
   }));
 }
 
-const { title, date, speaker, writer, tags, color, colorText, lead, poster, sections } = Astro.props;
+const { title, date, speaker, writer, tags, color, colorText, lead, poster, images = [], sections } = Astro.props;
+
+// 第一張圖放文章開頭當主視覺，其餘（少數報導有兩張）擺在文末
+const [cover, ...moreImages] = poster ? [poster, ...images] : images;
 ---
 
 <ArticleLayout
@@ -18,14 +21,14 @@ const { title, date, speaker, writer, tags, color, colorText, lead, poster, sect
   eyebrow="課程報導"
   eyebrowHref="/news/reports"
   date={date}
-  meta={[`講師 ${speaker}`]}
+  meta={speaker ? [`講師 ${speaker}`] : []}
   accent={color}
   accentText={colorText}
 >
-  {poster && <CoursePoster src={poster} alt={`${title} 課程海報`} />}
+  {cover && <CoursePoster src={cover} alt={`${title} 課程海報`} />}
 
   <p class="lead-para">{lead}</p>
-  <p class="byline">撰文・{writer}</p>
+  {writer && <p class="byline">撰文・{writer}</p>}
 
   {sections.map((s: { heading?: string; paragraphs: string[] }) => (
     <>
@@ -34,9 +37,15 @@ const { title, date, speaker, writer, tags, color, colorText, lead, poster, sect
     </>
   ))}
 
-  <div class="tag-row">
-    {tags.map((t: string) => <span>#{t}</span>)}
-  </div>
+  {moreImages.map((src: string) => (
+    <CoursePoster src={src} alt={`${title} 活動照片`} />
+  ))}
+
+  {tags && (
+    <div class="tag-row">
+      {tags.map((t: string) => <span>#{t}</span>)}
+    </div>
+  )}
 </ArticleLayout>
 
 <style>

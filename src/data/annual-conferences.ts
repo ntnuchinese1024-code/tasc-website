@@ -17,6 +17,8 @@ export interface ConferenceYear {
   colorText: string;
   /** 年會海報，放在 public/images/annual/ 底下 */
   poster?: string;
+  /** 當天現場照片，放在 public/images/annual/<年份>/ 底下 */
+  photos?: string[];
 }
 
 export const conferences: ConferenceYear[] = [
@@ -130,6 +132,7 @@ export const conferences: ConferenceYear[] = [
   },
   {
     year: 2023,
+    photos: ["/images/annual/2023/2023-01.jpg", "/images/annual/2023/2023-02.jpg", "/images/annual/2023/2023-03.jpg", "/images/annual/2023/2023-04.jpg", "/images/annual/2023/2023-05.jpg", "/images/annual/2023/2023-06.jpg"],
     status: "past",
     date: "112年6月10日（六）",
     location: "新北市新店區馬公公園演藝廳",
@@ -160,6 +163,7 @@ export const conferences: ConferenceYear[] = [
   },
   {
     year: 2022,
+    photos: ["/images/annual/2022/2022-01.jpg", "/images/annual/2022/2022-02.jpg", "/images/annual/2022/2022-03.jpg", "/images/annual/2022/2022-04.jpg", "/images/annual/2022/2022-05.jpg", "/images/annual/2022/2022-06.jpg", "/images/annual/2022/2022-07.jpg", "/images/annual/2022/2022-08.jpg"],
     status: "past",
     date: "111年6月25日（六）",
     location: "線上（ZOOM）",
@@ -202,6 +206,7 @@ export const conferences: ConferenceYear[] = [
   },
   {
     year: 2021,
+    photos: ["/images/annual/2021/2021-01.jpg", "/images/annual/2021/2021-02.jpg", "/images/annual/2021/2021-03.jpg", "/images/annual/2021/2021-04.jpg", "/images/annual/2021/2021-05.jpg", "/images/annual/2021/2021-06.jpg", "/images/annual/2021/2021-07.jpg", "/images/annual/2021/2021-08.jpg"],
     status: "past",
     date: "110年10月23日（六）",
     location: "線上",
@@ -224,6 +229,7 @@ export const conferences: ConferenceYear[] = [
   },
   {
     year: 2020,
+    photos: ["/images/annual/2020/2020-01.jpg", "/images/annual/2020/2020-02.jpg", "/images/annual/2020/2020-03.jpg", "/images/annual/2020/2020-04.jpg"],
     status: "past",
     date: "109年11月28日（六）",
     location: "線上",

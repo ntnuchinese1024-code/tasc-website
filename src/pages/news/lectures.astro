@@ -1,0 +1,257 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import { wrapHeadingHtml } from "../../lib/wrap-heading";
+import { archivedLectures, type ArchivedLecture } from "../../data/lectures-archive";
+
+// 依年份分組，年份新的排前面
+const byYear = new Map<number, ArchivedLecture[]>();
+for (const lecture of archivedLectures) {
+  const year = Number(lecture.sortKey.slice(0, 4));
+  byYear.set(year, [...(byYear.get(year) ?? []), lecture]);
+}
+const years = [...byYear.keys()].sort((a, b) => b - a);
+const posterCount = archivedLectures.reduce((n, l) => n + (l.posters?.length ?? 0), 0);
+---
+
+<BaseLayout
+  title="歷年講座"
+  description="台灣性諮商學會 2018 至 2025 年辦過的推廣課程與工作坊存檔，含當年課程海報。"
+>
+  <PageHero
+    breadcrumb={{ label: "最新消息", href: "/news" }}
+    eyebrow="歷年講座"
+    title="這些年，我們一起上過的課"
+    lead={`從 2018 年到 2025 年，學會辦過的推廣課程與工作坊都收在這裡，共 ${archivedLectures.length} 場、${posterCount} 張當年的課程海報。想看課後的心得側記，請到課程報導。`}
+  >
+    <div class="hero-links">
+      <a href="/news/reports">課程報導 →</a>
+      <a href="/annual">年會專區 →</a>
+    </div>
+  </PageHero>
+
+  <section class="section">
+    <div class="wrap">
+      <nav class="year-nav" aria-label="依年份跳轉">
+        {years.map((y) => <a href={`#y${y}`}>{y}</a>)}
+      </nav>
+    </div>
+  </section>
+
+  {years.map((year) => (
+    <section class="section year-section" id={`y${year}`}>
+      <div class="wrap">
+        <h2 class="year-title">
+          {year}
+          <span>{byYear.get(year)!.length} 場</span>
+        </h2>
+        <div class="lecture-list">
+          {byYear.get(year)!.map((l) => (
+            <article class="lecture">
+              <div class="lecture-posters">
+                {l.posters?.map((src, i) => (
+                  <a href={src} target="_blank" rel="noopener" title="點圖看原尺寸海報">
+                    <img src={src} alt={`${l.title ?? l.date}課程海報 ${i + 1}`} loading="lazy" decoding="async" />
+                  </a>
+                ))}
+              </div>
+              <div class="lecture-body">
+                <time>{l.date}</time>
+                {l.title ? (
+                  <h3 set:html={wrapHeadingHtml(l.title)} />
+                ) : (
+                  <p class="no-title">課程名稱請見左方海報</p>
+                )}
+                {l.speaker && <p class="lecture-speaker">講師・{l.speaker}</p>}
+                {l.summary && <p class="lecture-summary">{l.summary}</p>}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <section class="section">
+    <div class="wrap">
+      <p class="foot-note">
+        本頁內容整理自學會舊網站的「歷年講座」頁。2018 至 2020 年的幾場課程，
+        當年只把課程名稱做在海報圖片上、內文沒有另外打字，這裡就保留海報原圖，沒有另外替它們補標題。
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero-links {
+    display: flex;
+    gap: 16px;
+  }
+
+  .hero-links a {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    text-decoration: none;
+  }
+
+  .hero-links a:hover {
+    text-decoration: underline;
+  }
+
+  .section {
+    padding: 20px 0;
+  }
+
+  .year-section {
+    padding: 28px 0;
+    scroll-margin-top: 80px;
+  }
+
+  .year-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 24px;
+  }
+
+  .year-nav a {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    background: color-mix(in srgb, var(--blue) 10%, var(--card));
+    border-radius: 999px;
+    padding: 4px 14px;
+    text-decoration: none;
+  }
+
+  .year-nav a:hover {
+    background: color-mix(in srgb, var(--blue) 22%, var(--card));
+  }
+
+  .year-title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 1.45rem;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .year-title span {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--ink-faint);
+  }
+
+  .lecture-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .lecture {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 20px;
+    align-items: start;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+
+  /* 沒有海報的場次就讓文字佔滿整張卡片 */
+  .lecture:not(:has(.lecture-posters a)) {
+    grid-template-columns: 1fr;
+  }
+
+  .lecture:not(:has(.lecture-posters a)) .lecture-posters {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    .lecture {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+  }
+
+  .lecture-posters {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lecture-posters a {
+    display: block;
+    line-height: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+
+  .lecture-posters img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .lecture-posters a:hover img {
+    transform: scale(1.03);
+  }
+
+  @media (max-width: 640px) {
+    .lecture-posters {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    .lecture-posters a {
+      max-width: 180px;
+    }
+  }
+
+  .lecture-body time {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+
+  .lecture-body h3 {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  .no-title {
+    font-size: 0.92rem;
+    color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+
+  .lecture-speaker {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    margin: 0 0 6px;
+  }
+
+  .lecture-summary {
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+    line-height: 1.75;
+    margin: 0;
+  }
+
+  .foot-note {
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    line-height: 1.8;
+    padding-bottom: 40px;
+  }
+</style>

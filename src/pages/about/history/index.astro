@@ -1,0 +1,141 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHero from "../../../components/PageHero.astro";
+import { wrapHeadingHtml } from "../../../lib/wrap-heading";
+import { chairInterviews } from "../../../data/chair-interviews";
+
+const accents = ["red", "blue", "green", "magenta"];
+---
+
+<BaseLayout
+  title="學會歷史・歷屆理事長專訪"
+  description="溯源計畫：台灣性諮商學會歷屆理事長專訪，從 2013 年創會走到今天。"
+>
+  <PageHero
+    breadcrumb={{ label: "關於我們", href: "/about" }}
+    eyebrow="溯源計畫"
+    title="學會是怎麼一路長成今天這樣的"
+    lead="我們邀請歷屆理事長回顧自己任內的處境與抉擇——創會的初衷、制度從無到有的摸索、專業如何一步步站穩。這是一份由當事人親口說出來的學會歷史。"
+  />
+
+  <section class="section">
+    <div class="wrap">
+      <div class="chair-grid">
+        {chairInterviews.map((c, i) => (
+          <a
+            href={`/about/history/${c.slug}`}
+            class="chair-card"
+            style={`--dot: var(--${accents[i % accents.length]}); --dot-text: var(--${accents[i % accents.length]}-deep)`}
+          >
+            <img src={c.image} alt={`${c.role} ${c.person} 專訪`} loading="lazy" decoding="async" />
+            <div class="chair-body">
+              <span class="chair-role">{c.role}</span>
+              <span class="chair-person">{c.person}</span>
+              {c.term && <span class="chair-term">{c.term}</span>}
+              <h2 set:html={wrapHeadingHtml(c.title)} />
+              <span class="chair-go">讀這篇專訪 →</span>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <p class="foot-note">
+        專訪內容取自學會「溯源計畫」系列報導。歷屆理監事完整名冊請見
+        <a href="/about/board">歷屆理監事</a>。
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .section {
+    padding: 44px 0 56px;
+  }
+
+  .chair-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+  }
+
+  @media (max-width: 760px) {
+    .chair-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .chair-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--dot);
+    border-radius: 14px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .chair-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .chair-card img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+
+  .chair-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px 22px 22px;
+  }
+
+  .chair-role {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--dot-text);
+    letter-spacing: 0.04em;
+  }
+
+  .chair-person {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .chair-term {
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+  }
+
+  .chair-card h2 {
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    font-weight: 400;
+    margin: 6px 0 12px;
+  }
+
+  .chair-go {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--dot-text);
+    margin-top: auto;
+  }
+
+  .foot-note {
+    margin-top: 28px;
+    font-size: 0.84rem;
+    color: var(--ink-faint);
+  }
+
+  .foot-note a {
+    color: var(--blue-deep);
+    font-weight: 700;
+  }
+</style>

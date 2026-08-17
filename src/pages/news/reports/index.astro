@@ -3,42 +3,124 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHero from "../../../components/PageHero.astro";
 import CoursePoster from "../../../components/CoursePoster.astro";
 import { wrapHeadingHtml } from "../../../lib/wrap-heading";
-import { courseReports } from "../../../data/course-reports";
+import { allCourseReports, reportYear, type CourseReport } from "../../../data/course-reports";
+
+// 依年份分組，年份新的排前面
+const byYear = new Map<number, CourseReport[]>();
+for (const report of allCourseReports) {
+  const year = reportYear(report);
+  byYear.set(year, [...(byYear.get(year) ?? []), report]);
+}
+const years = [...byYear.keys()].sort((a, b) => b - a);
 ---
 
-<BaseLayout title="課程報導" description="台灣性諮商學會已開設課程的課後報導與側記。">
+<BaseLayout title="課程報導" description="台灣性諮商學會歷年課程的課後報導與側記，2020 年至今。">
   <PageHero
     breadcrumb={{ label: "最新消息", href: "/news" }}
     eyebrow="課程報導"
     title="上完課之後，我們寫下了這些"
-    lead="每場課程結束後，由參與的心理師撰寫課後側記，記錄講座中的核心觀點與現場的真實回饋。"
-  />
+    lead="每場課程結束後，由參與的心理師撰寫課後側記，記錄講座中的核心觀點與現場的真實回饋。這裡收錄 2020 年至今的每一篇。"
+  >
+    <p class="hero-link"><a href="/news/lectures">想看當年的課程海報？請見歷年講座 →</a></p>
+    <nav class="year-nav" aria-label="依年份跳轉">
+      {years.map((y) => <a href={`#y${y}`}>{y}</a>)}
+    </nav>
+  </PageHero>
 
-  <section class="section">
-    <div class="wrap">
-      <div class="report-grid">
-        {courseReports.map((r) => (
-          <a href={`/news/reports/${r.slug}`} class="report-card" style={`--dot: ${r.color}; --dot-text: ${r.colorText}`}>
-            {r.poster && (
-              <CoursePoster src={r.poster} alt={`${r.title} 課程海報`} variant="thumb" linkToFull={false} />
-            )}
-            <time>{r.date}</time>
-            <h2 set:html={wrapHeadingHtml(r.title)} />
-            <p>{r.lead}</p>
-            <div class="report-tags">
-              {r.tags.map((t) => <span>#{t}</span>)}
-            </div>
-          </a>
-        ))}
+  {years.map((year) => (
+    <section class="section" id={`y${year}`}>
+      <div class="wrap">
+        <h2 class="year-title">
+          {year}
+          <span>{byYear.get(year)!.length} 篇</span>
+        </h2>
+        <div class="report-grid">
+          {byYear.get(year)!.map((r) => {
+            const cover = r.poster ?? r.images?.[0];
+            return (
+              <a href={`/news/reports/${r.slug}`} class="report-card" style={`--dot: ${r.color}; --dot-text: ${r.colorText}`}>
+                {cover && (
+                  <CoursePoster src={cover} alt={`${r.title} 課程海報`} variant="thumb" linkToFull={false} />
+                )}
+                <time>{r.date}</time>
+                <h3 set:html={wrapHeadingHtml(r.title)} />
+                <p>{r.lead}</p>
+                <div class="report-foot">
+                  {r.speaker && <span class="report-speaker">講師・{r.speaker}</span>}
+                  {r.tags && (
+                    <div class="report-tags">
+                      {r.tags.map((t) => <span>#{t}</span>)}
+                    </div>
+                  )}
+                </div>
+              </a>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  ))}
 </BaseLayout>
 
 <style>
+  .hero-link {
+    margin: 0 0 12px;
+  }
+
+  .hero-link a {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    text-decoration: none;
+  }
+
+  .hero-link a:hover {
+    text-decoration: underline;
+  }
+
+  .year-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .year-nav a {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    background: color-mix(in srgb, var(--blue) 10%, var(--card));
+    border-radius: 999px;
+    padding: 4px 14px;
+    text-decoration: none;
+  }
+
+  .year-nav a:hover {
+    background: color-mix(in srgb, var(--blue) 22%, var(--card));
+  }
 
   .section {
-    padding: 44px 0 56px;
+    padding: 36px 0;
+    scroll-margin-top: 80px;
+  }
+
+  .section:last-of-type {
+    padding-bottom: 56px;
+  }
+
+  .year-title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 1.45rem;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .year-title span {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--ink-faint);
   }
 
   .report-grid {
@@ -77,7 +159,7 @@ import { courseReports } from "../../../data/course-reports";
     font-weight: 700;
   }
 
-  .report-card h2 {
+  .report-card h3 {
     font-size: 1.05rem;
     line-height: 1.55;
   }
@@ -87,14 +169,30 @@ import { courseReports } from "../../../data/course-reports";
     color: var(--ink-soft);
     line-height: 1.7;
     margin: 0;
+    /* 舊報導的開場白長短差很多，統一截到四行，卡片才不會忽高忽低 */
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .report-foot {
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  .report-speaker {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--dot-text);
+    font-weight: 700;
   }
 
   .report-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: auto;
-    padding-top: 10px;
+    margin-top: 8px;
   }
 
   .report-tags span {

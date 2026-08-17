@@ -1,15 +1,20 @@
+import { archiveReports } from "./course-reports-archive";
+
 export interface CourseReport {
   slug: string;
   title: string;
   date: string;
   speaker: string;
   writer: string;
-  tags: string[];
+  /** 主題標籤，舊報導多半沒有，可以不寫 */
+  tags?: string[];
   color: string;
   colorText: string;
   lead: string;
   /** 課程海報／活動宣傳圖，放在 public/images/courses/ 底下 */
   poster?: string;
+  /** 一篇報導有多張圖時用這個：第一張放在文章開頭，其餘放在文末 */
+  images?: string[];
   sections: { heading?: string; paragraphs: string[] }[];
 }
 
@@ -135,6 +140,14 @@ export const courseReports: CourseReport[] = [
   },
 ];
 
+/** 當年度報導（courseReports）＋ 歷年報導（archiveReports），新的排前面 */
+export const allCourseReports: CourseReport[] = [...courseReports, ...archiveReports];
+
 export function getCourseReport(slug: string) {
-  return courseReports.find((r) => r.slug === slug);
+  return allCourseReports.find((r) => r.slug === slug);
+}
+
+/** 報導年份，用來在列表頁分組 */
+export function reportYear(report: CourseReport) {
+  return Number(report.date.slice(0, 4));
 }

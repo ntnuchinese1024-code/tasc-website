@@ -1,0 +1,100 @@
+---
+import ArticleLayout from "../../../layouts/ArticleLayout.astro";
+import CoursePoster from "../../../components/CoursePoster.astro";
+import { chairInterviews } from "../../../data/chair-interviews";
+
+const accents = ["red", "blue", "green", "magenta"];
+
+export function getStaticPaths() {
+  const palette = ["red", "blue", "green", "magenta"];
+  return chairInterviews.map((c, i) => ({
+    params: { slug: c.slug },
+    props: { ...c, accent: palette[i % palette.length] },
+  }));
+}
+
+const { role, person, term, title, image, lead, sections, accent } = Astro.props;
+---
+
+<ArticleLayout
+  title={title}
+  eyebrow="溯源計畫・歷屆理事長專訪"
+  eyebrowHref="/about/history"
+  date={term || undefined}
+  meta={[`${role}　${person}`]}
+  accent={`var(--${accent})`}
+  accentText={`var(--${accent}-deep)`}
+>
+  <CoursePoster src={image} alt={`${role} ${person} 專訪`} />
+
+  <p class="lead-para">{lead}</p>
+
+  {sections.map((s: { heading?: string; paragraphs: string[] }) => (
+    <>
+      {s.heading && <h2>{s.heading}</h2>}
+      {s.paragraphs.map((p: string) => <p>{p}</p>)}
+    </>
+  ))}
+
+  <div class="series-foot">
+    <span>溯源計畫・其他篇章</span>
+    <div class="series-links">
+      {chairInterviews.map((c, i) => (
+        <a
+          href={`/about/history/${c.slug}`}
+          class:list={["series-link", { "is-current": c.role === role }]}
+          style={`--dot-text: var(--${accents[i % accents.length]}-deep)`}
+        >
+          {c.role}・{c.person.split(" ")[0]}
+        </a>
+      ))}
+    </div>
+  </div>
+</ArticleLayout>
+
+<style>
+  .lead-para {
+    font-size: 1.08rem !important;
+    color: var(--ink) !important;
+    font-weight: 600;
+  }
+
+  .series-foot {
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .series-foot > span {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+
+  .series-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .series-link {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--dot-text);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 14px;
+    text-decoration: none;
+  }
+
+  .series-link:hover {
+    border-color: currentColor;
+  }
+
+  .series-link.is-current {
+    background: var(--bg-alt);
+    color: var(--ink-faint);
+    pointer-events: none;
+  }
+</style>

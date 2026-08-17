@@ -1,0 +1,138 @@
+---
+/**
+ * 檔案下載卡片（入會申請書、法規全文等）。
+ *
+ * 檔案本身放在 public/downloads/ 底下，href 從 /downloads/ 開始寫。
+ * size 請填實際檔案大小（在終端機用 `ls -lh public/downloads/` 看得到），
+ * 讓訪客點下去之前就知道要下載多大的東西。
+ */
+interface Props {
+  href: string;
+  /** 檔案在畫面上顯示的名稱 */
+  name: string;
+  /** 副檔名標籤，例如 PDF */
+  format: string;
+  /** 檔案大小，例如 98 KB */
+  size?: string;
+  /** 補充說明，例如表格版本或適用對象 */
+  note?: string;
+  /** 想換一個主色時傳入，例如 var(--red) */
+  accent?: string;
+}
+
+const { href, name, format, size, note, accent = "var(--blue)" } = Astro.props;
+const accentText = accent.replace(")", "-deep)");
+---
+
+<a
+  class="file-download"
+  href={href}
+  download
+  style={`--dot: ${accent}; --dot-text: ${accentText}`}
+>
+  <span class="file-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v12" />
+      <path d="M7 12l5 5 5-5" />
+      <path d="M4 20h16" />
+    </svg>
+  </span>
+  <span class="file-text">
+    <span class="file-name">{name}</span>
+    <span class="file-meta">
+      <span class="file-format">{format}</span>
+      {size && <span>{size}</span>}
+      {note && <span class="file-note">{note}</span>}
+    </span>
+  </span>
+  <span class="file-action">下載</span>
+</a>
+
+<style>
+  .file-download {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--card);
+    border: 1px solid color-mix(in srgb, var(--dot) 35%, var(--line));
+    border-left: 4px solid var(--dot);
+    border-radius: 12px;
+    padding: 16px 20px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .file-download:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .file-icon {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--dot) 14%, var(--card));
+    color: var(--dot-text);
+  }
+
+  .file-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .file-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .file-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .file-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+  }
+
+  .file-format {
+    font-weight: 700;
+    color: var(--dot-text);
+    letter-spacing: 0.04em;
+  }
+
+  .file-action {
+    margin-left: auto;
+    flex: 0 0 auto;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--dot-text);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 520px) {
+    .file-download {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .file-note {
+      width: 100%;
+    }
+
+    .file-action {
+      margin-left: 56px;
+    }
+  }
+</style>

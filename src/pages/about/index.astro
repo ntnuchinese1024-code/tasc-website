@@ -117,8 +117,9 @@ const charterChapters = [
   </nav>
 
   <section id="belief" class="section">
-    <div class="wrap prose">
+    <div class="wrap prose-cols">
       <h2>創會理念</h2>
+      <div class="prose">
       <p>
         2013年，一群盡力投入面對性議題的心理師，希望能集結關心性議題的助人工作者，一起持續關注與投入性的領域，建構適合台灣本土文化與制度的性諮商工作。
       </p>
@@ -129,6 +130,7 @@ const charterChapters = [
         而性諮商專業發展，最重要的核心目的，是為了能藉由性諮商專業的觸角，支持在性上面受苦的人們，因此，更希望藉由性諮商學會集結眾人的力量，能為台灣社會推動平權盡一份心力。
       </p>
       <p>這是台灣性諮商學會創會會員的理念，至今我們仍持續的前進著，而對於未來我們有更多的盼望。</p>
+      </div>
     </div>
   </section>
 
@@ -274,8 +276,29 @@ const charterChapters = [
     margin-bottom: 20px;
   }
 
+  /* 標題放左欄、內文放右欄。原本內文卡在 62ch（約 595px），
+     右邊會空掉快一半的版面，看起來像整段擠在左側。 */
+  .prose-cols {
+    display: grid;
+    grid-template-columns: 13rem 1fr;
+    gap: 16px 48px;
+    align-items: start;
+  }
+
+  .prose-cols > h2 {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 860px) {
+    .prose-cols {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .prose p {
-    max-width: 62ch;
+    /* em 在中文字型下約等於一個字寬，44em 就是一行大約 44 個中文字——
+       再長讀起來會找不到下一行的開頭 */
+    max-width: 44em;
     color: var(--ink-soft);
     margin: 0 0 16px;
   }

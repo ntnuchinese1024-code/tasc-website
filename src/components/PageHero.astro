@@ -1,5 +1,6 @@
 ---
 import { wrapHeadingHtml } from "../lib/wrap-heading";
+import FigureRing from "./decor/FigureRing.astro";
 
 interface Props {
   eyebrow: string;
@@ -10,13 +11,16 @@ interface Props {
   lead?: string;
   /** true if `title` already contains HTML (e.g. pre-wrapped) */
   titleIsHtml?: boolean;
+  /** 標題右邊那塊空白要不要放標誌延伸出來的三人環線稿；長標題的頁面可以關掉 */
+  decor?: boolean;
 }
 
-const { eyebrow, eyebrowHref, breadcrumb, title, lead, titleIsHtml = false } = Astro.props;
+const { eyebrow, eyebrowHref, breadcrumb, title, lead, titleIsHtml = false, decor = true } = Astro.props;
 ---
 
 <header class="page-hero">
-  <div class="wrap">
+  {decor && <FigureRing class="decor-layer hero-ring" variant="outline" />}
+  <div class="wrap decor-above">
     {breadcrumb ? (
       <span class="eyebrow hero-eyebrow">
         <a href={breadcrumb.href}>{breadcrumb.label}</a> · {eyebrow}
@@ -40,9 +44,45 @@ const { eyebrow, eyebrowHref, breadcrumb, title, lead, titleIsHtml = false } = A
 
 <style>
   .page-hero {
+    position: relative;
+    overflow: hidden;
     background: var(--bg-alt);
     padding: 48px 0 40px;
     border-bottom: 1px solid var(--line);
+  }
+
+  /* 標題最寬 46rem，內容區最寬 1080px，所以寬螢幕上右邊固定有一塊空白，
+     三人環就放在那裡。故意讓它超出右緣一點，看起來像延伸出去而不是被塞進角落。 */
+  .page-hero :global(.hero-ring) {
+    width: 190px;
+    height: 190px;
+    top: 50%;
+    transform: translateY(-50%);
+    /* 右緣對齊內容欄（最寬 1080px、左右各留 32px）的右邊界，
+       這樣它看起來是版面的一部分，不是隨便貼在角落 */
+    right: max(24px, calc(50% - 540px + 32px));
+    opacity: 0.4;
+  }
+
+  @media (max-width: 1100px) {
+    /* 空間不夠時縮小、往外推，避免壓到標題 */
+    .page-hero :global(.hero-ring) {
+      width: 150px;
+      height: 150px;
+      right: -34px;
+      opacity: 0.3;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .page-hero :global(.hero-ring) {
+      width: 150px;
+      height: 150px;
+      top: -28px;
+      right: -46px;
+      transform: none;
+      opacity: 0.32;
+    }
   }
 
   .hero-eyebrow {

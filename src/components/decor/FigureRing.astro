@@ -1,0 +1,90 @@
+---
+/*
+  三人環（學會標誌的核心圖形）。
+
+  幾何是從 public/logo.png 的像素直接量出來的，不是目測：三個人形的頭分別
+  落在 252°／2.5°／130°（0° = 三點鐘方向、順時針為正），每個人形的「手臂」
+  是一段約 150° 的圓弧，頭剛好坐在弧的中點外側。因為原始 PNG 只有 100×97px，
+  放大就糊，所以大尺寸裝飾一律用這支手繪 SVG，真正代表品牌的標誌還是
+  Logo.astro 裡的 logo.png。
+
+  紅／藍／黃三色是環上真的有的三個人形；綠色在原標誌裡只出現在 TASC 的 C，
+  所以這裡刻意不畫第四個人形（舊版 LogoRingDecoration 畫四個是不準的）。
+
+  手臂用「中間粗、兩端收尖」的填色形狀而不是等粗的線，因為三段弧加起來
+  超過 360°、彼此有重疊，等粗的話整圈會糊成一個實心圓環，看不出是三個人。
+*/
+interface Props {
+  class?: string;
+  /** solid：跟標誌一樣的實心筆畫。outline：細線版，安靜到可以墊在文字後面。 */
+  variant?: "solid" | "outline";
+  /** 只畫手臂、不畫頭，用在需要更抽象的背景時 */
+  headless?: boolean;
+}
+const { class: className = "", variant = "solid", headless = false } = Astro.props;
+
+const CX = 50;
+const CY = 50;
+const R = 37;
+const HEAD_R_CENTER = 40;
+
+function point(r: number, deg: number) {
+  const rad = (deg * Math.PI) / 180;
+  return [CX + r * Math.cos(rad), CY + r * Math.sin(rad)];
+}
+
+/** 中間最粗、兩端收尖的弧形（手臂）。用取樣點畫出來，48 段在放大後也看不出折角。 */
+function taperedArm(start: number, span: number, maxWidth: number) {
+  const STEPS = 48;
+  const outer: string[] = [];
+  const inner: string[] = [];
+  for (let i = 0; i <= STEPS; i++) {
+    const s = i / STEPS;
+    const angle = start + span * s;
+    const w = maxWidth * (0.18 + 0.82 * Math.pow(Math.sin(Math.PI * s), 0.55));
+    const [ox, oy] = point(R + w / 2, angle);
+    const [ix, iy] = point(R - w / 2, angle);
+    outer.push(`${ox.toFixed(2)} ${oy.toFixed(2)}`);
+    inner.push(`${ix.toFixed(2)} ${iy.toFixed(2)}`);
+  }
+  return `M ${outer.join(" L ")} L ${inner.reverse().join(" L ")} Z`;
+}
+
+/** 量到的三個人形：起始角、弧長、顏色 */
+const figures = [
+  { color: "var(--gold)", start: 47, span: 153 },
+  { color: "var(--red)", start: 174, span: 156 },
+  { color: "var(--blue)", start: 299, span: 142 },
+].map((f) => {
+  const [hx, hy] = point(HEAD_R_CENTER, f.start + f.span / 2);
+  return { ...f, hx, hy };
+});
+
+const isOutline = variant === "outline";
+const armWidth = isOutline ? 2.4 : 8.5;
+const headRadius = isOutline ? 7.2 : 9;
+---
+
+<svg class={className} viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false">
+  {figures.map((f) => (
+    <g>
+      {isOutline ? (
+        <path
+          d={`M ${point(R, f.start)[0].toFixed(2)} ${point(R, f.start)[1].toFixed(2)} A ${R} ${R} 0 0 1 ${point(R, f.start + f.span)[0].toFixed(2)} ${point(R, f.start + f.span)[1].toFixed(2)}`}
+          stroke={f.color}
+          stroke-width={armWidth}
+          stroke-linecap="round"
+        />
+      ) : (
+        <path d={taperedArm(f.start, f.span, armWidth)} fill={f.color} />
+      )}
+      {!headless && (
+        isOutline ? (
+          <circle cx={f.hx.toFixed(2)} cy={f.hy.toFixed(2)} r={headRadius} stroke={f.color} stroke-width={armWidth} />
+        ) : (
+          <circle cx={f.hx.toFixed(2)} cy={f.hy.toFixed(2)} r={headRadius} fill={f.color} />
+        )
+      )}
+    </g>
+  ))}
+</svg>

@@ -1,0 +1,54 @@
+---
+/*
+  同心弧線場：標誌那個環的「回音」，一圈一圈細線加上小圓點（人形的頭），
+  用學會的四個顏色。專門拿來墊在大面積留白的背景（hero 角落、區塊底色），
+  線很細、透明度很低，不會跟文字搶。
+*/
+interface Props {
+  class?: string;
+  /** 線條粗細 */
+  weight?: number;
+}
+const { class: className = "", weight = 2 } = Astro.props;
+
+const CX = 100;
+const CY = 100;
+
+/** 極座標轉點；0° = 三點鐘方向，順時針為正（跟 SVG 的 y 軸向下一致） */
+function point(r: number, deg: number) {
+  const rad = (deg * Math.PI) / 180;
+  return [CX + r * Math.cos(rad), CY + r * Math.sin(rad)];
+}
+
+function arcPath(r: number, start: number, span: number) {
+  const [x1, y1] = point(r, start);
+  const [x2, y2] = point(r, start + span);
+  const largeArc = span > 180 ? 1 : 0;
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+}
+
+/* 每一圈的起點刻意錯開，讓缺口不會排在同一條線上 */
+const rings = [
+  { r: 94, start: 196, span: 152, color: "var(--gold)" },
+  { r: 78, start: 318, span: 148, color: "var(--red)" },
+  { r: 62, start: 84, span: 150, color: "var(--blue)" },
+  { r: 46, start: 214, span: 126, color: "var(--green)" },
+];
+---
+
+<svg class={className} viewBox="0 0 200 200" fill="none" aria-hidden="true" focusable="false">
+  {rings.map((ring) => {
+    const [hx, hy] = point(ring.r, ring.start + ring.span / 2);
+    return (
+      <g>
+        <path
+          d={arcPath(ring.r, ring.start, ring.span)}
+          stroke={ring.color}
+          stroke-width={weight}
+          stroke-linecap="round"
+        />
+        <circle cx={hx.toFixed(2)} cy={hy.toFixed(2)} r={weight * 1.9} fill={ring.color} />
+      </g>
+    );
+  })}
+</svg>

@@ -1,0 +1,37 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import FigureRing from "../components/decor/FigureRing.astro";
+import FigureFrieze from "../components/decor/FigureFrieze.astro";
+import ArcField from "../components/decor/ArcField.astro";
+import FigureMark from "../components/decor/FigureMark.astro";
+---
+<BaseLayout title="裝飾元件預覽">
+  <div class="wrap" style="padding:40px 24px; display:grid; gap:40px;">
+    <div style="display:flex; gap:32px; align-items:flex-start; background:var(--bg-alt); padding:24px;">
+      <FigureRing class="a" />
+      <FigureRing class="a" variant="outline" />
+      <FigureRing class="a" headless />
+      <img src="/logo.png" width="200" />
+    </div>
+    <div style="background:#fff; padding:24px;">
+      <FigureFrieze />
+      <div style="height:20px"></div>
+      <FigureFrieze scale={1.8} />
+      <div style="height:20px"></div>
+      <div style="opacity:.28"><FigureFrieze scale={2.6} /></div>
+    </div>
+    <div style="display:flex; gap:32px; background:var(--bg-alt); padding:24px;">
+      <ArcField class="a" />
+      <div style="opacity:.3"><ArcField class="a" weight={3} /></div>
+    </div>
+    <div style="display:flex; gap:24px; align-items:flex-end; background:#fff; padding:24px;">
+      <FigureMark style="width:120px" color="var(--red)" />
+      <FigureMark style="width:160px" color="var(--blue)" />
+      <FigureMark style="width:100px" color="var(--gold)" />
+      <FigureMark style="width:120px" color="var(--green)" outline />
+    </div>
+  </div>
+  <style>
+    .a { width: 220px; height: 220px; }
+  </style>
+</BaseLayout>

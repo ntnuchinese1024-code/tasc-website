@@ -115,3 +115,27 @@ img, svg {
   border: 1.5px solid var(--ink);
   color: var(--ink);
 }
+
+/* ---- 裝飾圖層 -------------------------------------------------------------
+   從標誌延伸出來的 SVG 裝飾（三人環 FigureRing、人形橫帶 FigureFrieze、
+   弧線場 ArcField）統一掛這個類別墊在內容底下：不吃滑鼠事件、不會被選取、
+   列印時不印。實際的位置與大小由各頁自己的樣式決定。 */
+.decor-layer {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 裝飾層是 position:absolute，所以每個放裝飾的區塊要自己開 relative；
+   內容則統一用這個類別浮到裝飾上面。 */
+.decor-above {
+  position: relative;
+  z-index: 1;
+}
+
+@media print {
+  .decor-layer {
+    display: none;
+  }
+}

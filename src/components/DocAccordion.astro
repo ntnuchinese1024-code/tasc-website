@@ -7,11 +7,33 @@
  * 編號後面若接一個短標題加全形冒號（例如「一、公共政策：」），
  * 那個短標題會自動變粗，方便一眼掃過去找到要看的那一條。
  */
+/** 一條條文，底下可以再帶原文沒有編號的小點 */
+export interface Clause {
+  text: string;
+  subItems?: string[];
+}
+
+/** 一個小標底下的內容（倫理守則那種三層結構用的） */
+export interface Group {
+  heading?: string;
+  lead?: string;
+  paragraphs?: string[];
+  items?: Clause[];
+  footnote?: string;
+}
+
 interface Section {
   title: string;
   color: string;
   colorText: string;
-  paragraphs: string[];
+  /** 認證辦法、換證辦法這種「一章就是一串條文」的寫法 */
+  paragraphs?: string[];
+  /** 章開頭的引言 */
+  lead?: string;
+  /** 章層級就有的編號條文 */
+  items?: Clause[];
+  /** 章底下還要再分小標時用這個（倫理守則） */
+  groups?: Group[];
 }
 
 interface Props {
@@ -45,7 +67,19 @@ function parseParagraph(raw: string) {
   return { num, label, text: rest };
 }
 
-const parsed = sections.map((s) => ({ ...s, items: s.paragraphs.map(parseParagraph) }));
+const CN = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
+            "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十"];
+const cn = (i: number) => CN[i] ?? String(i + 1);
+
+const parsed = sections.map((s) => {
+  const paras = (s.paragraphs ?? []).map(parseParagraph);
+  // 摘要列上顯示的數量：有條文就算條文，否則算段落
+  const clauseCount =
+    (s.items?.length ?? 0) +
+    (s.groups ?? []).reduce((n, g) => n + (g.items?.length ?? 0) + (g.paragraphs?.length ?? 0), 0) +
+    paras.length;
+  return { ...s, paras, clauseCount };
+});
 ---
 
 <div class="doc-layout" data-doc>
@@ -75,16 +109,62 @@ const parsed = sections.map((s) => ({ ...s, items: s.paragraphs.map(parseParagra
         <summary>
           <span class="chapter-dot"></span>
           <span class="chapter-title">{section.title}</span>
-          <span class="chapter-count">{section.items.length} 段</span>
+          <span class="chapter-count">{section.clauseCount} 條</span>
         </summary>
         <div class="doc-body">
-          {section.items.map((item) => (
+          {section.lead && <p class="doc-lead">{section.lead}</p>}
+
+          {section.items && (
+            <ol class="clause-list">
+              {section.items.map((c, n) => (
+                <li class="clause">
+                  <span class="para-num">{cn(n)}</span>
+                  <div class="clause-text">
+                    <p>{c.text}</p>
+                    {c.subItems && (
+                      <ul class="sub-list">
+                        {c.subItems.map((sub) => <li>{sub}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+
+          {section.paras.map((item) => (
             <p class:list={["doc-para", { "has-num": item.num }]}>
               {item.num && <span class="para-num">{item.num}</span>}
               <span class="para-text">
                 {item.label && <strong>{item.label}</strong>}{item.text}
               </span>
             </p>
+          ))}
+
+          {section.groups?.map((g) => (
+            <section class="doc-group">
+              {g.heading && <h3 class="doc-subhead">{g.heading}</h3>}
+              {g.lead && <p class="doc-lead">{g.lead}</p>}
+              {g.paragraphs?.map((t) => <p class="doc-para"><span class="para-text">{t}</span></p>)}
+              {g.items && (
+                <ol class="clause-list">
+                  {g.items.map((c, n) => (
+                    <li class="clause">
+                      <span class="para-num">{cn(n)}</span>
+                      <div class="clause-text">
+                        <p>{c.text}</p>
+                        {c.subItems && (
+                          <ul class="sub-list">
+                            {c.subItems.map((sub) => <li>{sub}</li>)}
+                          </ul>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+              {g.footnote && <p class="doc-footnote">{g.footnote}</p>}
+            </section>
           ))}
         </div>
       </details>
@@ -268,7 +348,9 @@ const parsed = sections.map((s) => ({ ...s, items: s.paragraphs.map(parseParagra
   /* 有編號的條文，編號掛在左邊，內文對齊成一直線 */
   .para-num {
     flex: none;
-    width: 1.9em;
+    /* 用 min-width 而不是固定寬度，「十一」這種兩個字的編號才不會被擠成兩行 */
+    min-width: 1.9em;
+    padding: 0 0.35em;
     text-align: center;
     font-family: var(--font-display);
     font-weight: 700;
@@ -293,6 +375,102 @@ const parsed = sections.map((s) => ({ ...s, items: s.paragraphs.map(parseParagra
   /* 沒有編號的段落不用留左邊的位置 */
   .doc-para:not(.has-num) {
     padding-left: 0;
+  }
+
+  /* ---- 小標（倫理守則的「一、公共政策」「原則三　服務對象的福祉」） ---- */
+  .doc-group + .doc-group {
+    margin-top: 30px;
+  }
+
+  .doc-subhead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--chapter-text);
+    margin: 26px 0 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--chapter) 26%, var(--line));
+  }
+
+  /* 小標前面的短色條，讓它跟條文明顯分層 */
+  .doc-subhead::before {
+    content: "";
+    width: 4px;
+    height: 1em;
+    border-radius: 2px;
+    background: var(--chapter);
+    flex: none;
+  }
+
+  .doc-lead {
+    font-size: 0.98rem;
+    color: var(--ink);
+    line-height: 1.9;
+    max-width: 44em;
+    margin: 14px 0 4px;
+  }
+
+  .doc-footnote {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    line-height: 1.85;
+    max-width: 44em;
+    margin: 14px 0 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--line);
+  }
+
+  /* ---- 編號條文 ---- */
+  .clause-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+  }
+
+  .clause {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+    max-width: 44em;
+  }
+
+  .clause-text {
+    min-width: 0;
+  }
+
+  .clause-text > p {
+    font-size: 0.98rem;
+    color: var(--ink);
+    line-height: 1.9;
+    margin: 0;
+  }
+
+  /* 條文底下更細的小點，原文沒有編號，用圓點列出 */
+  .sub-list {
+    margin: 8px 0 0;
+    padding-left: 1.1em;
+    list-style: none;
+  }
+
+  .sub-list li {
+    position: relative;
+    font-size: 0.94rem;
+    color: var(--ink-soft);
+    line-height: 1.85;
+    margin-bottom: 4px;
+  }
+
+  .sub-list li::before {
+    content: "";
+    position: absolute;
+    left: -1.1em;
+    top: 0.82em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--chapter) 55%, var(--line));
   }
 </style>
 

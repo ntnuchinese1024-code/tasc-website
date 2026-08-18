@@ -2,95 +2,38 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import DocAccordion from "../../components/DocAccordion.astro";
 import PageHero from "../../components/PageHero.astro";
+import { ethicsChapters, revisionHistory } from "../../data/ethics-code";
 
-const sections = [
-  {
-    title: "壹　總則",
-    color: "var(--blue)",
-    colorText: "var(--blue-deep)",
-    paragraphs: [
-      "台灣性諮商學會（以下簡稱本會）因其全國性目標和其對社會責任之認知，採用倫理守則。本守則：(一) 是成為會員的條件。(二) 適用於所有會員，不論其證照或會員地位為何，都應遵守。(三) 包含與專業身分或專業訓練有關之一切直接與間接的活動。(四) 此守則不能取代或修改成為性諮商師取得證照的條件。(五) 性諮商師需同時遵守其專業執照（諮商心理師/臨床心理師）之專業倫理守則。",
-      "一、公共政策：本會有責任促進會員提供有品質的服務與適當的行為與專業性，宣佈會員必須遵守專業倫理守則。",
-      "二、目標與具體目標：專業倫理守則旨在推動性諮商/性健康的推廣與專業地位，提供本會實務工作指引。",
-      "三、自我規範：任何專業情境均需要實務工作者依照當下情境做出合宜的判斷，所有會員必須自我規範，且符合政府法規與法律要求。",
-      "四、對本會應負的責任：會員資格取決於謹守本倫理守則，若有充份的原因，會員資格可以被終止；申請專業會員或繼續會員資格者，須詳細記錄任何過去或現在與實務相關的法律、倫理、規定上的控訴或判決。",
-      "五、懲戒：理事會將對是否繼續或終止會員資格做出適當裁決，包含違反民法、犯輕罪或重罪、被專業倫理委員會或執照委員會懲戒等情形。所有資訊與理事會商議內容將視為保密，此程序無法上訴。",
-    ],
-  },
-  {
-    title: "貳　倫理程序",
-    color: "var(--red)",
-    colorText: "var(--red-deep)",
-    paragraphs: [
-      "一、會員詢問：本會倫理委員會有責任回應會員的詢問。會員尋求倫理議題的諮詢，將被轉介倫理委員會主任委員，如有需要將安排後繼追蹤諮詢。所有詢問者的身分與內容，將由倫理委員會予以保密。",
-      "每一個詢問將由主任委員與至少一位倫理委員共同執行，並填寫「倫理委員會詢問諮詢紀錄表」，且會在下一個倫理委員會議中討論，商討後續處理方式或決議。",
-    ],
-  },
-  {
-    title: "參　行為守則・原則一：能力與誠正",
-    color: "var(--magenta)",
-    colorText: "var(--magenta-deep)",
-    paragraphs: [
-      "會員必須對自己行為的後果負責任，並且必須致力於確保其所有的專業服務對服務對象是恰當且合適的。",
-      "會員應具備本會所制定的專業資格標準，了解自己能力的限制，並必須即早告知服務對象；能力不足以提供最佳受惠利益時，應即時建議轉介至更合適的資源。",
-      "會員不應刻意誤導服務對象有關自己的專業能力，應誠實且明確地澄清資格、訓練、所屬機構或組織、經驗與技能。",
-      "會員不應該跟不符資格、不適任的人共同執行專業活動，也不應蓄意提出假報告或假記錄。",
-    ],
-  },
-  {
-    title: "參　行為守則・原則二：道德、倫理與法律標準",
-    color: "var(--green)",
-    colorText: "var(--green-deep)",
-    paragraphs: [
-      "會員必須體認，其專業服務的品質取決於其個人的道德與專業倫理，並能遵守法律；應維持定期督導，協助預防作出不明智或不恰當的判斷與行動。",
-      "會員不該進入任何形式會危害服務對象福祉的雙重關係，不應該從事任何不人道的行為，或與種族、身心障礙、年齡、性別、性取向、宗教或原生背景等因素相關的歧視行為。",
-      "會員應就與實務相關之任何有關倫理、規章或法律之申訴或判決，以書面在三十天內提交給本會倫理委員會。",
-    ],
-  },
-  {
-    title: "參　行為守則・原則三：服務對象的福祉",
-    color: "var(--orange)",
-    colorText: "var(--orange-deep)",
-    paragraphs: [
-      "跟服務對象接觸之初，會員應澄清其專業訓練經驗與能力、服務性質、介入效果評估之有限性、保密與保密例外情況、付款相關事項。",
-      "只有在服務對象提供書面知情同意、或有明顯且立即危險、或專業所屬適用倫理法規規定通報事項時，會員才可以釋出由服務對象獲得的訊息。",
-      "會員應有意義地記錄有關其對服務對象所提供的專業服務，妥善保存檔案紀錄。",
-      "會員不應該跟服務對象或跟服務對象的重要他人，發展任何形式會危害服務對象福祉的雙重關係；在執行業務時，不應與服務對象發生性接觸，無論服務對象同意與否。",
-      "當確認服務對象於持續治療中並未獲得充分益處，會員應終止對此服務對象的專業服務，並轉介至其他專業服務資源或提供合理的追蹤。",
-    ],
-  },
-  {
-    title: "參　行為守則・原則四：受訓者與其他人的福祉",
-    color: "var(--blue)",
-    colorText: "var(--blue-deep)",
-    paragraphs: [
-      "會員應尊重受訓者與其他人的權利與尊嚴，提供符合專業學習需求的活動；在教育、訓練或督導等專業關係前，應澄清個人的專業資格與能力、責任義務及財務議題。",
-      "會員不應強迫受訓者成為研究計畫中的受試者，不應對受訓者提供診斷、諮商、治療或任何其他臨床服務，不應以任何形式騷擾受訓者或會員。",
-    ],
-  },
-  {
-    title: "參　行為守則・原則五：研究對象的福祉",
-    color: "var(--red)",
-    colorText: "var(--red-deep)",
-    paragraphs: [
-      "會員在做研究時，需尊重受試者的尊嚴權利和福祉，只應參與由有資格主導者所執行、對受試者提供恰當保護、要求所有研究人員誠實精確的性研究。",
-      "會員不應與研究對象發生如原則三所定義的任何形式的性行為。",
-    ],
-  },
-];
+// 條文本體在 src/data/ethics-code.ts，這裡只負責把它排出來
+const sections = ethicsChapters.map((c) => ({
+  title: `${c.num}　${c.title}`,
+  color: `var(--${c.color})`,
+  colorText: `var(--${c.color}-deep)`,
+  lead: c.lead,
+  items: c.items,
+  groups: c.subsections,
+}));
 ---
 
-<BaseLayout title="性諮商師倫理規範" description="台灣性諮商學會專業倫理守則全文。">
+<BaseLayout title="性諮商師倫理規範" description="台灣性諮商學會專業倫理守則全文，含總則、倫理程序與五項行為守則原則。">
   <PageHero
     breadcrumb={{ label: "性諮商師", href: "/counselors" }}
     eyebrow="倫理規範"
     title="台灣性諮商學會專業倫理守則"
-    lead="民國一一一年五月一日倫理委員會會議通過。"
+    lead="本守則是成為會員的條件，適用於所有會員。以下為全文，分總則、倫理程序、行為守則三章，行為守則再分為五項原則。"
   />
 
   <section class="section">
     <div class="wrap">
       <DocAccordion sections={sections} />
+
+      <details class="history">
+        <summary>修訂沿革</summary>
+        <ol>
+          {revisionHistory.map((r) => <li>{r}</li>)}
+        </ol>
+      </details>
+
       <div class="contact-note">
         <p>台灣性諮商學會聯繫方式</p>
         <p>會址：231 新北市新店區北新路一段337號2樓　電話：02-2914-3527　E-MAIL：tasc.tw@gmail.com</p>
@@ -100,9 +43,32 @@ const sections = [
 </BaseLayout>
 
 <style>
-
   .section {
     padding: 44px 0 56px;
+  }
+
+  .history {
+    margin-top: 32px;
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 4px 20px;
+  }
+
+  .history summary {
+    padding: 12px 0;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+
+  .history ol {
+    margin: 0 0 16px;
+    padding-left: 20px;
+    font-size: 0.84rem;
+    color: var(--ink-faint);
+    line-height: 1.9;
   }
 
   .contact-note {

@@ -1,0 +1,11 @@
+# 給 Netlify 看的設定檔：告訴它這個專案要怎麼打包、打包完的檔案放在哪。
+# 有了這個檔，Netlify 接上 GitHub 之後就會自己做「情境三：發布上線」那一步，
+# 不用再有人手動把 dist 資料夾拖上去。
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Astro 7 需要 Node 22.12 以上（跟 package.json 的 engines 一致）
+  NODE_VERSION = "22"

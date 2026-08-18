@@ -61,6 +61,22 @@ const links = [
     </div>
   </section>
 
+  <section class="section feature-section">
+    <div class="wrap">
+      <a href="/counselors/course-credits" class="feature-card">
+        <div>
+          <span class="feature-eyebrow">申請認證前的對照工具</span>
+          <h2 class="feature-title">課程認證對照表</h2>
+          <p class="feature-desc">
+            我上過的這門課，到底算「人類性學 A 必修」還是「B 選修」？可以認幾小時？這裡整理了認證委員會實際審核通過的
+            28 門課程與其對應的認證類別、領域與時數，也可以反過來查某一個領域有哪些課曾被認列。
+          </p>
+        </div>
+        <span class="feature-go">開始對照 →</span>
+      </a>
+    </div>
+  </section>
+
   <section class="section section-alt">
     <div class="wrap">
       <h2>認證相關辦法</h2>
@@ -137,6 +153,57 @@ const links = [
     font-size: 0.82rem;
     color: var(--ink-faint);
     margin: 0;
+  }
+
+  .feature-section {
+    padding-top: 0;
+  }
+
+  .feature-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--orange);
+    border-radius: 16px;
+    padding: 24px 28px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .feature-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--orange-deep);
+  }
+
+  .feature-title {
+    font-size: clamp(1.15rem, 3.4vw, 1.45rem);
+    margin: 4px 0 8px;
+  }
+
+  .feature-desc {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    line-height: 1.8;
+    max-width: 62ch;
+  }
+
+  .feature-go {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    white-space: nowrap;
   }
 
   .link-grid {

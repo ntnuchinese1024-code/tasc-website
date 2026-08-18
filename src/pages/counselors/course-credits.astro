@@ -1,0 +1,782 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import { buckets, approvedCourses, dataCoverage } from "../../data/course-credits";
+import type { BucketId, Credit } from "../../data/course-credits";
+
+/** 單一主題最多可認證的時數（依認證辦法伍、陸的規定） */
+const topicCap: Record<BucketId, number | null> = { A: 12, B: 6, T: 12, S: null };
+
+const bucketById = Object.fromEntries(buckets.map((b) => [b.id, b])) as Record<
+  BucketId,
+  (typeof buckets)[number]
+>;
+
+function topicShort(bucket: BucketId, no: number | null) {
+  if (no === null) return null;
+  return bucketById[bucket].topics.find((t) => t.no === no) ?? null;
+}
+
+function creditLabel(c: Credit) {
+  const b = bucketById[c.bucket];
+  const t = topicShort(c.bucket, c.topic);
+  return t ? `${b.shortName}（${t.no}）${t.short}` : b.shortName;
+}
+
+function hoursLabel(hours: number | null) {
+  return hours === null ? "時數待確認" : `${hours} 小時`;
+}
+
+/** 每筆課程的搜尋字串：課名、講師、單位、以及對應到的所有領域名稱 */
+function haystack(course: (typeof approvedCourses)[number]) {
+  const topicWords = course.credits.flatMap((c) => {
+    const b = bucketById[c.bucket];
+    const t = topicShort(c.bucket, c.topic);
+    return t ? [b.shortName, b.name, t.short, t.title] : [b.shortName, b.name];
+  });
+  return [course.title, course.instructor, course.org, course.format, ...topicWords].join(" ");
+}
+
+const courses = [...approvedCourses].sort((a, b) => b.date.localeCompare(a.date));
+
+/** 反查索引：每個類別的每個領域，有哪些已審核課程 */
+const reverse = buckets.map((bucket) => {
+  const rows = (
+    bucket.topics.length
+      ? bucket.topics.map((t) => ({ no: t.no as number | null, short: t.short, title: t.title }))
+      : [{ no: null as number | null, short: bucket.shortName, title: bucket.rule }]
+  ).map((topic) => {
+    const matches = approvedCourses.flatMap((course) =>
+      course.credits
+        .filter((c) => c.bucket === bucket.id && c.topic === topic.no)
+        .map((c) => ({ course, hours: c.hours })),
+    );
+    const total = matches.reduce((sum, m) => sum + (m.hours ?? 0), 0);
+    const cap = topicCap[bucket.id];
+    return { topic, matches, total, overCap: cap !== null && total > cap };
+  });
+  return { bucket, rows, courseCount: rows.reduce((n, r) => n + r.matches.length, 0) };
+});
+
+const filters = [
+  { id: "all", label: "全部", color: "var(--ink-soft)" },
+  ...buckets.map((b) => ({ id: b.id, label: b.shortName, color: b.colorText })),
+];
+---
+
+<BaseLayout
+  title="課程認證對照表"
+  description="台灣性諮商學會已審核通過的課程，各自對應到性諮商師認證的哪一類別、哪一個領域、可認列幾小時，供會員申請認證時參考核對。"
+>
+  <PageHero
+    breadcrumb={{ label: "性諮商師", href: "/counselors" }}
+    eyebrow="認證申請"
+    title="我上過的課，算哪一類認證時數？"
+    lead={`這裡整理了認證委員會實際審核過的 ${dataCoverage.count} 門課程（${dataCoverage.from}至${dataCoverage.to}），列出每一門課對應到認證辦法的哪一個類別、哪一個領域、可認列幾小時，讓你在準備認證申請時可以直接對照核，不必自己猜。`}
+  >
+    <a href="/counselors/certification" class="btn btn-ghost hero-btn">看認證辦法全文</a>
+  </PageHero>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>先看懂：認證時數分成四類</h2>
+      <p class="section-note">
+        每一門課在申請認證時，都要被歸到下面其中一類（長時數的培訓課程可以同時拆進好幾類）。各類別的時數要求與主題上下限都不一樣。
+      </p>
+      <div class="bucket-grid">
+        {buckets.map((b) => (
+          <div class="bucket-card" style={`--dot: ${b.color}; --dot-text: ${b.colorText}`}>
+            <span class="bucket-code">{b.code}</span>
+            <h3 class="bucket-name">
+              {b.name.split("　").map((line) => (
+                <span class="bucket-name-line">{line}</span>
+              ))}
+            </h3>
+            <p class="bucket-hours">
+              <strong>{b.hours}</strong>
+              <span>{b.hoursNote}</span>
+            </p>
+            <p class="bucket-rule">{b.rule}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="table">
+    <div class="wrap">
+      <div class="section-head-row">
+        <h2>已審核課程對照表</h2>
+        <span class="section-note">共 {dataCoverage.count} 門</span>
+      </div>
+
+      <div class="tools">
+        <label class="search-box">
+          <span class="sr-only">搜尋課程</span>
+          <input
+            type="search"
+            id="credit-search"
+            placeholder="輸入課程名稱、講師、或領域關鍵字（例如：性產業、BDSM、伴侶）"
+            autocomplete="off"
+          />
+        </label>
+        <div class="chips" role="group" aria-label="依認證類別篩選">
+          {filters.map((f, i) => (
+            <button
+              type="button"
+              class:list={["chip", { "chip-on": i === 0 }]}
+              data-bucket={f.id}
+              style={`--chip-text: ${f.color}`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <p class="result-count"><span id="result-n">{courses.length}</span> 門課程</p>
+
+      <div class="course-list">
+        {courses.map((course) => (
+          <article
+            class="course-row"
+            data-buckets={course.credits.map((c) => c.bucket).join("")}
+            data-search={haystack(course)}
+          >
+            <div class="course-main">
+              <h3 class="course-title">{course.title}</h3>
+              <p class="course-meta">
+                {course.org}　·　{course.instructor}　·　{course.date}　·　{course.format}
+              </p>
+              <p class="course-total">課程總時數 {course.totalHours}</p>
+            </div>
+            <div class="course-credits">
+              {course.credits.map((c) => {
+                const b = bucketById[c.bucket];
+                return (
+                  <span class="credit-tag" style={`--dot: ${b.color}; --dot-text: ${b.colorText}`}>
+                    <span class="credit-name">{creditLabel(c)}</span>
+                    <span class="credit-hours">{hoursLabel(c.hours)}</span>
+                  </span>
+                );
+              })}
+              {course.status === "pending" && <span class="status-flag">審核尚未完成</span>}
+            </div>
+            {course.note && <p class="course-note">{course.note}</p>}
+          </article>
+        ))}
+      </div>
+
+      <p class="empty-state" id="empty-state" hidden>
+        找不到符合的課程。這份表只收錄已經送審並通過的課程，沒有列在上面不代表不能認證——請開課單位或你本人向認證委員會提出課程認證申請。
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="by-category">
+    <div class="wrap">
+      <div class="section-head-row">
+        <h2>反過來查：這個領域有哪些課？</h2>
+        <span class="section-note">點擊展開各類別</span>
+      </div>
+      <p class="section-note lead-note">
+        如果你發現自己缺的是某一個特定領域的時數，可以從這裡看有哪些課程曾被認列在該領域；標示「尚無已審核課程」的領域，代表學會近年開的課還沒有涵蓋到，需要另外找其他單位的課程送審。
+      </p>
+
+      <div class="cat-accordion">
+        {reverse.map((group, i) => (
+          <details
+            class="cat-item"
+            style={`--dot: ${group.bucket.color}; --dot-text: ${group.bucket.colorText}`}
+            open={i === 1}
+          >
+            <summary>
+              <span class="cat-dot"></span>
+              <span class="cat-summary-text">{group.bucket.name}</span>
+              <span class="cat-count">{group.courseCount} 筆</span>
+            </summary>
+            <div class="cat-body">
+              {group.rows.map((row) => (
+                <div class:list={["topic-row", { "topic-empty": row.matches.length === 0 }]}>
+                  <div class="topic-head">
+                    <span class="topic-no">{row.topic.no === null ? "—" : row.topic.no}</span>
+                    <div>
+                      <p class="topic-short">{row.topic.short}</p>
+                      {row.topic.no !== null && <p class="topic-full">{row.topic.title}</p>}
+                    </div>
+                  </div>
+                  {row.matches.length === 0 ? (
+                    <p class="topic-none">尚無已審核課程</p>
+                  ) : (
+                    <ul class="topic-courses">
+                      {row.matches.map((m) => (
+                        <li>
+                          <span class="tc-title">{m.course.title}</span>
+                          <span class="tc-hours">{hoursLabel(m.hours)}</span>
+                          <span class="tc-date">{m.course.date}</span>
+                        </li>
+                      ))}
+                      {row.overCap && (
+                        <li class="tc-cap">
+                          {`提醒：這個領域的已審核課程合計 ${row.total} 小時，但依認證辦法，同一個主題最多只能認列 ${topicCap[group.bucket.id]} 小時——全部上完也不會超過這個上限。`}
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap">
+      <h2>對照時請注意這幾件事</h2>
+      <div class="note-grid">
+        <div class="note-card">
+          <h3>課程總時數 ≠ 認證時數</h3>
+          <p>
+            一門 2 小時的課，未必 2 小時全部認列；長時數的培訓課程則常被拆成好幾個類別（例如「成人性教練 Level
+            One」28 小時，拆進 A 必修、B 選修與性諮商訓練三類）。以表上列出的認證時數為準。
+          </p>
+        </div>
+        <div class="note-card">
+          <h3>每個主題有上下限</h3>
+          <p>
+            A 必修每主題至少 3 小時、最多認 12 小時；B 選修每主題至少 2 小時、最多認 6 小時；性諮商訓練每主題至少
+            5 小時、最多認 12 小時。同一個領域上很多堂課，超過上限的部分不會被計入。
+          </p>
+        </div>
+        <div class="note-card">
+          <h3>這頁是參考，不是核定</h3>
+          <p>
+            資料整理自認證委員會的課程認證審核紀錄。個別申請案的最終認定，仍以認證委員會的審核結果為準；表上標有備註的幾筆，代表當時審核就留有待確認事項。
+          </p>
+        </div>
+        <div class="note-card">
+          <h3>沒列在表上的課程怎麼辦？</h3>
+          <p>
+            這份表只收錄曾經送審的課程。其他單位開的課若未曾送審，並不代表不能認證——可請開課單位提出課程認證申請，或先來信詢問：
+            <a href="mailto:tasc.tw@gmail.com">tasc.tw@gmail.com</a>。
+          </p>
+        </div>
+      </div>
+      <p class="source-note">
+        資料範圍：{dataCoverage.from}－{dataCoverage.to}，共 {dataCoverage.count} 件課程認證申請的審核紀錄。為保護個人資料，本頁未列出申請人姓名與聯絡方式，委員審核意見亦僅摘錄與課程認定有關的部分。
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const input = document.getElementById("credit-search") as HTMLInputElement | null;
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>(".chip"));
+  const rows = Array.from(document.querySelectorAll<HTMLElement>(".course-row"));
+  const counter = document.getElementById("result-n");
+  const empty = document.getElementById("empty-state");
+  let bucket = "all";
+
+  function apply() {
+    const q = (input?.value ?? "").trim().toLowerCase();
+    let shown = 0;
+    for (const row of rows) {
+      const okBucket = bucket === "all" || (row.dataset.buckets ?? "").includes(bucket);
+      const okQuery = q === "" || (row.dataset.search ?? "").toLowerCase().includes(q);
+      const show = okBucket && okQuery;
+      row.hidden = !show;
+      if (show) shown += 1;
+    }
+    if (counter) counter.textContent = String(shown);
+    if (empty) empty.hidden = shown > 0;
+  }
+
+  input?.addEventListener("input", apply);
+  for (const chip of chips) {
+    chip.addEventListener("click", () => {
+      bucket = chip.dataset.bucket ?? "all";
+      for (const c of chips) c.classList.toggle("chip-on", c === chip);
+      apply();
+    });
+  }
+</script>
+
+<style>
+  .section {
+    padding: 44px 0;
+  }
+
+  .section-alt {
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section h2 {
+    font-size: clamp(1.1rem, 3vw, 1.35rem);
+  }
+
+  .section-head-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .section-note {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    margin: 8px 0 20px;
+    max-width: 62ch;
+    line-height: 1.8;
+  }
+
+  .lead-note {
+    margin-top: 4px;
+  }
+
+  .hero-btn {
+    display: inline-block;
+    font-size: 0.84rem;
+    padding: 9px 20px;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* ---------- 四大類別 ---------- */
+
+  .bucket-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 900px) {
+    .bucket-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .bucket-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .bucket-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--dot);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .section-alt .bucket-card {
+    background: var(--bg-alt);
+  }
+
+  .bucket-code {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--dot-text);
+  }
+
+  .bucket-name {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .bucket-name-line {
+    display: block;
+  }
+
+  .bucket-hours {
+    margin: 2px 0 0;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .bucket-hours strong {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    line-height: 1;
+    color: var(--dot-text);
+  }
+
+  .bucket-hours span {
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+  }
+
+  .bucket-rule {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  /* ---------- 搜尋與篩選 ---------- */
+
+  .tools {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 18px 0 10px;
+  }
+
+  .search-box input {
+    width: 100%;
+    font: inherit;
+    font-size: 0.9rem;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .search-box input:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--chip-text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 16px;
+    cursor: pointer;
+  }
+
+  .chip:hover {
+    border-color: var(--chip-text);
+  }
+
+  .chip-on {
+    background: color-mix(in srgb, currentColor 12%, var(--card));
+    border-color: currentColor;
+  }
+
+  .result-count {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+  }
+
+  /* ---------- 課程列表 ---------- */
+
+  .course-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .course-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 8px 20px;
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+
+  .section-alt .course-row {
+    background: var(--bg-alt);
+  }
+
+  @media (max-width: 760px) {
+    .course-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .course-title {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin: 0 0 6px;
+  }
+
+  .course-meta {
+    margin: 0;
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+
+  .course-total {
+    margin: 2px 0 0;
+    font-size: 0.76rem;
+    color: var(--ink-soft);
+  }
+
+  .course-credits {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .credit-tag {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: color-mix(in srgb, var(--dot) 14%, transparent);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .credit-name {
+    font-weight: 700;
+    color: var(--dot-text);
+  }
+
+  .credit-hours {
+    font-size: 0.76rem;
+    color: var(--ink-soft);
+  }
+
+  .status-flag {
+    font-size: 0.72rem;
+    color: var(--orange-deep);
+    border: 1px dashed var(--orange);
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+
+  .course-note {
+    grid-column: 1 / -1;
+    margin: 4px 0 0;
+    font-size: 0.76rem;
+    color: var(--ink-soft);
+    line-height: 1.75;
+    border-top: 1px dashed var(--line);
+    padding-top: 8px;
+  }
+
+  .empty-state {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    background: var(--bg-alt);
+    border-radius: 14px;
+    padding: 20px;
+    line-height: 1.8;
+  }
+
+  /* ---------- 依類別反查 ---------- */
+
+  .cat-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cat-item {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--dot);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .cat-item summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    list-style: none;
+  }
+
+  .cat-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .cat-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--dot);
+    flex: none;
+  }
+
+  .cat-summary-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cat-count {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+  }
+
+  .cat-body {
+    padding: 0 18px 8px;
+  }
+
+  .topic-row {
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: 8px 20px;
+  }
+
+  @media (max-width: 760px) {
+    .topic-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .topic-head {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .topic-no {
+    flex: none;
+    min-width: 26px;
+    text-align: center;
+    background: color-mix(in srgb, var(--dot) 16%, transparent);
+    color: var(--dot-text);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 6px;
+  }
+
+  .topic-short {
+    margin: 0;
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+
+  .topic-full {
+    margin: 2px 0 0;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+
+  .topic-none {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+  }
+
+  .topic-empty {
+    opacity: 0.75;
+  }
+
+  .topic-courses {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .topic-courses li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+
+  .tc-title {
+    font-weight: 700;
+  }
+
+  .tc-hours {
+    color: var(--dot-text);
+    font-weight: 700;
+    font-size: 0.76rem;
+  }
+
+  .tc-date {
+    color: var(--ink-faint);
+    font-size: 0.72rem;
+  }
+
+  .tc-cap {
+    color: var(--orange-deep);
+    font-size: 0.75rem;
+  }
+
+  /* ---------- 注意事項 ---------- */
+
+  .note-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  @media (max-width: 760px) {
+    .note-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .note-card {
+    background: var(--bg-alt);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+
+  .note-card h3 {
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+  }
+
+  .note-card p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.8;
+  }
+
+  .source-note {
+    margin: 18px 0 0;
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    line-height: 1.8;
+  }
+</style>

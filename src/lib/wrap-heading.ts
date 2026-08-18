@@ -16,6 +16,13 @@ const CLAUSE_BREAK = /([，。！？；：、])/g;
 // this length, merge the clause into its neighbor instead.
 const MIN_CLAUSE_LENGTH = 4;
 
+// 一個子句被 nowrap 鎖住之後就再也不能換行，所以它必須短到能整句塞進最窄的
+// 螢幕。實測 375px 的手機：內容欄寬 327px、標題最小字級 20px，大約放得下 16 個
+// 字。超過這個長度的子句（例如課程報導那種 27 字的長標題）如果照鎖，整段會被
+// 裁掉而不是換行——比孤字還糟。這種情況改成只鎖「最後兩個字」，讓瀏覽器可以
+// 在中間任意換行，但永遠不會只留一個字在最後一行。
+const MAX_LOCK_LENGTH = 16;
+
 function escapeHtml(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -54,5 +61,14 @@ export function wrapHeadingHtml(text: string): string {
     return escapeHtml(text);
   }
 
-  return clauses.map((clause) => `<span class="nowrap-clause">${escapeHtml(clause)}</span>`).join("");
+  return clauses.map(lockClause).join("");
+}
+
+function lockClause(clause: string): string {
+  if (clause.length <= MAX_LOCK_LENGTH) {
+    return `<span class="nowrap-clause">${escapeHtml(clause)}</span>`;
+  }
+  const head = clause.slice(0, -2);
+  const tail = clause.slice(-2);
+  return `${escapeHtml(head)}<span class="nowrap-clause">${escapeHtml(tail)}</span>`;
 }

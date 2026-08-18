@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHero from "../../../components/PageHero.astro";
+import FigureRing from "../../../components/decor/FigureRing.astro";
 
 export const groups = [
   {
@@ -44,8 +45,11 @@ const { name, summary } = Astro.props;
     <div class="wrap prose">
       <p class="lead">{summary}</p>
       <div class="placeholder-note">
-        <p>這個小組的詳細運作方式（成員、聯繫窗口、近期工作）正在整理中，之後會補上。</p>
-        <a href="/about#structure" class="btn btn-ghost">回組織架構</a>
+        <div class="placeholder-text">
+          <p>這個小組的詳細運作方式（成員、聯繫窗口、近期工作）正在整理中，之後會補上。</p>
+          <a href="/about#structure" class="btn btn-ghost">回組織架構</a>
+        </div>
+        <FigureRing class="placeholder-ring" variant="outline" />
       </div>
     </div>
   </section>
@@ -67,11 +71,32 @@ const { name, summary } = Astro.props;
     background: var(--bg-alt);
     border: 1px dashed var(--line);
     border-radius: 14px;
-    padding: 22px;
+    padding: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .placeholder-text {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+  }
+
+  .placeholder-note :global(.placeholder-ring) {
+    width: 128px;
+    height: 128px;
+    flex: none;
+    opacity: 0.55;
+  }
+
+  @media (max-width: 600px) {
+    .placeholder-note {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+    }
   }
 
   .placeholder-note p {

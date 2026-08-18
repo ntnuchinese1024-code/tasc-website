@@ -1,6 +1,8 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import LogoRingDecoration from "../components/LogoRingDecoration.astro";
+import FigureRing from "../components/decor/FigureRing.astro";
+import FigureMark from "../components/decor/FigureMark.astro";
+import ArcField from "../components/decor/ArcField.astro";
 import { wrapHeadingHtml } from "../lib/wrap-heading";
 
 const pillars = [
@@ -63,8 +65,8 @@ const events = [
 
 <BaseLayout title="首頁" description="台灣性諮商學會由一群關心性諮商發展的性諮商師、心理師與相關專業人士組成，推動性諮商之專業發展。">
   <header class="hero">
-    <LogoRingDecoration class="hero-ring" />
-    <div class="wrap">
+    <div class="wrap hero-wrap">
+      <FigureRing class="decor-layer hero-ring" />
       <div class="hero-inner">
         <span class="eyebrow">TASC・台灣性諮商學會</span>
         <h1 set:html={wrapHeadingHtml("集結性議題專長的心理師，共同促進台灣社會的性健康福祉")} />
@@ -88,6 +90,7 @@ const events = [
       <div class="pillar-grid">
         {pillars.map((p, i) => (
           <div class="pillar" style={`--dot: ${p.color}; --dot-text: ${p.colorText}`}>
+            <FigureMark class="decor-layer pillar-mark" color={p.color} />
             <span class="num">0{i + 1}</span>
             <h3>{p.title}</h3>
             <p>{p.body}</p>
@@ -98,7 +101,8 @@ const events = [
   </section>
 
   <section class="events">
-    <div class="wrap">
+    <ArcField class="decor-layer events-arcs" weight={2.4} />
+    <div class="wrap decor-above">
       <div class="section-head events-head">
         <div>
           <span class="eyebrow">近期課程</span>
@@ -129,20 +133,30 @@ const events = [
     background: var(--bg-alt);
   }
 
+  .hero-wrap {
+    position: relative;
+  }
+
+  /* 標題欄最寬 42rem，內容欄最寬 1080px，右邊本來就空著一大塊，三人環放這裡 */
   .hero :global(.hero-ring) {
-    position: absolute;
-    width: 420px;
-    height: 420px;
-    top: -90px;
-    right: -110px;
-    opacity: 0.9;
-    z-index: 0;
+    width: 300px;
+    height: 300px;
+    top: 50%;
+    right: 24px;
+    transform: translateY(-50%);
   }
 
   .hero-inner {
     position: relative;
     z-index: 1;
     max-width: 42rem;
+  }
+
+  @media (min-width: 1000px) {
+    /* 環佔掉右邊約 300px，文字欄要讓開才不會壓在一起 */
+    .hero-inner {
+      max-width: 38rem;
+    }
   }
 
   .hero .eyebrow {
@@ -177,12 +191,10 @@ const events = [
     .hero {
       padding-top: 40px;
     }
+    /* 手機版標題會佔滿整個寬度，實心的環壓上去會擋到字，
+       所以這裡直接收掉，色彩交給下面那排人形橫帶負責。 */
     .hero :global(.hero-ring) {
-      width: 150px;
-      height: 150px;
-      top: -20px;
-      right: -40px;
-      opacity: 0.55;
+      display: none;
     }
   }
 
@@ -235,10 +247,20 @@ const events = [
   }
 
   .pillar {
+    position: relative;
+    overflow: hidden;
     padding: 18px 18px 20px;
     border-radius: 12px;
     border-top: 3px solid var(--dot);
     background: color-mix(in srgb, var(--dot) 6%, var(--card));
+  }
+
+  /* 卡片自己的顏色畫一個人形當底紋，讓四張卡片不只是四個色塊 */
+  .pillar :global(.pillar-mark) {
+    width: 96px;
+    right: -18px;
+    bottom: -14px;
+    opacity: 0.14;
   }
 
   .pillar .num {
@@ -264,7 +286,27 @@ const events = [
   }
 
   .events {
+    position: relative;
+    overflow: hidden;
     padding: 48px 0 56px;
+  }
+
+  /* 卡片右邊在寬螢幕上會留白，用標誌那圈弧線的「回音」墊底 */
+  .events :global(.events-arcs) {
+    width: 460px;
+    height: 460px;
+    top: -120px;
+    right: -170px;
+    opacity: 0.16;
+  }
+
+  @media (max-width: 860px) {
+    .events :global(.events-arcs) {
+      width: 300px;
+      height: 300px;
+      right: -140px;
+      opacity: 0.12;
+    }
   }
 
   .event-grid {

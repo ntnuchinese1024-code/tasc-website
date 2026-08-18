@@ -4,6 +4,7 @@ import PageHero from "../../components/PageHero.astro";
 import CoursePoster from "../../components/CoursePoster.astro";
 import { wrapHeadingHtml } from "../../lib/wrap-heading";
 import { conferences } from "../../data/annual-conferences";
+import FigureRing from "../../components/decor/FigureRing.astro";
 
 const upcoming = conferences.filter((c) => c.status === "building");
 const featured = conferences.find((c) => c.year === 2026);
@@ -21,9 +22,12 @@ const past = conferences.filter((c) => c.status === "past" && c.year !== 2026);
     <section class="section building-section">
       <div class="wrap">
         <div class="building-card">
-          <span class="eyebrow">下一屆・建置中</span>
-          <h2 set:html={wrapHeadingHtml(`${c.year}年會`)} />
-          <p>{c.intro}</p>
+          <div class="building-text">
+            <span class="eyebrow">下一屆・建置中</span>
+            <h2 set:html={wrapHeadingHtml(`${c.year}年會`)} />
+            <p>{c.intro}</p>
+          </div>
+          <FigureRing class="building-ring" variant="outline" />
         </div>
       </div>
     </section>
@@ -80,6 +84,23 @@ const past = conferences.filter((c) => c.status === "past" && c.year !== 2026);
     border-radius: 16px;
     padding: 22px 26px;
     background: var(--card);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .building-card :global(.building-ring) {
+    width: 104px;
+    height: 104px;
+    flex: none;
+    opacity: 0.5;
+  }
+
+  @media (max-width: 600px) {
+    .building-card :global(.building-ring) {
+      display: none;
+    }
   }
 
   .building-card .eyebrow {

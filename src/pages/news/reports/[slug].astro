@@ -1,16 +1,24 @@
 ---
 import ArticleLayout from "../../../layouts/ArticleLayout.astro";
 import CoursePoster from "../../../components/CoursePoster.astro";
-import { allCourseReports } from "../../../data/course-reports";
+import { getAllReports, getReport } from "../../../lib/reports";
 
-export function getStaticPaths() {
-  return allCourseReports.map((r) => ({
-    params: { slug: r.slug },
-    props: r,
-  }));
+export async function getStaticPaths() {
+  const reports = await getAllReports();
+
+  // 列表用的資料沒有全文，逐篇補抓完整內容
+  const pages = [];
+  for (const summary of reports) {
+    const full = await getReport(summary.slug, summary.source);
+    if (full) pages.push({ params: { slug: full.slug }, props: full });
+  }
+  return pages;
 }
 
-const { title, date, speaker, writer, tags, color, colorText, lead, poster, images = [], sections } = Astro.props;
+const {
+  title, date, speaker, writer, tags, color, colorText, lead,
+  poster, images = [], sections = [], bodyHtml,
+} = Astro.props;
 
 // 第一張圖放文章開頭當主視覺，其餘（少數報導有兩張）擺在文末
 const [cover, ...moreImages] = poster ? [poster, ...images] : images;
@@ -30,12 +38,17 @@ const [cover, ...moreImages] = poster ? [poster, ...images] : images;
   <p class="lead-para">{lead}</p>
   {writer && <p class="byline">撰文・{writer}</p>}
 
-  {sections.map((s: { heading?: string; paragraphs: string[] }) => (
-    <>
-      {s.heading && <h2>{s.heading}</h2>}
-      {s.paragraphs.map((p: string) => <p>{p}</p>)}
-    </>
-  ))}
+  {/* 報名系統寫的報導帶 HTML（Markdown 轉出來的）；搬遷前的本地報導仍是 sections */}
+  {bodyHtml ? (
+    <div class="report-body" set:html={bodyHtml} />
+  ) : (
+    sections.map((s: { heading?: string; paragraphs: string[] }) => (
+      <>
+        {s.heading && <h2>{s.heading}</h2>}
+        {s.paragraphs.map((p: string) => <p>{p}</p>)}
+      </>
+    ))
+  )}
 
   {moreImages.map((src: string) => (
     <CoursePoster src={src} alt={`${title} 活動照片`} />
@@ -49,6 +62,31 @@ const [cover, ...moreImages] = poster ? [poster, ...images] : images;
 </ArticleLayout>
 
 <style>
+  /* ArticleLayout 已經用 .article-body :global(h2/p) 管到內文，
+     這裡只補它沒涵蓋到的條列與引言——舊報導是純段落，不會用到這些。 */
+  .report-body :global(ul),
+  .report-body :global(ol) {
+    margin: 0 0 1.3rem;
+    padding-left: 1.4rem;
+  }
+
+  .report-body :global(li) {
+    margin-bottom: 0.55rem;
+    line-height: 1.95;
+    color: var(--ink-soft);
+  }
+
+  .report-body :global(blockquote) {
+    margin: 1.6rem 0;
+    padding: 0.15rem 0 0.15rem 1.1rem;
+    border-left: 3px solid var(--accent);
+    color: var(--ink-faint);
+  }
+
+  .report-body :global(a) {
+    color: var(--accent-text);
+  }
+
   .lead-para {
     font-size: 1.08rem !important;
     color: var(--ink) !important;

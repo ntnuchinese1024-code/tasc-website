@@ -1,0 +1,178 @@
+---
+/**
+ * 課程報名區塊。
+ *
+ * 建置時就把當下的名額與狀態寫進 HTML，所以沒有 JavaScript 也看得到完整資訊、
+ * 按鈕也能點。載入後再跟報名系統要一次最新名額把數字補正——
+ * 因為官網是靜態的，建置之後又有人報名，寫死的數字會慢慢過期。
+ *
+ * 這個「先靜態、後補正」的順序也表示：報名系統暫時掛掉時，
+ * 訪客看到的是稍舊的名額而不是空白或錯誤。
+ */
+import {
+  formatEventTime,
+  formatPrice,
+  REGISTRATION_LABEL,
+  REGISTRATION_ORIGIN,
+  registrationUrl,
+  type EventDetail,
+  type EventSummary,
+} from "../lib/registration-api";
+
+interface Props {
+  event: EventSummary | EventDetail;
+}
+
+const { event } = Astro.props;
+const { status, remaining, is_open } = event.registration;
+const href = registrationUrl(event.slug);
+---
+
+<aside class="reg-panel" data-slug={event.slug} data-origin={REGISTRATION_ORIGIN}>
+  <h2 class="reg-title">報名資訊</h2>
+
+  <dl class="reg-list">
+    <div>
+      <dt>時間</dt>
+      <dd>{formatEventTime(event.starts_at, event.ends_at)}</dd>
+    </div>
+    <div>
+      <dt>地點</dt>
+      <dd>{event.location ?? "報名確認後另行通知"}</dd>
+    </div>
+    <div>
+      <dt>費用</dt>
+      <dd>{formatPrice(event.price)}</dd>
+    </div>
+    <div>
+      <dt>名額</dt>
+      <dd>
+        <span class="reg-seats" data-seats>
+          {is_open ? `尚餘 ${remaining} 位 / 共 ${event.max_capacity} 位` : REGISTRATION_LABEL[status]}
+        </span>
+      </dd>
+    </div>
+  </dl>
+
+  <a class:list={["reg-btn", { "is-closed": !is_open }]} href={href} data-cta>
+    {is_open ? "我要報名" : REGISTRATION_LABEL[status]}
+  </a>
+
+  <p class="reg-note" data-note>
+    {
+      is_open
+        ? "報名表在學會的報名系統上，送出後會立即收到含匯款指引的確認信。"
+        : "如仍希望參加，歡迎來信與秘書處聯絡。"
+    }
+  </p>
+</aside>
+
+<script>
+  // 建置當下寫進 HTML 的名額會隨時間過期，載入後跟報名系統要一次最新的。
+  // 要不到就安靜維持原樣——顯示稍舊的數字，好過在課程頁上跳錯誤訊息。
+  document.querySelectorAll<HTMLElement>(".reg-panel").forEach(async (panel) => {
+    const { slug, origin } = panel.dataset;
+    const seats = panel.querySelector<HTMLElement>("[data-seats]");
+    const cta = panel.querySelector<HTMLAnchorElement>("[data-cta]");
+    if (!slug || !origin || !seats || !cta) return;
+
+    try {
+      const response = await fetch(`${origin}/api/events/${slug}/status`);
+      if (!response.ok) return;
+
+      const data = await response.json();
+
+      const label: Record<string, string> = {
+        OPEN: `尚餘 ${data.remaining} 位 / 共 ${data.max_capacity} 位`,
+        FULL: "名額已滿",
+        NOT_OPEN: "尚未開放報名",
+        CLOSED: "報名已截止",
+      };
+
+      const text = label[data.status as string];
+      if (text) seats.textContent = text;
+
+      if (!data.is_open) {
+        cta.classList.add("is-closed");
+        cta.textContent = data.status === "FULL" ? "名額已滿" : "報名已截止";
+      }
+    } catch {
+      /* 靜態內容已經夠用，這裡不需要對訪客說什麼 */
+    }
+  });
+</script>
+
+<style>
+  .reg-panel {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    padding: 1.5rem 1.5rem 1.35rem;
+    box-shadow: var(--shadow);
+  }
+
+  .reg-title {
+    margin: 0 0 1rem;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .reg-list {
+    margin: 0 0 1.35rem;
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .reg-list > div {
+    display: grid;
+    grid-template-columns: 3.5rem 1fr;
+    gap: 0.75rem;
+    align-items: baseline;
+  }
+
+  .reg-list dt {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+  }
+
+  .reg-list dd {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+
+  .reg-seats {
+    font-weight: 600;
+  }
+
+  .reg-btn {
+    display: block;
+    padding: 0.9rem 1.5rem;
+    border-radius: 0.5rem;
+    background: var(--blue-deep);
+    color: #fff;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.15s;
+  }
+
+  .reg-btn:hover {
+    background: #03526f;
+  }
+
+  /* 額滿或截止時降低視覺強度，但仍可點進去看詳情 */
+  .reg-btn.is-closed {
+    background: var(--ink-faint);
+  }
+
+  .reg-note {
+    margin: 0.85rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.75;
+    color: var(--ink-faint);
+  }
+</style>

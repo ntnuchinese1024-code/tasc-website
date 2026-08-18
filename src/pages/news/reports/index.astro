@@ -3,10 +3,11 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHero from "../../../components/PageHero.astro";
 import CoursePoster from "../../../components/CoursePoster.astro";
 import { wrapHeadingHtml } from "../../../lib/wrap-heading";
-import { allCourseReports, reportYear, type CourseReport } from "../../../data/course-reports";
+import { getAllReports, reportYear, type UnifiedReport } from "../../../lib/reports";
 
-// 依年份分組，年份新的排前面
-const byYear = new Map<number, CourseReport[]>();
+// 本地歷史報導＋報名系統後台寫的新報導，合併之後依年份分組，年份新的排前面
+const allCourseReports = await getAllReports();
+const byYear = new Map<number, UnifiedReport[]>();
 for (const report of allCourseReports) {
   const year = reportYear(report);
   byYear.set(year, [...(byYear.get(year) ?? []), report]);

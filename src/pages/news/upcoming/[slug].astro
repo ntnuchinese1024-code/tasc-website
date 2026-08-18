@@ -1,0 +1,230 @@
+---
+/**
+ * 課程公告頁（招生中）。
+ *
+ * 內容全部來自學會的報名系統後台：秘書處在那邊上架課程、上傳海報、寫課程介紹，
+ * 這一頁在建置時把它們抓下來生成靜態 HTML，報名區塊就出現在介紹旁邊。
+ *
+ * 換句話說，開一門新課不需要碰這個檔案，也不需要新增任何檔案。
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHero from "../../../components/PageHero.astro";
+import CoursePoster from "../../../components/CoursePoster.astro";
+import RegistrationPanel from "../../../components/RegistrationPanel.astro";
+import { wrapHeadingHtml } from "../../../lib/wrap-heading";
+import { renderMarkdown, excerpt } from "../../../lib/markdown";
+import {
+  accentVars,
+  getEventDetail,
+  getOpenCourses,
+  type EventDetail,
+} from "../../../lib/registration-api";
+
+export async function getStaticPaths() {
+  const courses = await getOpenCourses();
+
+  // 逐一取完整內容。課程數量是個位數到數十，序列抓取足夠快，
+  // 而且比並發更不容易在報名系統剛醒來時被限流。
+  const pages = [];
+  for (const course of courses) {
+    const detail = await getEventDetail(course.slug);
+    if (detail) pages.push({ params: { slug: course.slug }, props: { event: detail } });
+  }
+  return pages;
+}
+
+interface Props {
+  event: EventDetail;
+}
+
+const { event } = Astro.props;
+const accent = accentVars(event.accent);
+const introHtml = renderMarkdown(event.intro_md);
+const description = event.description ?? excerpt(event.intro_md, 140);
+---
+
+<BaseLayout title={`${event.title} 報名`} description={description}>
+  <PageHero
+    breadcrumb={{ label: "最新消息", href: "/news" }}
+    eyebrow="課程公告"
+    title={wrapHeadingHtml(event.title)}
+    titleIsHtml={true}
+    lead={description}
+    decor={false}
+  />
+
+  <div class="section">
+    <div class="wrap course-layout" style={`--accent: ${accent.color}; --accent-text: ${accent.text}`}>
+      <article class="course-main">
+        {event.poster_url && (
+          <CoursePoster src={event.poster_url} alt={event.poster_alt ?? `${event.title} 課程海報`} />
+        )}
+
+        {(event.instructor || event.target_audience || event.credits_note) && (
+          <dl class="course-facts">
+            {event.instructor && (
+              <div>
+                <dt>講師</dt>
+                <dd>{event.instructor}</dd>
+              </div>
+            )}
+            {event.target_audience && (
+              <div>
+                <dt>適合對象</dt>
+                <dd>{event.target_audience}</dd>
+              </div>
+            )}
+            {event.credits_note && (
+              <div>
+                <dt>繼續教育積分</dt>
+                <dd>{event.credits_note}</dd>
+              </div>
+            )}
+          </dl>
+        )}
+
+        {introHtml ? (
+          <div class="course-intro" set:html={introHtml} />
+        ) : (
+          <p class="course-intro-empty">課程詳細介紹整理中，如需進一步資訊歡迎來信詢問。</p>
+        )}
+
+        {event.tags.length > 0 && (
+          <div class="tag-row">
+            {event.tags.map((t) => <span>#{t}</span>)}
+          </div>
+        )}
+      </article>
+
+      <div class="course-side">
+        <RegistrationPanel event={event} />
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .course-layout {
+    display: grid;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  /* 桌機把報名資訊放在介紹旁邊，捲動時跟著；手機則排在介紹下方 */
+  @media (min-width: 62rem) {
+    .course-layout {
+      grid-template-columns: minmax(0, 1fr) 20rem;
+      gap: 3rem;
+    }
+
+    .course-side {
+      position: sticky;
+      top: 5rem;
+    }
+  }
+
+  .course-main {
+    min-width: 0;
+  }
+
+  .course-facts {
+    margin: 1.75rem 0;
+    padding: 1.25rem 1.4rem;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    background: var(--bg-alt);
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .course-facts > div {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    gap: 0.9rem;
+    align-items: baseline;
+  }
+
+  .course-facts dt {
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+  }
+
+  .course-facts dd {
+    margin: 0;
+    font-size: 0.98rem;
+    line-height: 1.8;
+    color: var(--ink);
+  }
+
+  @media (max-width: 30rem) {
+    .course-facts > div {
+      grid-template-columns: 1fr;
+      gap: 0.15rem;
+    }
+  }
+
+  /* set:html 進來的 Markdown 內容 */
+  .course-intro :global(h2) {
+    margin: 2.25rem 0 0.85rem;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .course-intro :global(h3) {
+    margin: 1.75rem 0 0.6rem;
+    font-size: 1.06rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .course-intro :global(p) {
+    margin: 0 0 1.15rem;
+    font-size: 1.02rem;
+    line-height: 2;
+    color: var(--ink-soft);
+  }
+
+  .course-intro :global(ul),
+  .course-intro :global(ol) {
+    margin: 0 0 1.15rem;
+    padding-left: 1.4rem;
+  }
+
+  .course-intro :global(li) {
+    margin-bottom: 0.5rem;
+    font-size: 1.02rem;
+    line-height: 1.95;
+    color: var(--ink-soft);
+  }
+
+  .course-intro :global(blockquote) {
+    margin: 1.5rem 0;
+    padding: 0.15rem 0 0.15rem 1.1rem;
+    border-left: 3px solid var(--line);
+    color: var(--ink-faint);
+  }
+
+  .course-intro :global(a) {
+    color: var(--accent-text);
+  }
+
+  .course-intro-empty {
+    color: var(--ink-faint);
+  }
+
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 2.25rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .tag-row span {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+  }
+</style>

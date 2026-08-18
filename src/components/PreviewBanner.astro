@@ -1,0 +1,66 @@
+---
+/**
+ * 「這是預覽版」提示條。只有 src/lib/site.ts 的 IS_PREVIEW 是 true 時才會出現。
+ * 正式上線把那個值改成 false，這條就會整條消失，不用來刪這個檔案。
+ */
+import { IS_PREVIEW, PREVIEW_FEEDBACK_EMAIL } from "../lib/site";
+---
+
+{IS_PREVIEW && (
+  <div class="preview-banner">
+    <div class="wrap preview-inner">
+      <span class="preview-tag">預覽版</span>
+      <span class="preview-text">這個網站還在審閱中，尚未正式對外公開。</span>
+      <a href={`mailto:${PREVIEW_FEEDBACK_EMAIL}?subject=${encodeURIComponent("學會網站改版建議")}`}>
+        寄建議給我們 →
+      </a>
+    </div>
+  </div>
+)}
+
+<style>
+  .preview-banner {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .preview-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    font-size: 0.8rem;
+  }
+
+  .preview-tag {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+
+  .preview-text {
+    opacity: 0.86;
+  }
+
+  .preview-inner a {
+    margin-left: auto;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .preview-inner a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 560px) {
+    .preview-inner a {
+      margin-left: 0;
+    }
+  }
+</style>

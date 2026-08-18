@@ -1,4 +1,12 @@
 ---
+/**
+ * 長篇法規文件的版面（倫理守則、認證辦法、換證辦法都用這個）。
+ *
+ * 左邊是固定跟著捲動的章節目錄，右邊是條文本體。
+ * 條文開頭如果有「一、」「（二）」這種編號，會被抓出來放到左邊當懸掛編號；
+ * 編號後面若接一個短標題加全形冒號（例如「一、公共政策：」），
+ * 那個短標題會自動變粗，方便一眼掃過去找到要看的那一條。
+ */
 interface Section {
   title: string;
   color: string;
@@ -8,30 +16,180 @@ interface Section {
 
 interface Props {
   sections: Section[];
+  /** 目錄上方的小標，預設「章節」 */
+  tocTitle?: string;
 }
 
-const { sections } = Astro.props;
+const { sections, tocTitle = "章節" } = Astro.props;
+
+// 條文編號有好幾種寫法：「一、」「壹.」「壹、」「（三）」「3.」都要抓得到
+const NUM = /^((?:[一二三四五六七八九十壹貳參肆伍陸柒捌玖拾]+[、.．])|(?:（[一二三四五六七八九十壹貳參肆伍陸柒捌玖拾\d]+）)|(?:\d+[.、]))\s*/;
+
+function parseParagraph(raw: string) {
+  const m = raw.match(NUM);
+  let num: string | null = null;
+  let rest = raw;
+  if (m) {
+    num = m[1].replace(/[、。．.（）()]/g, "");  // 只留數字/中文數字本身
+    rest = raw.slice(m[0].length);
+  }
+
+  // 「公共政策：」這種短前綴當小標；有逗號就不是小標，是正常句子
+  let label: string | null = null;
+  const colon = rest.indexOf("：");
+  if (colon >= 2 && colon <= 10 && !/[，,。]/.test(rest.slice(0, colon))) {
+    label = rest.slice(0, colon + 1);
+    rest = rest.slice(colon + 1);
+  }
+
+  return { num, label, text: rest };
+}
+
+const parsed = sections.map((s) => ({ ...s, items: s.paragraphs.map(parseParagraph) }));
 ---
 
-<div class="doc-accordion">
-  {sections.map((section, i) => (
-    <details class="doc-item" style={`--chapter: ${section.color}; --chapter-text: ${section.colorText}`} open={i === 0}>
-      <summary>
-        <span class="chapter-dot"></span>
-        {section.title}
-      </summary>
-      <div class="doc-body">
-        {section.paragraphs.map((p) => <p>{p}</p>)}
-      </div>
-    </details>
-  ))}
+<div class="doc-layout" data-doc>
+  <nav class="doc-toc" aria-label={tocTitle}>
+    <span class="toc-title">{tocTitle}</span>
+    <ol>
+      {parsed.map((s, i) => (
+        <li>
+          <a href={`#doc-${i}`} style={`--chapter: ${s.color}; --chapter-text: ${s.colorText}`}>
+            <span class="toc-dot"></span>
+            <span>{s.title}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+    <button type="button" class="toc-toggle" data-doc-toggle>全部展開</button>
+  </nav>
+
+  <div class="doc-accordion">
+    {parsed.map((section, i) => (
+      <details
+        class="doc-item"
+        id={`doc-${i}`}
+        style={`--chapter: ${section.color}; --chapter-text: ${section.colorText}`}
+        open={i === 0}
+      >
+        <summary>
+          <span class="chapter-dot"></span>
+          <span class="chapter-title">{section.title}</span>
+          <span class="chapter-count">{section.items.length} 段</span>
+        </summary>
+        <div class="doc-body">
+          {section.items.map((item) => (
+            <p class:list={["doc-para", { "has-num": item.num }]}>
+              {item.num && <span class="para-num">{item.num}</span>}
+              <span class="para-text">
+                {item.label && <strong>{item.label}</strong>}{item.text}
+              </span>
+            </p>
+          ))}
+        </div>
+      </details>
+    ))}
+  </div>
 </div>
 
 <style>
+  .doc-layout {
+    display: grid;
+    grid-template-columns: 15rem 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .doc-layout {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+
+  /* ---- 左欄：章節目錄 ---- */
+  .doc-toc {
+    position: sticky;
+    top: 88px;
+  }
+
+  @media (max-width: 900px) {
+    .doc-toc {
+      position: static;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+  }
+
+  .toc-title {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    margin-bottom: 12px;
+  }
+
+  .doc-toc ol {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .doc-toc a {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .doc-toc a:hover {
+    background: color-mix(in srgb, var(--chapter) 12%, transparent);
+    color: var(--chapter-text);
+  }
+
+  .toc-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--chapter);
+    flex: none;
+    transform: translateY(-1px);
+  }
+
+  .toc-toggle {
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 14px;
+    cursor: pointer;
+  }
+
+  .toc-toggle:hover {
+    border-color: var(--ink-faint);
+    color: var(--ink);
+  }
+
+  /* ---- 右欄：條文 ---- */
   .doc-accordion {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-width: 0;
   }
 
   .doc-item {
@@ -39,7 +197,8 @@ const { sections } = Astro.props;
     border: 1px solid var(--line);
     border-left: 3px solid var(--chapter);
     border-radius: 12px;
-    padding: 4px 18px;
+    padding: 2px 22px;
+    scroll-margin-top: 88px;
   }
 
   .doc-item summary {
@@ -52,6 +211,7 @@ const { sections } = Astro.props;
     list-style: none;
     display: flex;
     align-items: center;
+    gap: 10px;
   }
 
   .doc-item summary::-webkit-details-marker {
@@ -63,16 +223,27 @@ const { sections } = Astro.props;
     height: 9px;
     border-radius: 50%;
     background: var(--chapter);
-    margin-right: 10px;
     flex-shrink: 0;
+  }
+
+  .chapter-title {
+    min-width: 0;
+  }
+
+  .chapter-count {
+    margin-left: auto;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--ink-faint);
+    white-space: nowrap;
   }
 
   .doc-item summary::after {
     content: "▸";
-    display: inline-block;
-    margin-left: auto;
     color: var(--chapter-text);
     transition: transform 0.15s ease;
+    flex: none;
   }
 
   .doc-item[open] summary::after {
@@ -80,19 +251,77 @@ const { sections } = Astro.props;
   }
 
   .doc-body {
-    padding-bottom: 20px;
+    padding: 4px 0 22px;
+    border-top: 1px dashed var(--line);
   }
 
-  .doc-body p {
+  .doc-para {
+    display: flex;
+    gap: 12px;
     font-size: 0.98rem;
     color: var(--ink);
-    max-width: 68ch;
-    margin: 0 0 16px;
-    line-height: 1.85;
-    white-space: pre-line;
+    max-width: 44em;
+    margin: 18px 0 0;
+    line-height: 1.9;
   }
 
-  .doc-body p:last-child {
-    margin-bottom: 0;
+  /* 有編號的條文，編號掛在左邊，內文對齊成一直線 */
+  .para-num {
+    flex: none;
+    width: 1.9em;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.86rem;
+    line-height: 1.9;
+    color: var(--chapter-text);
+    background: color-mix(in srgb, var(--chapter) 13%, transparent);
+    border-radius: 6px;
+    height: fit-content;
+  }
+
+  .para-text {
+    white-space: pre-line;
+    min-width: 0;
+  }
+
+  .para-text strong {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  /* 沒有編號的段落不用留左邊的位置 */
+  .doc-para:not(.has-num) {
+    padding-left: 0;
   }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-doc]").forEach((root) => {
+    const items = Array.from(root.querySelectorAll("details"));
+    const btn = root.querySelector<HTMLButtonElement>("[data-doc-toggle]");
+    if (!btn) return;
+
+    const sync = () => {
+      btn.textContent = items.every((d) => d.open) ? "全部收合" : "全部展開";
+    };
+
+    btn.addEventListener("click", () => {
+      const shouldOpen = !items.every((d) => d.open);
+      items.forEach((d) => (d.open = shouldOpen));
+      sync();
+    });
+
+    items.forEach((d) => d.addEventListener("toggle", sync));
+
+    // 從目錄點過去時，把該章節先打開再捲過去
+    root.querySelectorAll<HTMLAnchorElement>(".doc-toc a").forEach((a) => {
+      a.addEventListener("click", () => {
+        const target = root.querySelector<HTMLDetailsElement>(a.getAttribute("href") || "");
+        if (target) target.open = true;
+      });
+    });
+
+    sync();
+  });
+</script>

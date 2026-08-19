@@ -24,3 +24,15 @@ Consult these guides before working on related tasks:
 - [Adding or managing content](https://docs.astro.build/en/guides/content-collections/)
 - [Adding styles or using Tailwind](https://docs.astro.build/en/guides/styling/)
 - [Supporting multiple languages](https://docs.astro.build/en/guides/internationalization/)
+
+## Commit 規則（重要）
+
+**這個 repo 的 commit 訊息不要加 `Co-Authored-By` 尾註。**
+
+網站部署在 Netlify，免費方案對私有 repo 只允許一位 Git 貢獻者，
+而 Netlify 會把 commit 訊息裡的 co-author 也算成一位貢獻者。
+加了那一行，建置就會失敗並顯示 "unrecognized Git contributor"，
+而且失敗訊息不會提到 co-author，很難聯想到原因（2026-08-19 實際踩過，
+官網因此有一整天沒能成功更新，線上停在更早的版本）。
+
+作者身分統一用 repo 既有的 `Drlin <ntnuchinese1024@gmail.com>`。

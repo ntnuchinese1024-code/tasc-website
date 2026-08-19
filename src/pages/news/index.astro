@@ -3,6 +3,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHero from "../../components/PageHero.astro";
 import CoursePoster from "../../components/CoursePoster.astro";
 import { wrapHeadingHtml } from "../../lib/wrap-heading";
+import {
+  getOpenCourses,
+  accentVars,
+  formatEventTime,
+  type EventSummary,
+} from "../../lib/registration-api";
 
 interface EventItem {
   date: string;
@@ -18,7 +24,7 @@ interface EventItem {
   poster?: string;
 }
 
-const upcoming: EventItem[] = [
+const handWrittenUpcoming: EventItem[] = [
   {
     date: "9月5日（六）",
     sortKey: "2026-09-05",
@@ -54,6 +60,55 @@ const upcoming: EventItem[] = [
     href: "/news/upcoming/gender-case-consultation",
   },
 ];
+
+// ---------------------------------------------------------------------------
+// 報名系統後台上架的課程
+// ---------------------------------------------------------------------------
+// 上面那個 upcoming 陣列是早期手寫的課程，之後新開的課一律從報名系統來，
+// 秘書處在後台按下發布，這裡就會自動多一張卡片，不需要改這個檔案。
+// 兩邊以網址去重，資料庫的版本優先——舊的手寫項目搬過去之後刪掉即可。
+
+/** 把報名系統的課程轉成這一頁既有的卡片格式，讓兩種來源共用同一套版面。 */
+function toEventItem(course: EventSummary): EventItem {
+  const vars = accentVars(course.accent);
+  const dateLabel = course.starts_at
+    ? new Intl.DateTimeFormat("zh-TW", {
+        timeZone: "Asia/Taipei",
+        month: "long",
+        day: "numeric",
+        weekday: "narrow",
+      }).format(new Date(course.starts_at))
+    : "時間另行公告";
+
+  const seats =
+    course.registration.status === "OPEN"
+      ? `尚餘 ${course.registration.remaining} 位`
+      : course.registration.status === "FULL"
+        ? "名額已滿"
+        : "";
+
+  return {
+    date: dateLabel,
+    sortKey: course.starts_at ? course.starts_at.slice(0, 10) : "9999-12-31",
+    tag: course.instructor ? `講師・${course.instructor}` : "課程",
+    color: vars.color,
+    colorText: vars.text,
+    title: course.title,
+    body: course.description ?? "",
+    meta: [formatEventTime(course.starts_at, course.ends_at), course.location, seats]
+      .filter(Boolean)
+      .join("・"),
+    href: `/news/upcoming/${course.slug}`,
+    poster: course.poster_url ?? undefined,
+  };
+}
+
+const dbCourses = (await getOpenCourses()).map(toEventItem);
+const dbHrefs = new Set(dbCourses.map((c) => c.href));
+
+const upcoming: EventItem[] = [...dbCourses, ...handWrittenUpcoming.filter((e) => !dbHrefs.has(e.href))].sort(
+  (a, b) => a.sortKey.localeCompare(b.sortKey),
+);
 
 const past: EventItem[] = [
   {

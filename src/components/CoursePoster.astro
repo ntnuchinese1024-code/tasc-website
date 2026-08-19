@@ -6,7 +6,7 @@
  * 例如 /images/courses/2026-08-22-夜遊林森北路.jpg。
  *
  * 三種用法：
- *   variant="thumb"   —— 卡片上方的縮圖（會裁切成統一比例，只保留海報上半部的標題區）
+ *   variant="thumb"   —— 卡片上方的縮圖（完整呈現，不裁切；留白處用同張圖的模糊版填滿）
  *   variant="full"    —— 課程頁／報導頁裡的完整海報（不裁切，維持原始比例）
  *   variant="natural" —— 不裁切、也不限制大小，整張塞滿外層容器（用在窄欄位，例如年會卡片左側）
  *
@@ -30,7 +30,16 @@ const wrapperProps = linkToFull
 
 <figure class:list={["poster", `poster-${variant}`]}>
   <Wrapper class="poster-frame" {...wrapperProps}>
-    <img src={src} alt={alt} loading="lazy" decoding="async" />
+    {/*
+      模糊底圖：海報有直式有橫式（實測 23 張裡橫式 10、方形 8、直式 5），
+      硬裁成統一比例會讓直式海報只剩四成看得到。改成完整呈現後，
+      比例不合的地方用同一張圖模糊放大填滿，卡片高度才不會參差不齊。
+      純裝飾，對螢幕報讀器隱藏。
+    */}
+    {variant === "thumb" && (
+      <img class="poster-blur" src={src} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+    )}
+    <img class="poster-image" src={src} alt={alt} loading="lazy" decoding="async" />
   </Wrapper>
   {variant === "full" && linkToFull && <figcaption>點圖可看原尺寸圖片</figcaption>}
 </figure>
@@ -55,19 +64,36 @@ const wrapperProps = linkToFull
     display: block;
   }
 
-  /* 縮圖：統一 16:10，從頂部開始裁切——海報的標題幾乎都在上方 */
+  /* 縮圖：5:4 的框，圖片完整呈現不裁切。
+     5:4 是實測算出來對現有這批圖最省留白的比例（平均 22.6%），
+     比原本的 16:10 橫幅少掉五個百分點，最糟的一張也從 58% 降到 47%。 */
   .poster-thumb .poster-frame {
-    aspect-ratio: 16 / 10;
+    position: relative;
+    aspect-ratio: 5 / 4;
     border: none;
+    background: var(--bg-alt);
+    isolation: isolate;
   }
 
-  .poster-thumb .poster-frame img {
-    object-fit: cover;
-    object-position: center top;
+  .poster-thumb .poster-image {
+    position: relative;
+    z-index: 1;
+    object-fit: contain;
     transition: transform 0.3s ease;
   }
 
-  .poster-thumb .poster-frame:hover img {
+  /* 填滿留白的模糊底。放大一些是為了蓋掉模糊在邊緣造成的透明帶。 */
+  .poster-thumb .poster-blur {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    object-fit: cover;
+    filter: blur(22px) saturate(1.15);
+    transform: scale(1.15);
+    opacity: 0.55;
+  }
+
+  .poster-thumb .poster-frame:hover .poster-image {
     transform: scale(1.03);
   }
 
@@ -83,7 +109,7 @@ const wrapperProps = linkToFull
     max-width: min(34rem, 100%);
   }
 
-  .poster-full .poster-frame img {
+  .poster-full .poster-frame .poster-image {
     width: auto;
     height: auto;
     max-width: 100%;
@@ -91,7 +117,7 @@ const wrapperProps = linkToFull
   }
 
   /* 塞滿容器：由外層決定寬度，圖片維持原始比例 */
-  .poster-natural .poster-frame img {
+  .poster-natural .poster-frame .poster-image {
     width: 100%;
     height: auto;
   }

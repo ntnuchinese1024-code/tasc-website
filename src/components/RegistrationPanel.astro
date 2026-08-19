@@ -48,7 +48,11 @@ const href = registrationUrl(event.slug);
       <dt>名額</dt>
       <dd>
         <span class="reg-seats" data-seats>
-          {is_open ? `尚餘 ${remaining} 位 / 共 ${event.max_capacity} 位` : REGISTRATION_LABEL[status]}
+          {is_open
+            ? remaining === null
+              ? "開放報名中"
+              : `尚餘 ${remaining} 位 / 共 ${event.max_capacity} 位`
+            : REGISTRATION_LABEL[status]}
         </span>
       </dd>
     </div>
@@ -83,7 +87,11 @@ const href = registrationUrl(event.slug);
       const data = await response.json();
 
       const label: Record<string, string> = {
-        OPEN: `尚餘 ${data.remaining} 位 / 共 ${data.max_capacity} 位`,
+        // remaining 為 null＝秘書處選擇不公開人數，只說「開放報名中」
+        OPEN:
+          data.remaining === null
+            ? "開放報名中"
+            : `尚餘 ${data.remaining} 位 / 共 ${data.max_capacity} 位`,
         FULL: "名額已滿",
         NOT_OPEN: "尚未開放報名",
         CLOSED: "報名已截止",

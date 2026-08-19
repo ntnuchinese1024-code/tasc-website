@@ -56,7 +56,11 @@ export interface EventSummary {
   report_cover_url: string | null;
   report_cover_alt: string | null;
   report_published_at: string | null;
-  registration: { status: RegistrationStatusCode; remaining: number; is_open: boolean };
+  /**
+   * remaining 是 null 代表秘書處關閉了「對外顯示名額」——
+   * 不是抓失敗，是刻意不公開，畫面上就不要顯示數字。
+   */
+  registration: { status: RegistrationStatusCode; remaining: number | null; is_open: boolean };
   has_report: boolean;
 }
 

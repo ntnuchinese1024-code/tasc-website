@@ -82,7 +82,9 @@ function toEventItem(course: EventSummary): EventItem {
 
   const seats =
     course.registration.status === "OPEN"
-      ? `尚餘 ${course.registration.remaining} 位`
+      ? course.registration.remaining === null
+        ? "" // 秘書處選擇不公開人數
+        : `尚餘 ${course.registration.remaining} 位`
       : course.registration.status === "FULL"
         ? "名額已滿"
         : "";

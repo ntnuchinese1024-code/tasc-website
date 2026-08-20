@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import FigureRing from "../components/decor/FigureRing.astro";
 import FigureMark from "../components/decor/FigureMark.astro";
 import ArcField from "../components/decor/ArcField.astro";
+import VideoEmbed from "../components/VideoEmbed.astro";
 import { wrapHeadingHtml } from "../lib/wrap-heading";
 
 const pillars = [
@@ -100,6 +101,32 @@ const events = [
     </div>
   </section>
 
+  <section class="intro-video">
+    <div class="wrap">
+      <div class="video-layout">
+        <div class="video-copy">
+          <span class="eyebrow">認識性諮商</span>
+          <h2>性諮商師到底在做什麼？</h2>
+          <p>
+            性諮商是一門需要專門訓練的專業。這支影片從實務工作的角度，
+            說明性諮商師如何陪伴當事人談論性議題，以及這份工作和一般
+            心理諮商的差別。
+          </p>
+          <a href="/counselors" class="more">認識性諮商師認證 →</a>
+        </div>
+
+        <VideoEmbed
+          class="video-media"
+          videoId="2MQnFY7w24g"
+          title="【直擊!】一窺專業又神秘的職業！──性諮商師"
+          poster="/images/video/sex-counseling-intro.jpg"
+          source="荷光性諮商專業訓練中心"
+          sourceUrl="https://www.youtube.com/@beoneplace"
+        />
+      </div>
+    </div>
+  </section>
+
   <section class="events">
     <ArcField class="decor-layer events-arcs" weight={2.4} />
     <div class="wrap decor-above">
@@ -191,8 +218,7 @@ const events = [
     .hero {
       padding-top: 40px;
     }
-    /* 手機版標題會佔滿整個寬度，實心的環壓上去會擋到字，
-       所以這裡直接收掉，色彩交給下面那排人形橫帶負責。 */
+    /* 手機版標題會佔滿整個寬度，實心的環壓上去會擋到字，所以這裡直接收掉。 */
     .hero :global(.hero-ring) {
       display: none;
     }
@@ -283,6 +309,55 @@ const events = [
     font-size: 0.85rem;
     color: var(--ink-soft);
     margin: 0;
+  }
+
+  .intro-video {
+    padding: 48px 0;
+    background: var(--bg-alt);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .video-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    gap: 32px;
+    align-items: center;
+  }
+
+  .video-copy .eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--magenta-deep);
+  }
+
+  .video-copy h2 {
+    font-size: clamp(1.15rem, 3vw, 1.4rem);
+    margin-bottom: 12px;
+  }
+
+  .video-copy p {
+    margin: 0 0 16px;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+  }
+
+  .video-copy .more {
+    font-size: 0.86rem;
+    color: var(--blue-deep);
+    text-decoration: none;
+    font-weight: 700;
+  }
+
+  .video-copy .more:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 860px) {
+    /* 窄螢幕改成上下排：先講這是什麼，再放影片 */
+    .video-layout {
+      grid-template-columns: 1fr;
+      gap: 22px;
+    }
   }
 
   .events {

@@ -1,0 +1,225 @@
+---
+/**
+ * 嵌入一支 YouTube 影片。
+ *
+ * 一開始只顯示一張存在本站的封面圖，訪客真的按下播放才去跟 YouTube 要影片。
+ * 這樣做有兩個好處：頁面載入快（不用先下載 YouTube 那一整包播放器），以及
+ * 沒按播放的訪客不會被 YouTube 記錄追蹤。按下去之後改用 youtube-nocookie
+ * 網域，那是 YouTube 官方提供、不放追蹤 cookie 的版本。
+ *
+ * 用法：
+ *   <VideoEmbed
+ *     videoId="2MQnFY7w24g"
+ *     title="影片標題"
+ *     poster="/images/video/檔名.jpg"
+ *     source="頻道名稱"
+ *     sourceUrl="頻道網址"
+ *   />
+ *
+ * 封面圖怎麼來：YouTube 每支影片都有現成的封面，網址是
+ * https://i.ytimg.com/vi/<影片ID>/maxresdefault.jpg
+ * 下載後放進 public/images/video/ 即可。
+ */
+interface Props {
+  videoId: string;
+  title: string;
+  poster: string;
+  /** 影片來源（頻道名稱），會標在影片下方 */
+  source?: string;
+  sourceUrl?: string;
+  class?: string;
+}
+
+const {
+  videoId,
+  title,
+  poster,
+  source,
+  sourceUrl,
+  class: className = "",
+} = Astro.props;
+
+const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+---
+
+<figure class:list={["video", className]}>
+  <div class="video-frame" data-video-id={videoId}>
+    <button type="button" class="video-play" aria-label={`播放影片：${title}`}>
+      <img src={poster} alt="" width="1280" height="720" loading="lazy" decoding="async" />
+      <span class="video-btn" aria-hidden="true">
+        <svg viewBox="0 0 68 48" width="68" height="48">
+          <path
+            class="video-btn-bg"
+            d="M66.5 7.7c-.8-2.9-2.5-5.4-5.4-6.2C55.8.1 34 0 34 0S12.2.1 6.9 1.5C4 2.3 2.3 4.8 1.5 7.7 0 13.1 0 24 0 24s0 10.9 1.5 16.3c.8 2.9 2.5 5.4 5.4 6.2C12.2 47.9 34 48 34 48s21.8-.1 27.1-1.5c2.9-.8 4.6-3.3 5.4-6.2C68 34.9 68 24 68 24s0-10.9-1.5-16.3z"
+          />
+          <path class="video-btn-arrow" d="M45 24 27 14v20" />
+        </svg>
+      </span>
+    </button>
+  </div>
+
+  <figcaption class="video-caption">
+    <span class="video-title">{title}</span>
+    {source && (
+      <span class="video-source">
+        影片來源：
+        {sourceUrl ? (
+          <a href={sourceUrl} target="_blank" rel="noopener noreferrer">{source}</a>
+        ) : (
+          source
+        )}
+      </span>
+    )}
+  </figcaption>
+
+  <noscript>
+    {/* 沒有 JavaScript 的情況下，至少給一條前往 YouTube 的路 */}
+    <p class="video-fallback">
+      <a href={watchUrl} target="_blank" rel="noopener noreferrer">在 YouTube 上觀看這支影片 →</a>
+    </p>
+  </noscript>
+</figure>
+
+<style>
+  .video {
+    margin: 0;
+  }
+
+  .video-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--ink);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+
+  .video-frame :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .video-play {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  .video-play img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* 封面上壓一層淡淡的暗色，讓播放鍵在任何畫面上都看得清楚 */
+  .video-play::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(33, 27, 20, 0.06), rgba(33, 27, 20, 0.28));
+    transition: background 0.2s ease;
+  }
+
+  .video-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    line-height: 0;
+  }
+
+  .video-btn-bg {
+    fill: rgba(33, 27, 20, 0.72);
+    transition: fill 0.2s ease;
+  }
+
+  .video-btn-arrow {
+    fill: #fff;
+  }
+
+  .video-play:hover .video-btn-bg,
+  .video-play:focus-visible .video-btn-bg {
+    /* 滑過去時換成學會的紅，跟 logo 同一個色 */
+    fill: var(--red);
+  }
+
+  .video-play:hover::after {
+    background: linear-gradient(180deg, rgba(33, 27, 20, 0.02), rgba(33, 27, 20, 0.18));
+  }
+
+  .video-play:focus-visible {
+    outline: 3px solid var(--blue-deep);
+    outline-offset: 3px;
+  }
+
+  .video-caption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    margin-top: 14px;
+    font-size: 0.9rem;
+  }
+
+  .video-title {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .video-source {
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+  }
+
+  .video-source a {
+    color: var(--ink-soft);
+  }
+
+  .video-fallback {
+    margin: 12px 0 0;
+    font-size: 0.9rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .video-play::after,
+    .video-btn-bg {
+      transition: none;
+    }
+  }
+
+  @media print {
+    .video-frame {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // 按下封面才把 YouTube 播放器換上來，並直接開始播放。
+  document.querySelectorAll<HTMLElement>(".video-frame").forEach((frame) => {
+    const button = frame.querySelector("button");
+    const videoId = frame.dataset.videoId;
+    if (!button || !videoId) return;
+
+    button.addEventListener("click", () => {
+      const iframe = document.createElement("iframe");
+      iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+      iframe.title = button.getAttribute("aria-label")?.replace(/^播放影片：/, "") ?? "";
+      iframe.allow =
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      iframe.allowFullscreen = true;
+      iframe.referrerPolicy = "strict-origin-when-cross-origin";
+      frame.replaceChildren(iframe);
+    });
+  });
+</script>

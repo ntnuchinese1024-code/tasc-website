@@ -7,6 +7,7 @@ import {
   getOpenCourses,
   accentVars,
   formatEventTime,
+  formatPriceSummary,
   type EventSummary,
 } from "../../lib/registration-api";
 
@@ -24,49 +25,13 @@ interface EventItem {
   poster?: string;
 }
 
-const handWrittenUpcoming: EventItem[] = [
-  {
-    date: "9月5日（六）",
-    sortKey: "2026-09-05",
-    poster: "/images/courses/2026-09-05-月經平權.jpg",
-    tag: "線上講座",
-    color: "var(--blue)",
-    colorText: "var(--blue-deep)",
-    title: "當身體遇見社會：讓月經，被好好說出來——臺灣月經平權的推廣與現況",
-    body: "理解月經貧窮與污名如何影響個人與社會、推動倡議時的真實挑戰、台灣與全球的行動經驗，以及生理用品的多元選擇。",
-    meta: "講師 鄭涵馨　會員 300 元／非會員 600 元　報名截止 8/25",
-  },
-  {
-    date: "8月22日（六）",
-    sortKey: "2026-08-22",
-    poster: "/images/courses/2026-08-22-夜遊林森北路.jpg",
-    tag: "走讀活動",
-    color: "var(--red)",
-    colorText: "var(--red-deep)",
-    title: "夜遊林森北路：從四大鬼樓反思性產業與性相關法規",
-    body: "以東光、春暉、錦新、和益金銀四大指標大樓為經緯，在夜行中反思都市傳說背後的性產業與八大行業的結構性困境。",
-    meta: "講師 CL經紀人、李翊平　會員 700 元／非會員 900 元　限額 12 人",
-  },
-  {
-    date: "8月16日（日）",
-    sortKey: "2026-08-16",
-    poster: "/images/courses/2026-08-16-性別事件行為人.jpg",
-    tag: "線上講座",
-    color: "var(--green)",
-    colorText: "var(--green-deep)",
-    title: "當代性別事件行為人諮商處遇實務經驗分享交流",
-    body: "從助人者角度理解偷窺與偷拍事件行為人可能經驗到的內在狀態與歷程。",
-    meta: "講師 龍冠華　會員 100 元／非會員 400 元",
-    href: "/news/upcoming/gender-case-consultation",
-  },
-];
-
 // ---------------------------------------------------------------------------
-// 報名系統後台上架的課程
+// 課程一律來自報名系統後台
 // ---------------------------------------------------------------------------
-// 上面那個 upcoming 陣列是早期手寫的課程，之後新開的課一律從報名系統來，
-// 秘書處在後台按下發布，這裡就會自動多一張卡片，不需要改這個檔案。
-// 兩邊以網址去重，資料庫的版本優先——舊的手寫項目搬過去之後刪掉即可。
+// 秘書處在後台按下發布，這一頁就會自動多一張卡片，不需要改這個檔案。
+// 原本手寫在這裡的三堂課（8/16、8/22、9/5）已經搬進資料庫，所以陣列清空了。
+// 「已結束的活動」那一區還留著更早以前的手寫紀錄，那些沒有報名資料，
+// 就讓它們留在檔案裡；日後想搬也是一次搬一堂，兩種來源可以並存。
 
 /** 把報名系統的課程轉成這一頁既有的卡片格式，讓兩種來源共用同一套版面。 */
 function toEventItem(course: EventSummary): EventItem {
@@ -97,7 +62,12 @@ function toEventItem(course: EventSummary): EventItem {
     colorText: vars.text,
     title: course.title,
     body: course.description ?? "",
-    meta: [formatEventTime(course.starts_at, course.ends_at), course.location, seats]
+    meta: [
+      formatEventTime(course.starts_at, course.ends_at),
+      course.location,
+      formatPriceSummary(course.price, course.price_tiers),
+      seats,
+    ]
       .filter(Boolean)
       .join("・"),
     href: `/news/upcoming/${course.slug}`,
@@ -105,14 +75,25 @@ function toEventItem(course: EventSummary): EventItem {
   };
 }
 
-const dbCourses = (await getOpenCourses()).map(toEventItem);
-const dbHrefs = new Set(dbCourses.map((c) => c.href));
-
-const upcoming: EventItem[] = [...dbCourses, ...handWrittenUpcoming.filter((e) => !dbHrefs.has(e.href))].sort(
-  (a, b) => a.sortKey.localeCompare(b.sortKey),
+// 課程結束之後不會馬上從後台下架（要留著寫課程報導），
+// 所以在這裡依開課時間分流：還沒開始的放「近期活動」，已經上完的直接歸到下面那一區。
+// 判斷用當天凌晨而不是「此刻」，當天的課整天都還留在近期活動裡。
+const dbCourses = await getOpenCourses();
+const todayStart = new Date(
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Taipei" }).format(new Date()) + "T00:00:00+08:00",
 );
 
-const past: EventItem[] = [
+const isFinished = (course: EventSummary) =>
+  course.starts_at !== null && new Date(course.starts_at) < todayStart;
+
+const upcoming: EventItem[] = dbCourses
+  .filter((c) => !isFinished(c))
+  .map(toEventItem)
+  .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+const dbFinished: EventItem[] = dbCourses.filter(isFinished).map(toEventItem);
+
+const handWrittenPast: EventItem[] = [
   {
     date: "8月15日（六）",
     sortKey: "2026-08-15",
@@ -180,6 +161,12 @@ const past: EventItem[] = [
     meta: "講師 許庭韶",
   },
 ];
+
+// 資料庫版本優先：同一堂課若兩邊都有，以後台的為準（點得進去、之後也會有報導）。
+const pastHrefs = new Set(dbFinished.map((e) => e.href));
+const past: EventItem[] = [...dbFinished, ...handWrittenPast.filter((e) => !pastHrefs.has(e.href))].sort(
+  (a, b) => b.sortKey.localeCompare(a.sortKey),
+);
 ---
 
 <BaseLayout title="最新消息" description="台灣性諮商學會近期與歷年課程、講座、年會活動公告。">
@@ -223,18 +210,22 @@ const past: EventItem[] = [
     <div class="wrap">
       <h2>已結束的活動</h2>
       <div class="event-grid">
-        {past.map((e) => (
-          <article class="event-card is-past" style={`--dot: ${e.color}; --dot-text: ${e.colorText}`}>
-            {e.poster && (
-              <CoursePoster src={e.poster} alt={`${e.title} 課程海報`} variant="thumb" />
-            )}
-            <span class="event-tag">{e.tag}</span>
-            <span class="event-date">{e.date}</span>
-            <h3 set:html={wrapHeadingHtml(e.title)} />
-            <p>{e.body}</p>
-            <div class="event-meta">{e.meta}</div>
-          </article>
-        ))}
+        {past.map((e) => {
+          const Tag = e.href ? "a" : "article";
+          return (
+            <Tag class="event-card is-past" href={e.href} style={`--dot: ${e.color}; --dot-text: ${e.colorText}`}>
+              {e.poster && (
+                <CoursePoster src={e.poster} alt={`${e.title} 課程海報`} variant="thumb" linkToFull={!e.href} />
+              )}
+              <span class="event-tag">{e.tag}</span>
+              <span class="event-date">{e.date}</span>
+              <h3 set:html={wrapHeadingHtml(e.title)} />
+              <p>{e.body}</p>
+              <div class="event-meta">{e.meta}</div>
+              {e.href && <span class="event-register">課程頁 →</span>}
+            </Tag>
+          );
+        })}
       </div>
     </div>
   </section>

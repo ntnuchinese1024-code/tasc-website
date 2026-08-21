@@ -23,6 +23,14 @@ export type EventKind = "course" | "workshop" | "lecture" | "annual" | "other";
 export type AccentName = "blue" | "red" | "green" | "magenta" | "orange" | "gold";
 export type RegistrationStatusCode = "OPEN" | "FULL" | "NOT_OPEN" | "CLOSED" | "DISABLED";
 
+/** 身分別價目（會員／非會員／學生）。空陣列＝單一價格，看 price。 */
+export interface PriceTier {
+  id: string;
+  label: string;
+  price: number;
+  note?: string;
+}
+
 export interface GalleryImage {
   url: string;
   alt: string;
@@ -45,6 +53,7 @@ export interface EventSummary {
   ends_at: string | null;
   location: string | null;
   price: number;
+  price_tiers: PriceTier[];
   max_capacity: number;
   current_registered: number;
   registration_enabled: boolean;
@@ -191,6 +200,17 @@ export function eventYear(event: { report_published_at: string | null; starts_at
 
 export function formatPrice(price: number): string {
   return price > 0 ? `NT$ ${price.toLocaleString("zh-TW")}` : "免費";
+}
+
+/**
+ * 費用文字。學會的課多半是「會員 100／非會員 400」這種雙價，
+ * 報名系統把每一檔的金額都給了，這裡就照實列出來，不要只顯示其中一個數字。
+ */
+export function formatPriceSummary(price: number, tiers?: PriceTier[] | null): string {
+  if (Array.isArray(tiers) && tiers.length > 0) {
+    return tiers.map((t) => `${t.label} ${formatPrice(t.price)}`).join("／");
+  }
+  return formatPrice(price);
 }
 
 /** 報名狀態 → 顯示文字。 */

@@ -11,7 +11,7 @@
  */
 import {
   formatEventTime,
-  formatPrice,
+  formatPriceSummary,
   REGISTRATION_LABEL,
   REGISTRATION_ORIGIN,
   registrationUrl,
@@ -42,7 +42,7 @@ const href = registrationUrl(event.slug);
     </div>
     <div>
       <dt>費用</dt>
-      <dd>{formatPrice(event.price)}</dd>
+      <dd>{formatPriceSummary(event.price, event.price_tiers)}</dd>
     </div>
     <div>
       <dt>名額</dt>

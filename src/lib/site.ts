@@ -10,7 +10,7 @@
  * 👉 正式對外公開的那一天，把下面這行的 true 改成 false，重新發布一次就好，
  *    其他檔案都不用動。
  */
-export const IS_PREVIEW = true;
+export const IS_PREVIEW = false;
 
 /** 預覽版提示條上寫的回饋方式 */
 export const PREVIEW_FEEDBACK_EMAIL = "tasc.tw@gmail.com";

@@ -10,6 +10,11 @@ interface Props {
   description?: string;
 }
 const { title, description = "台灣性諮商學會（TASC）" } = Astro.props;
+
+// 這一頁的「正版網址」。同一頁如果同時能從 tasctaiwan.tw、www.tasctaiwan.tw
+// 或舊的 netlify 網址打開，canonical 會告訴 Google 只認 astro.config.mjs 裡設定的那一個，
+// 避免搜尋排名被自己的分身稀釋。
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
 ---
 
 <html lang="zh-Hant">
@@ -18,6 +23,7 @@ const { title, description = "台灣性諮商學會（TASC）" } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     {IS_PREVIEW && <meta name="robots" content="noindex, nofollow" />}
+    {canonical && <link rel="canonical" href={canonical} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} - 台灣性諮商學會</title>
   </head>

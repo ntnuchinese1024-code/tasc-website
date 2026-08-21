@@ -3,6 +3,9 @@ dist/
 # generated types
 .astro/
 
+# wrangler 的本機快取
+.wrangler/
+
 # dependencies
 node_modules/
 

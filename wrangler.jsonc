@@ -1,0 +1,17 @@
+{
+  // Cloudflare Workers（靜態資源）的部署設定。
+  //
+  // 官網是純靜態站，這個 Worker 沒有任何程式碼，只負責把 npm run build 產出的
+  // dist 資料夾當成網站供稿。Cloudflare 後台的建置指令是：
+  //   Build command  : npm run build      ← 產生 dist
+  //   Deploy command : npx wrangler deploy ← 讀這個檔，把 dist 送上去
+  // 少了這個檔，deploy 那一步不知道要部署什麼，自動建置會失敗。
+  //
+  // name 必須跟後台的 Worker 名稱一致，改名等於部署到另一個 Worker。
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tasctaiwan",
+  "compatibility_date": "2026-08-21",
+  "assets": {
+    "directory": "./dist"
+  }
+}

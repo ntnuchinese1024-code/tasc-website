@@ -15,6 +15,30 @@ const { title, description = "台灣性諮商學會（TASC）" } = Astro.props;
 // 或舊的 netlify 網址打開，canonical 會告訴 Google 只認 astro.config.mjs 裡設定的那一個，
 // 避免搜尋排名被自己的分身稀釋。
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+
+/** 分享到 FB／LINE 時顯示的預覽圖。放在 public/ 底下，換圖不用改程式。 */
+const ogImage = Astro.site ? new URL("/logo.png", Astro.site).href : undefined;
+
+/**
+ * 給搜尋引擎看的組織資料（JSON-LD）。
+ *
+ * 這段不是給人看的，是讓 Google 明確知道「這個網站代表哪一個組織」，
+ * 搜尋學會名稱時比較容易出現知識面板、也比較不會跟同名機構混淆。
+ * 只需要放在首頁一次就夠，重複放在每一頁反而是雜訊。
+ */
+const isHome = Astro.url.pathname === "/";
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "社團法人台灣性諮商學會",
+  alternateName: ["台灣性諮商學會", "TASC", "Taiwan Association of Sex Counseling"],
+  url: "https://tasctaiwan.tw/",
+  logo: "https://tasctaiwan.tw/logo.png",
+  email: "tasc.tw@gmail.com",
+  areaServed: "TW",
+  description:
+    "台灣性諮商學會由一群關心性諮商發展的性諮商師、心理師與相關專業人士組成，推動性諮商專業訓練、認證與公眾教育。",
+};
 ---
 
 <html lang="zh-Hant">
@@ -24,6 +48,20 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
     <meta name="description" content={description} />
     {IS_PREVIEW && <meta name="robots" content="noindex, nofollow" />}
     {canonical && <link rel="canonical" href={canonical} />}
+
+    {/* 分享到 Facebook／LINE 時的預覽卡片。沒有這些的話只會顯示一條乾巴巴的網址。 */}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="社團法人台灣性諮商學會" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {isHome && (
+      <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)} />
+    )}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} - 台灣性諮商學會</title>
   </head>

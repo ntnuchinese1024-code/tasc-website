@@ -1,0 +1,119 @@
+---
+/**
+ * 會慶留言頁的官網入口（轉址頁）。
+ *
+ * 為什麼要有這一頁：留言功能需要資料庫，只能住在報名系統
+ * （tasc-registration.vercel.app）。但那個網址不適合印在會慶的文宣、
+ * 立牌或 QR code 上——太長、也不是學會自己的網域。
+ *
+ * 有了這一頁，對外一律公告 tasctaiwan.tw/anniversary，
+ * 而且日後報名系統換網域時，只要改 REGISTRATION_ORIGIN 一個地方，
+ * 已經印出去的 QR code 與海報統統不必重印。
+ *
+ * 刻意不套 BaseLayout：轉址頁要越輕越好，訪客通常連看都來不及看。
+ * 但 OG 標籤要完整——貼進 LINE 或 Facebook 時，爬蟲不會跟著轉址走，
+ * 沒有這些標籤就只會顯示一條乾巴巴的網址。
+ */
+import { REGISTRATION_ORIGIN } from "../lib/registration-api";
+
+const target = `${REGISTRATION_ORIGIN}/anniversary`;
+const title = "凱道辦桌・時光留言席｜台灣性諮商學會 2026 會慶";
+const description =
+  "2013 年 9 月 7 日，我們在凱道辦桌成會；走過舊平台時代，如今藉由 AI 浪潮親手打造新家。挑一道菜、敬一杯茶，留下你的回憶與祝福。";
+const ogImage = Astro.site ? new URL("/logo.png", Astro.site).href : undefined;
+---
+
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- 這頁只是通道，正版內容在報名系統那邊，請搜尋引擎認那一個 -->
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href={target} />
+
+    <!-- 沒有 JavaScript 也會跳轉 -->
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="社團法人台灣性諮商學會" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={target} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+
+  <body>
+    <main>
+      <p class="lantern" aria-hidden="true">🏮</p>
+      <p class="eyebrow">凱道辦桌・時光留言席</p>
+      <h1>正在為你帶位入席…</h1>
+      <p class="hint">如果畫面沒有自動跳轉，請點下面這顆按鈕。</p>
+      <a href={target}>前往留言席 →</a>
+    </main>
+
+    <script is:inline define:vars={{ target }}>
+      // replace 而不是 assign：讓「上一頁」直接回到來源，
+      // 不會卡在這個轉址頁跟目的地之間來回彈。
+      window.location.replace(target);
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        text-align: center;
+        background: radial-gradient(120% 130% at 50% -10%, #c9301a 0%, #9d200f 42%, #4a1409 100%);
+        color: #fff;
+        font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system, sans-serif;
+      }
+
+      .lantern {
+        margin: 0;
+        font-size: 44px;
+      }
+
+      .eyebrow {
+        margin: 18px 0 0;
+        color: #fff000;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.26em;
+      }
+
+      h1 {
+        margin: 14px 0 0;
+        font-family: "Noto Serif TC", "Songti TC", serif;
+        font-size: clamp(1.4rem, 5vw, 1.9rem);
+        font-weight: 800;
+      }
+
+      .hint {
+        margin: 12px 0 0;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 0.9rem;
+        line-height: 1.9;
+      }
+
+      a {
+        display: inline-block;
+        margin-top: 26px;
+        padding: 14px 30px;
+        border-radius: 999px;
+        background: #fff000;
+        color: #211b14;
+        font-weight: 800;
+        text-decoration: none;
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,156 @@
+---
+/**
+ * 首頁的會慶橫幅。
+ *
+ * 文案會跟著活動的真實狀態換，而不是寫死日期：
+ *   籌備中 → 預告；開桌中 → 邀請入席並顯示已入席人數；典藏 → 邀請回味。
+ *
+ * 狀態在**建置時**抓一次寫進 HTML（所以 Google 讀得到、載入不必等 API），
+ * 另外掛一段極小的瀏覽器端腳本再確認一次——因為秘書處在 9/7 當天按下「開桌中」
+ * 並不會重新建置官網，沒有這段的話橫幅會停在「敬請期待」直到下次發布課程為止。
+ * 這跟課程頁補即時名額是同一套做法。
+ *
+ * 會慶結束、典藏一段時間之後想撤掉：把 index.astro 裡的 <AnniversaryBanner /> 刪掉即可。
+ */
+import { getAnniversaryState } from "../lib/anniversary";
+import { REGISTRATION_ORIGIN } from "../lib/registration-api";
+
+const state = await getAnniversaryState();
+
+const COPY = {
+  closed: { note: "九月七日會慶，我們把當年凱道的那張大桌搬上線。", cta: "先看看這是什麼" },
+  active: { note: "辦桌開席中，歡迎挑一道菜、留下你的回憶與祝福。", cta: "我也要入席 🥢" },
+  archived: { note: "這場辦桌已經圓滿收席，所有祝福都完整保留著。", cta: "回味當時的祝福" },
+} as const;
+---
+
+{state && (
+  <section class="feast-banner" data-feast aria-labelledby="feast-banner-title">
+    <div class="wrap feast-inner">
+      <p class="feast-eyebrow">2013.09.07 凱道成會　→　2026.09.07 數位新家</p>
+
+      <h2 id="feast-banner-title">凱道辦桌・時光留言席</h2>
+
+      <p class="feast-note" data-feast-note>{COPY[state.mode].note}</p>
+
+      <p class="feast-count" data-feast-count hidden={state.total === 0}>
+        已有 <strong data-feast-total>{state.total}</strong> 位夥伴入席
+      </p>
+
+      <a class="feast-cta" href="/anniversary" data-feast-cta>{COPY[state.mode].cta}</a>
+    </div>
+  </section>
+)}
+
+<script is:inline define:vars={{ endpoint: `${REGISTRATION_ORIGIN}/api/anniversary/messages?limit=1`, COPY }}>
+  // 靜默更新：失敗就維持建置時寫好的內容，不影響頁面其他部分。
+  (async () => {
+    const root = document.querySelector("[data-feast]");
+    if (!root) return;
+
+    try {
+      const res = await fetch(endpoint, { headers: { accept: "application/json" } });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const copy = COPY[data.mode];
+      if (!copy) return;
+
+      root.querySelector("[data-feast-note]").textContent = copy.note;
+      root.querySelector("[data-feast-cta]").textContent = copy.cta;
+
+      const total = data.total ?? data.count ?? 0;
+      const countBox = root.querySelector("[data-feast-count]");
+      root.querySelector("[data-feast-total]").textContent = String(total);
+      countBox.hidden = total === 0;
+    } catch {
+      /* 連不上就算了，橫幅照樣是完整可用的 */
+    }
+  })();
+</script>
+
+<style>
+  /* 紅桌巾：中央亮、邊緣沉，像辦桌現場正上方那盞燈 */
+  .feast-banner {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: radial-gradient(120% 140% at 50% -20%, #c9301a 0%, #9d200f 45%, #4a1409 100%);
+    text-align: center;
+  }
+
+  /* 桌巾印花 */
+  .feast-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(circle at center, var(--gold) 1.4px, transparent 1.5px);
+    background-size: 26px 26px;
+    opacity: 0.14;
+  }
+
+  .feast-inner {
+    padding-top: 52px;
+    padding-bottom: 56px;
+  }
+
+  .feast-eyebrow {
+    margin: 0;
+    color: var(--gold);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+  }
+
+  .feast-banner h2 {
+    margin: 16px 0 0;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    line-height: 1.35;
+  }
+
+  .feast-note {
+    margin: 14px auto 0;
+    max-width: 46ch;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.98rem;
+    line-height: 1.9;
+  }
+
+  .feast-count {
+    margin: 12px 0 0;
+    color: var(--gold);
+    font-size: 0.9rem;
+  }
+
+  .feast-count[hidden] {
+    display: none;
+  }
+
+  .feast-cta {
+    display: inline-block;
+    margin-top: 26px;
+    padding: 14px 30px;
+    border-radius: 999px;
+    background: var(--gold);
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.8);
+  }
+
+  /* 桌沿：跟下方紙色內容區收邊 */
+  .feast-banner::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 10px;
+    background: repeating-linear-gradient(90deg, var(--gold) 0 18px, #c9301a 18px 36px);
+    opacity: 0.7;
+  }
+</style>

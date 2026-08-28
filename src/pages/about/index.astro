@@ -7,8 +7,8 @@ const workingGroups = [
   { name: "倫理委員會", href: "/about/groups/ethics" },
   { name: "認證委員會", href: "/about/groups/certification" },
   { name: "公關組", href: "/about/groups/pr" },
-  { name: "課程推廣組", href: "/about/groups/course-promotion" },
-  { name: "課程認證組", href: "/about/groups/course-certification" },
+  { name: "推廣課程組", href: "/about/groups/course-promotion" },
+  { name: "認證課程組", href: "/about/groups/course-certification" },
 ];
 
 const missionPoints = [
@@ -203,16 +203,14 @@ const charterChapters = [
                           <span class="org-node tier-secretariat">
                             <span class="org-role">秘書處／秘書長</span>
                           </span>
-                          <ul>
+                          <div class="org-groups">
                             {workingGroups.map((g) => (
-                              <li>
-                                <a class="org-node tier-group" href={g.href}>
-                                  <span class="org-role">{g.name}</span>
-                                  <span class="org-go">看小組運作 →</span>
-                                </a>
-                              </li>
+                              <a class="org-node tier-group" href={g.href}>
+                                <span class="org-role">{g.name}</span>
+                                <span class="org-go">看小組運作 →</span>
+                              </a>
                             ))}
-                          </ul>
+                          </div>
                         </li>
                       </ul>
                     </li>
@@ -439,7 +437,6 @@ const charterChapters = [
 
   /* ---------- Org chart: pure-CSS connector tree ---------- */
   .org-scroll {
-    overflow-x: auto;
     padding: 8px 4px 20px;
     margin: 0 -4px;
   }
@@ -449,6 +446,41 @@ const charterChapters = [
     display: flex;
     justify-content: center;
   }
+
+  /* 每一層都要能被壓縮，否則子項會把整棵樹撐寬、逼出橫向捲軸 */
+  .org-tree,
+  .org-tree ul,
+  .org-tree li {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* 五個工作小組：不排成一長排，而是會自動換行的卡片區，窄螢幕也塞得下 */
+  .org-groups {
+    position: relative;
+    margin-top: 26px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    width: min(40rem, 100%);
+  }
+
+  /* 從秘書處垂下來接到卡片區的那一小段線 */
+  .org-groups::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -26px;
+    width: 2px;
+    height: 26px;
+    background: var(--line);
+  }
+
+  .org-groups .org-node {
+    flex: 0 1 auto;
+  }
+
 
   .org-tree ul {
     padding-top: 26px;
@@ -583,5 +615,16 @@ const charterChapters = [
     color: var(--blue-deep);
     font-weight: 700;
     text-decoration: underline;
+  }
+  /* 手機上把節點的內距收窄一點，理事會／監事會那一排才不會頂到邊 */
+  @media (max-width: 480px) {
+    .org-tree li {
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .org-node {
+      padding: 10px 12px;
+    }
   }
 </style>

@@ -1,107 +1,344 @@
 ---
+/**
+ * 各工作小組的介紹頁＋組織簡則全文。
+ * 條文內容都在 src/data/working-groups.ts，這裡只負責排版。
+ */
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHero from "../../../components/PageHero.astro";
-import FigureRing from "../../../components/decor/FigureRing.astro";
-
-export const groups = [
-  {
-    slug: "ethics",
-    name: "倫理委員會",
-    summary: "受理會員的倫理諮詢，處理性諮商實務中遇到的專業倫理疑義。",
-  },
-  {
-    slug: "certification",
-    name: "認證委員會",
-    summary: "審核性諮商師的認證與換證申請，維持專業資格的把關標準。",
-  },
-  {
-    slug: "pr",
-    name: "公關組",
-    summary: "對外發聲與合作聯繫，包含公開聲明、媒體溝通與跨機構合作。",
-  },
-  {
-    slug: "course-promotion",
-    name: "推廣課程組",
-    summary: "規劃並推廣年度課程、講座與工作坊，是會員最常接觸到的一線窗口。",
-  },
-  {
-    slug: "course-certification",
-    name: "認證課程組",
-    summary: "審核課程是否符合性諮商師認證／換證所需的時數與領域標準。",
-  },
-];
+import FileDownload from "../../../components/FileDownload.astro";
+import { workingGroups, cnIndex, type WorkingGroup } from "../../../data/working-groups";
 
 export function getStaticPaths() {
-  return groups.map((g) => ({ params: { slug: g.slug }, props: g }));
+  return workingGroups.map((g) => ({ params: { slug: g.slug }, props: { group: g } }));
 }
 
-const { name, summary } = Astro.props;
+const { group } = Astro.props as { group: WorkingGroup };
+const { name, summary, color, docTitle, approved, facts, pdf, articles } = group;
+
+// 主色的深色版才有足夠對比可以當文字色（見 global.css 的色票說明）
+const accent = `var(--${color})`;
+const accentText = `var(--${color}-deep)`;
+
+const others = workingGroups.filter((g) => g.slug !== group.slug);
 ---
 
-<BaseLayout title={name} description={`台灣性諮商學會 - ${name}`}>
-  <PageHero eyebrow="關於我們・組織架構" eyebrowHref="/about#structure" title={name} />
+<BaseLayout title={name} description={`台灣性諮商學會${name}組織簡則全文——任務、編制與會議規定。`}>
+  <PageHero
+    breadcrumb={{ label: "關於我們", href: "/about#structure" }}
+    eyebrow="組織架構"
+    title={name}
+    lead={summary}
+  />
 
-  <section class="section">
-    <div class="wrap prose">
-      <p class="lead">{summary}</p>
-      <div class="placeholder-note">
-        <div class="placeholder-text">
-          <p>這個小組的詳細運作方式（成員、聯繫窗口、近期工作）正在整理中，之後會補上。</p>
-          <a href="/about#structure" class="btn btn-ghost">回組織架構</a>
-        </div>
-        <FigureRing class="placeholder-ring" variant="outline" />
+  <div class="group-page" style={`--accent: ${accent}; --accent-text: ${accentText}`}>
+    <section class="section">
+      <div class="wrap">
+        <ul class="facts">
+          {facts.map((f) => (
+            <li class="fact">
+              <span class="fact-label">{f.label}</span>
+              <span class="fact-value">{f.value}</span>
+            </li>
+          ))}
+        </ul>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <section class="section section-alt">
+      <div class="wrap">
+        <header class="doc-head">
+          <span class="doc-kicker">組織簡則</span>
+          <h2>{docTitle}</h2>
+          <p class="doc-approved">{approved}</p>
+        </header>
+
+        <ol class="articles">
+          {articles.map((a) => (
+            <li class="article">
+              <span class="article-num">{a.num}</span>
+              <div class="article-body">
+                {a.lead && <p class="article-lead">{a.lead}</p>}
+                {a.items && (
+                  <ol class="article-items">
+                    {a.items.map((item, i) => (
+                      <li>
+                        <span class="item-num" aria-hidden="true">{cnIndex(i)}</span>
+                        <span class="item-text">{item}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+                {a.tail?.map((t) => <p class="article-lead">{t}</p>)}
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div class="doc-file">
+          <FileDownload
+            href={`/downloads/${pdf.file}`}
+            name={docTitle}
+            format="PDF"
+            size={pdf.size}
+            note="理監事會通過之原始檔"
+            accent={accent}
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <h2 class="more-title">其他工作小組</h2>
+        <div class="more-grid">
+          {others.map((g) => (
+            <a class="more-card" href={`/about/groups/${g.slug}`} style={`--card-accent: var(--${g.color})`}>
+              <span class="more-name">{g.name}</span>
+              <span class="more-summary">{g.summary}</span>
+            </a>
+          ))}
+        </div>
+        <p class="more-note">
+          想看小組在整個學會裡的位置，請回<a href="/about#structure" class="inline-link">組織架構</a>；
+          小組的設置依據寫在<a href="/about#charter" class="inline-link">法規章程</a>第二十五條。
+        </p>
+      </div>
+    </section>
+  </div>
 </BaseLayout>
 
 <style>
   .section {
-    padding: 44px 0 56px;
+    padding: 40px 0;
   }
 
-  .lead {
-    font-size: 1rem;
-    color: var(--ink-soft);
-    max-width: 56ch;
-    margin: 0 0 28px;
+  .section-alt {
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
   }
 
-  .placeholder-note {
-    background: var(--bg-alt);
-    border: 1px dashed var(--line);
-    border-radius: 14px;
-    padding: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-  }
+  /* ---- 重點速覽 ---------------------------------------------------------- */
 
-  .placeholder-text {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+  .facts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
 
-  .placeholder-note :global(.placeholder-ring) {
-    width: 128px;
-    height: 128px;
-    flex: none;
-    opacity: 0.55;
+  .fact {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
-  @media (max-width: 600px) {
-    .placeholder-note {
-      flex-direction: column-reverse;
-      align-items: flex-start;
+  .fact-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    font-weight: 700;
+    color: var(--accent-text);
+  }
+
+  .fact-value {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 760px) {
+    .facts {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .fact {
+      padding: 14px 16px;
     }
   }
 
-  .placeholder-note p {
-    margin: 0;
-    font-size: 0.9rem;
+  /* ---- 簡則本文 ---------------------------------------------------------- */
+
+  .doc-head {
+    text-align: center;
+    padding-bottom: 24px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .doc-kicker {
+    display: inline-block;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    font-weight: 700;
+    color: var(--accent-text);
+    margin-bottom: 10px;
+  }
+
+  .doc-head h2 {
+    font-size: clamp(1.15rem, 3.2vw, 1.5rem);
+    line-height: 1.6;
+  }
+
+  .doc-approved {
+    margin: 10px 0 0;
+    font-size: 0.8rem;
     color: var(--ink-faint);
+  }
+
+  .articles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 46em;
+    margin-inline: auto;
+  }
+
+  /* 條號放左欄、條文放右欄；窄螢幕改成上下堆疊 */
+  .article {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0 20px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .article:last-child {
+    border-bottom: 0;
+  }
+
+  .article-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--accent-text);
+    /* 跟右欄第一行文字對齊 */
+    line-height: 1.9;
+    white-space: nowrap;
+  }
+
+  .article-lead {
+    margin: 0;
+    font-size: 0.94rem;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+
+  .article-lead + .article-lead {
+    margin-top: 12px;
+  }
+
+  .article-items {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .article-items li {
+    display: grid;
+    grid-template-columns: 1.65rem 1fr;
+    align-items: start;
+    gap: 0 6px;
+  }
+
+  .item-num {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--accent-text);
+    line-height: 1.9;
+  }
+
+  /* 中文數字後面的頓號用偽元素補，資料裡就不用每筆都寫「一、」 */
+  .item-num::after {
+    content: "、";
+  }
+
+  .item-text {
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 640px) {
+    .article {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      padding: 18px 0;
+    }
+
+    .article-num {
+      line-height: 1.6;
+    }
+  }
+
+  .doc-file {
+    max-width: 46em;
+    margin: 28px auto 0;
+  }
+
+  /* ---- 其他小組 ---------------------------------------------------------- */
+
+  .more-title {
+    font-size: clamp(1.05rem, 2.6vw, 1.25rem);
+    margin-bottom: 18px;
+  }
+
+  .more-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .more-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 18px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--card-accent);
+    border-radius: 12px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .more-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .more-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
+
+  .more-summary {
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: var(--ink-faint);
+  }
+
+  .more-note {
+    margin: 20px 0 0;
+    font-size: 0.84rem;
+    color: var(--ink-faint);
+  }
+
+  .inline-link {
+    color: var(--accent-text);
+    font-weight: 700;
+    text-underline-offset: 3px;
   }
 </style>

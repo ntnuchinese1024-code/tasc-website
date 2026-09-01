@@ -2,14 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import FacebookBadge from "../../components/FacebookBadge.astro";
 import PageHero from "../../components/PageHero.astro";
-
-const workingGroups = [
-  { name: "倫理委員會", href: "/about/groups/ethics" },
-  { name: "認證委員會", href: "/about/groups/certification" },
-  { name: "公關組", href: "/about/groups/pr" },
-  { name: "推廣課程組", href: "/about/groups/course-promotion" },
-  { name: "認證課程組", href: "/about/groups/course-certification" },
-];
+import { workingGroups } from "../../data/working-groups";
 
 const missionPoints = [
   "推廣性諮商、性教育專業工作，促進社會大眾對性諮商及性教育之知識及態度。",
@@ -205,7 +198,7 @@ const charterChapters = [
                           </span>
                           <div class="org-groups">
                             {workingGroups.map((g) => (
-                              <a class="org-node tier-group" href={g.href}>
+                              <a class="org-node tier-group" href={`/about/groups/${g.slug}`}>
                                 <span class="org-role">{g.name}</span>
                                 <span class="org-go">看小組運作 →</span>
                               </a>

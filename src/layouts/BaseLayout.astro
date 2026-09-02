@@ -8,8 +8,10 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description?: string;
+  /** 這一頁分享出去要用的預覽圖，從 / 開頭寫。沒給就用學會標誌。 */
+  image?: string;
 }
-const { title, description = "台灣性諮商學會（TASC）" } = Astro.props;
+const { title, description = "台灣性諮商學會（TASC）", image } = Astro.props;
 
 // 這一頁的「正版網址」。同一頁如果同時能從 tasctaiwan.tw、www.tasctaiwan.tw
 // 或舊的 netlify 網址打開，canonical 會告訴 Google 只認 astro.config.mjs 裡設定的那一個，
@@ -17,7 +19,7 @@ const { title, description = "台灣性諮商學會（TASC）" } = Astro.props;
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
 
 /** 分享到 FB／LINE 時顯示的預覽圖。放在 public/ 底下，換圖不用改程式。 */
-const ogImage = Astro.site ? new URL("/logo.png", Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(image ?? "/logo.png", Astro.site).href : undefined;
 
 /**
  * 給搜尋引擎看的組織資料（JSON-LD）。

@@ -1,0 +1,16 @@
+---
+/** 電子報首頁：永遠顯示最新一期，往期收在頁面下方。 */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import NewsletterIssue from "../../components/NewsletterIssue.astro";
+import { latestNewsletter, coverImage } from "../../data/newsletters";
+
+const issue = latestNewsletter;
+---
+
+<BaseLayout
+  title="電子報"
+  description={`台灣性諮商學會${issue.title}：${issue.intro}`}
+  image={coverImage(issue)}
+>
+  <NewsletterIssue issue={issue} isLatest={true} />
+</BaseLayout>

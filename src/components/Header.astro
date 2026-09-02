@@ -5,6 +5,7 @@ const navLinks = [
   { href: "/about", label: "關於我們" },
   { href: "/counselors", label: "性諮商師" },
   { href: "/news", label: "最新消息" },
+  { href: "/newsletter", label: "電子報" },
   { href: "/annual", label: "年會專區" },
   { href: "/resources", label: "相關資源" },
   { href: "/contact", label: "聯絡我們" },
@@ -157,7 +158,8 @@ const navLinks = [
     margin-top: 6px;
   }
 
-  @media (min-width: 860px) {
+  /* 主選單有七項，940px 以下就換成漢堡選單，不然會擠到跟標誌黏在一起 */
+  @media (min-width: 940px) {
     .nav-desktop {
       display: flex;
     }

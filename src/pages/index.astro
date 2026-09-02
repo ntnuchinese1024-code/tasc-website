@@ -6,6 +6,7 @@ import ArcField from "../components/decor/ArcField.astro";
 import VideoEmbed from "../components/VideoEmbed.astro";
 import AnniversaryBanner from "../components/AnniversaryBanner.astro";
 import { wrapHeadingHtml } from "../lib/wrap-heading";
+import { latestNewsletter, assetBase, formatDate } from "../data/newsletters";
 import {
   getOpenCourses,
   accentVars,
@@ -161,6 +162,30 @@ const events = (await getOpenCourses())
             <span class="event-register">課程詳情與報名 →</span>
           </a>
         ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="newsletter">
+    <div class="wrap">
+      <div class="nl-layout">
+        <a class="nl-cover" href="/newsletter" aria-label={`翻閱${latestNewsletter.title}`}>
+          <img
+            src={`${assetBase(latestNewsletter)}/thumbs/p01.webp`}
+            alt={`${latestNewsletter.title}封面`}
+            width="260"
+            height="368"
+            loading="lazy"
+            decoding="async"
+          />
+        </a>
+        <div class="nl-copy">
+          <span class="eyebrow">學會電子報・{latestNewsletter.issue}</span>
+          <h2>{latestNewsletter.title}</h2>
+          <p>{latestNewsletter.intro}</p>
+          <p class="nl-meta">{formatDate(latestNewsletter.date)} 出刊・共 {latestNewsletter.pages} 頁</p>
+          <a href="/newsletter" class="btn btn-primary">翻閱這一期 →</a>
+        </div>
       </div>
     </div>
   </section>
@@ -378,6 +403,64 @@ const events = (await getOpenCourses())
     position: relative;
     overflow: hidden;
     padding: 48px 0 56px;
+  }
+
+  /* ---- 首頁的電子報區塊 ------------------------------------------------ */
+
+  .newsletter {
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    padding: 48px 0 56px;
+  }
+
+  .nl-layout {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 32px;
+    align-items: center;
+  }
+
+  /* 封面稍微斜放，像一本剛被放在桌上的刊物 */
+  .nl-cover {
+    display: block;
+    transform: rotate(-2.5deg);
+    transition: transform 0.2s ease;
+  }
+
+  .nl-cover:hover {
+    transform: rotate(0deg) translateY(-3px);
+  }
+
+  .nl-cover img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(33, 27, 20, 0.12), 0 18px 36px -18px rgba(33, 27, 20, 0.45);
+  }
+
+  .nl-copy h2 {
+    font-size: clamp(1.2rem, 3vw, 1.5rem);
+    margin: 8px 0 12px;
+  }
+
+  .nl-copy p {
+    margin: 0 0 12px;
+    max-width: 46em;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+
+  .nl-meta {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 700px) {
+    .nl-layout {
+      grid-template-columns: 130px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
   }
 
   /* 卡片右邊在寬螢幕上會留白，用標誌那圈弧線的「回音」墊底 */

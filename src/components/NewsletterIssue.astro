@@ -1,0 +1,304 @@
+---
+/**
+ * 一期電子報的完整頁面內容。/newsletter（最新一期）跟 /newsletter/<slug>（往期）
+ * 都用這一個，兩邊長得一樣，只有標籤跟往期清單不同。
+ */
+import PageHero from "./PageHero.astro";
+import Flipbook from "./Flipbook.astro";
+import {
+  newsletters,
+  assetBase,
+  pageImages,
+  formatDate,
+  type Newsletter,
+} from "../data/newsletters";
+
+interface Props {
+  issue: Newsletter;
+  /** 是不是網站上顯示的最新一期 */
+  isLatest: boolean;
+}
+
+const { issue, isLatest } = Astro.props;
+const pages = pageImages(issue);
+const base = assetBase(issue);
+const others = newsletters.filter((n) => n.slug !== issue.slug);
+---
+
+<PageHero
+  breadcrumb={{ label: "最新消息", href: "/news" }}
+  eyebrow="電子報"
+  title={issue.title}
+  lead={issue.intro}
+  decor={false}
+>
+  <ul class="meta">
+    <li>{issue.issue}</li>
+    <li>{formatDate(issue.date)} 出刊</li>
+    <li>共 {issue.pages} 頁</li>
+    <li>{issue.credits}</li>
+  </ul>
+  {!isLatest && (
+    <p class="archive-note">
+      這是往期電子報。<a href="/newsletter">看最新一期 →</a>
+    </p>
+  )}
+</PageHero>
+
+<section class="reader">
+  <div class="wrap">
+    <Flipbook
+      pages={pages}
+      title={issue.title}
+      pdfHref={`${base}/${issue.pdf.file}`}
+      pdfSize={issue.pdf.size}
+    />
+    <p class="reader-hint">
+      點書本兩側或用左右方向鍵翻頁；想直接跳到某一頁可以打開「目錄」。手機上左右滑動就能一頁一頁看。
+    </p>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="wrap">
+    <h2>這一期有什麼</h2>
+    <div class="highlight-grid">
+      {issue.highlights.map((h) => (
+        <a class="highlight" href={`#p${h.page}`}>
+          <span class="highlight-page">P.{h.page}</span>
+          <h3>{h.title}</h3>
+          <p>{h.body}</p>
+          <span class="highlight-go">翻到這一頁 →</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>往期電子報</h2>
+    {others.length === 0 ? (
+      <p class="empty">
+        {issue.issue === "創刊號"
+          ? "這是創刊號，之後每一期都會收在這裡，隨時可以回來翻。"
+          : "目前還沒有其他期數。"}
+      </p>
+    ) : (
+      <div class="issue-grid">
+        {others.map((n) => (
+          <a class="issue-card" href={`/newsletter/${n.slug}`}>
+            <img
+              src={`${assetBase(n)}/thumbs/p01.webp`}
+              alt={`${n.title}封面`}
+              width="260"
+              height="368"
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="issue-text">
+              <span class="issue-label">{n.issue}</span>
+              <span class="issue-title">{n.title}</span>
+              <span class="issue-date">{formatDate(n.date)}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    )}
+
+    <p class="subscribe">
+      電子報會隨學會信件寄給會員。還不是會員的話，歡迎<a href="/membership" class="inline-link">加入我們</a>；
+      對內容有想法或想投稿，也可以直接<a href="/contact" class="inline-link">跟我們說</a>。
+    </p>
+  </div>
+</section>
+
+<style>
+  .meta {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin: 18px 0 0;
+    padding: 0;
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+  }
+
+  .meta li {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  /* 各項之間用一個小圓點分隔，最後一項不要 */
+  .meta li:not(:last-child)::after {
+    content: "";
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+
+  .archive-note {
+    margin: 16px 0 0;
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+  }
+
+  .archive-note a {
+    color: var(--blue-deep);
+    font-weight: 700;
+  }
+
+  .reader {
+    padding: 36px 0 8px;
+    background: var(--bg-alt);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .reader-hint {
+    margin: 20px auto 0;
+    max-width: 46em;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    padding-bottom: 28px;
+  }
+
+  .section {
+    padding: 44px 0;
+  }
+
+  .section-alt {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section h2 {
+    font-size: clamp(1.1rem, 2.8vw, 1.35rem);
+    margin-bottom: 20px;
+  }
+
+  .highlight-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+  }
+
+  .highlight {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px 20px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .highlight:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .highlight-page {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--magenta-deep);
+  }
+
+  .highlight h3 {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .highlight p {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.8;
+    color: var(--ink-soft);
+  }
+
+  .highlight-go {
+    margin-top: auto;
+    padding-top: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+  }
+
+  .issue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .issue-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    text-decoration: none;
+  }
+
+  .issue-card:hover {
+    border-color: var(--blue);
+  }
+
+  .issue-card img {
+    width: 64px;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(33, 27, 20, 0.18);
+  }
+
+  .issue-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .issue-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink-faint);
+  }
+
+  .issue-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--ink);
+  }
+
+  .issue-date {
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+  }
+
+  .empty {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+
+  .subscribe {
+    margin: 24px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  .inline-link {
+    color: var(--blue-deep);
+    font-weight: 700;
+    text-underline-offset: 3px;
+  }
+</style>

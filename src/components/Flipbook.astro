@@ -1,0 +1,681 @@
+---
+/**
+ * 電子報翻書閱讀器。沒有用任何外部套件，純 CSS 3D + 一小段 JS，
+ * 這樣網站要搬到哪裡都不會壞掉。
+ *
+ * 兩種模式，用 CSS 切換，同一組按鈕控制：
+ *   寬螢幕（≥ 900px）：.fb-spread —— 真的會翻頁的跨頁書。
+ *     每一張「紙」是一個 .fb-sheet，正面是奇數頁、背面是偶數頁，
+ *     以左緣為軸 rotateY(-180deg) 翻到左半邊。
+ *   窄螢幕：.fb-strip —— 一頁一張、可以用手指滑的橫向捲動條。
+ *     手機上滑動比翻頁動畫好用，也能直接雙指放大看內文。
+ */
+interface Props {
+  pages: { page: number; src: string; thumb: string }[];
+  /** 用在 alt 文字上，例如「2026 春季電子報」 */
+  title: string;
+  pdfHref: string;
+  pdfSize: string;
+}
+
+const { pages, title, pdfHref, pdfSize } = Astro.props;
+
+// 一張紙兩頁：正面奇數頁、背面偶數頁。頁數是奇數時，最後一張紙的背面留白。
+const sheets = Array.from({ length: Math.ceil(pages.length / 2) }, (_, i) => ({
+  index: i,
+  front: pages[i * 2],
+  back: pages[i * 2 + 1],
+}));
+---
+
+<div class="fb" data-total={pages.length}>
+  <div class="fb-stage">
+    <div class="fb-spread" role="group" aria-label={`${title}翻頁閱讀`}>
+      <div class="fb-book">
+        {sheets.map((s) => (
+          <div class="fb-sheet" data-sheet={s.index}>
+            <div class="fb-face fb-front">
+              <img
+                src={s.front.src}
+                alt={`${title} 第 ${s.front.page} 頁`}
+                width="1400"
+                height="1980"
+                loading={s.index < 2 ? "eager" : "lazy"}
+                decoding="async"
+              />
+            </div>
+            <div class="fb-face fb-back">
+              {s.back ? (
+                <img
+                  src={s.back.src}
+                  alt={`${title} 第 ${s.back.page} 頁`}
+                  width="1400"
+                  height="1980"
+                  loading={s.index < 2 ? "eager" : "lazy"}
+                  decoding="async"
+                />
+              ) : (
+                <div class="fb-blank"></div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <button class="fb-edge fb-edge-prev" type="button" aria-label="上一頁"></button>
+      <button class="fb-edge fb-edge-next" type="button" aria-label="下一頁"></button>
+    </div>
+
+    <div class="fb-strip" tabindex="0" aria-label={`${title}逐頁閱讀`}>
+      {pages.map((p) => (
+        <figure class="fb-strip-page" data-page={p.page}>
+          <img
+            src={p.src}
+            alt={`${title} 第 ${p.page} 頁`}
+            width="1400"
+            height="1980"
+            loading={p.page <= 2 ? "eager" : "lazy"}
+            decoding="async"
+          />
+        </figure>
+      ))}
+    </div>
+  </div>
+
+  <div class="fb-bar">
+    <div class="fb-nav">
+      <button class="fb-btn fb-prev" type="button" aria-label="上一頁">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      </button>
+      <span class="fb-count" aria-live="polite">1 / {pages.length}</span>
+      <button class="fb-btn fb-next" type="button" aria-label="下一頁">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+      </button>
+    </div>
+
+    <div class="fb-tools">
+      <button class="fb-tool fb-toggle-thumbs" type="button" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="7" height="16" rx="1" /><rect x="14" y="4" width="7" height="16" rx="1" /></svg>
+        目錄
+      </button>
+      <button class="fb-tool fb-fullscreen" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
+        <span class="fb-fs-label">全螢幕</span>
+      </button>
+      <a class="fb-tool" href={pdfHref} download>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 12l5 5 5-5M4 20h16" /></svg>
+        下載 PDF<span class="fb-size">（{pdfSize}）</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="fb-thumbs" hidden>
+    {pages.map((p) => (
+      <button class="fb-thumb" type="button" data-goto={p.page}>
+        <img src={p.thumb} alt="" width="260" height="368" loading="lazy" decoding="async" />
+        <span>{p.page}</span>
+      </button>
+    ))}
+  </div>
+
+  <noscript>
+    <p class="fb-noscript">
+      翻頁閱讀需要 JavaScript。你也可以<a href={pdfHref}>直接下載 PDF（{pdfSize}）</a>閱讀。
+    </p>
+  </noscript>
+</div>
+
+<style>
+  .fb {
+    --page-w: 1400;
+    --page-h: 1980;
+    /* 跨頁 = 兩頁寬，用來算舞台的長寬比 */
+    --spread-ratio: calc(2 * var(--page-w) / var(--page-h));
+  }
+
+  .fb-stage {
+    position: relative;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  /* ---- 寬螢幕：會翻頁的跨頁書 ---------------------------------------- */
+
+  .fb-spread {
+    display: none;
+  }
+
+  .fb-strip {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding-bottom: 8px;
+    /* iOS 上不要出現橫向的彈跳白邊 */
+    overscroll-behavior-x: contain;
+  }
+
+  .fb-strip-page {
+    flex: 0 0 100%;
+    margin: 0;
+    scroll-snap-align: center;
+  }
+
+  .fb-strip img {
+    /* 逐頁模式如果在寬螢幕上出現（不支援 3D 的瀏覽器），
+       一頁 A4 撐滿整個版面會太巨大，所以給個上限並置中 */
+    width: 100%;
+    max-width: 620px;
+    margin-inline: auto;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    background: var(--card);
+  }
+
+  @media (min-width: 900px) {
+    /* 瀏覽器不支援 3D 翻頁時（極少數舊環境）就整個跳過，
+       讓下面的 .fb-strip 逐頁模式接手，不會變成一片空白 */
+    @supports (transform-style: preserve-3d) {
+      .fb-strip {
+        display: none;
+      }
+
+      .fb-spread {
+        display: block;
+        position: relative;
+        width: min(100%, calc(76vh * var(--spread-ratio)));
+        aspect-ratio: var(--spread-ratio);
+        margin-inline: auto;
+        perspective: 2600px;
+      }
+
+      .fb-book {
+        position: absolute;
+        inset: 0;
+        transform-style: preserve-3d;
+        transition: transform 0.7s cubic-bezier(0.4, 0.05, 0.2, 1);
+      }
+
+      /* 只剩封面（或最後一頁）時，把那一頁移到正中間，不要孤零零靠在一邊 */
+      .fb-book.at-start {
+        transform: translateX(-25%);
+      }
+
+      .fb-book.at-end {
+        transform: translateX(25%);
+      }
+
+      /* 紙張都疊在右半邊，以左緣為軸往左翻 */
+      .fb-sheet {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 50%;
+        height: 100%;
+        transform-origin: left center;
+        transform-style: preserve-3d;
+        transition: transform 0.7s cubic-bezier(0.4, 0.05, 0.2, 1);
+      }
+
+      .fb-sheet.is-flipped {
+        transform: rotateY(-180deg);
+      }
+
+      .fb-face {
+        position: absolute;
+        inset: 0;
+        backface-visibility: hidden;
+        overflow: hidden;
+        background: var(--card);
+      }
+
+      .fb-back {
+        transform: rotateY(180deg);
+      }
+
+      .fb-face img,
+      .fb-blank {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: var(--card);
+      }
+
+      /* 書縫：正面在左緣、背面在右緣，翻過去之後陰影方向才會對 */
+      .fb-face::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .fb-front::after {
+        background: linear-gradient(
+          to right,
+          rgba(33, 27, 20, 0.18),
+          rgba(33, 27, 20, 0.04) 4%,
+          transparent 12%
+        );
+      }
+
+      .fb-back::after {
+        background: linear-gradient(
+          to left,
+          rgba(33, 27, 20, 0.18),
+          rgba(33, 27, 20, 0.04) 4%,
+          transparent 12%
+        );
+      }
+
+      .fb-blank {
+        background: var(--bg-alt);
+      }
+
+      /* 整本書的落地陰影 */
+      .fb-spread::before {
+        content: "";
+        position: absolute;
+        left: 6%;
+        right: 6%;
+        bottom: -14px;
+        height: 26px;
+        background: radial-gradient(ellipse at center, rgba(33, 27, 20, 0.22), transparent 70%);
+        filter: blur(2px);
+      }
+
+      /* 左右兩側的透明點擊區，滑到才顯示箭頭游標 */
+      .fb-edge {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 26%;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        z-index: 60;
+        cursor: pointer;
+      }
+
+      .fb-edge-prev {
+        left: 0;
+        cursor: w-resize;
+      }
+
+      .fb-edge-next {
+        right: 0;
+        cursor: e-resize;
+      }
+
+      .fb-edge:disabled {
+        cursor: default;
+      }
+    }
+  }
+
+  /* ---- 控制列 ---------------------------------------------------------- */
+
+  .fb-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 22px;
+  }
+
+  .fb-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .fb-btn {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .fb-btn:hover:not(:disabled) {
+    border-color: var(--blue);
+    color: var(--blue-deep);
+  }
+
+  .fb-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .fb-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .fb-count {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    min-width: 5.5em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fb-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .fb-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .fb-tool:hover {
+    border-color: var(--blue);
+    color: var(--blue-deep);
+  }
+
+  .fb-tool svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .fb-tool rect {
+    fill: none;
+  }
+
+  .fb-size {
+    color: var(--ink-faint);
+    font-weight: 400;
+  }
+
+  /* ---- 縮圖目錄 -------------------------------------------------------- */
+
+  .fb-thumbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+    padding: 16px;
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+
+  .fb-thumbs[hidden] {
+    display: none;
+  }
+
+  .fb-thumb {
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    font-family: inherit;
+  }
+
+  .fb-thumb img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    box-shadow: 0 1px 4px rgba(33, 27, 20, 0.16);
+  }
+
+  .fb-thumb.is-current img {
+    border-color: var(--blue);
+  }
+
+  .fb-thumb.is-current {
+    color: var(--blue-deep);
+    font-weight: 700;
+  }
+
+  .fb-noscript {
+    margin-top: 16px;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  /* 全螢幕時把書撐滿，控制列壓在底部 */
+  .fb:fullscreen {
+    background: var(--bg);
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .fb:fullscreen .fb-spread {
+    width: min(100%, calc(82vh * var(--spread-ratio)));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fb-book,
+    .fb-sheet {
+      transition: none;
+    }
+
+    .fb-strip {
+      scroll-behavior: auto;
+    }
+  }
+</style>
+
+<script>
+  // 翻書的狀態只有一個數字：已經翻過去的紙張數 flipped。
+  //   左頁 = 2 × flipped，右頁 = 2 × flipped + 1（超過總頁數就是空的）
+  // 縮圖、頁碼、手機版捲動條都從這個數字推算出來。
+  function initFlipbook(root: HTMLElement) {
+    const total = Number(root.dataset.total ?? 0);
+    const book = root.querySelector<HTMLElement>(".fb-book");
+    const sheets = Array.from(root.querySelectorAll<HTMLElement>(".fb-sheet"));
+    const strip = root.querySelector<HTMLElement>(".fb-strip");
+    const stripPages = Array.from(root.querySelectorAll<HTMLElement>(".fb-strip-page"));
+    const thumbs = root.querySelector<HTMLElement>(".fb-thumbs");
+    const thumbButtons = Array.from(root.querySelectorAll<HTMLButtonElement>(".fb-thumb"));
+    const count = root.querySelector<HTMLElement>(".fb-count");
+    const prev = root.querySelector<HTMLButtonElement>(".fb-prev");
+    const next = root.querySelector<HTMLButtonElement>(".fb-next");
+    const edgePrev = root.querySelector<HTMLButtonElement>(".fb-edge-prev");
+    const edgeNext = root.querySelector<HTMLButtonElement>(".fb-edge-next");
+    const toggleThumbs = root.querySelector<HTMLButtonElement>(".fb-toggle-thumbs");
+    const fullscreen = root.querySelector<HTMLButtonElement>(".fb-fullscreen");
+    const fsLabel = root.querySelector<HTMLElement>(".fb-fs-label");
+
+    if (!book || !count) return;
+
+    const maxFlipped = Math.floor(total / 2);
+    let flipped = 0;
+    // 手機版是使用者自己滑的，換頁時不要再被程式捲一次
+    let syncingStrip = false;
+
+    // 直接問 CSS 現在是哪一種模式，這樣 @media 或 @supports 條件改了 JS 也不會脫節
+    const spread = root.querySelector<HTMLElement>(".fb-spread");
+    const isSpread = () => !!spread && getComputedStyle(spread).display !== "none";
+
+    function render() {
+      sheets.forEach((sheet, i) => {
+        const isFlipped = i < flipped;
+        sheet.classList.toggle("is-flipped", isFlipped);
+        // 翻過去的紙疊在左邊、越晚翻的越上面；還沒翻的疊在右邊、越前面的越上面
+        sheet.style.zIndex = String(isFlipped ? i + 1 : sheets.length - i);
+      });
+
+      const left = flipped * 2;
+      const right = flipped * 2 + 1;
+      book.classList.toggle("at-start", flipped === 0);
+      book.classList.toggle("at-end", right > total);
+
+      if (isSpread()) {
+        count.textContent =
+          left === 0 ? `封面 / ${total}` : right > total ? `${left} / ${total}` : `${left}–${right} / ${total}`;
+      } else {
+        count.textContent = `${currentStripPage()} / ${total}`;
+      }
+
+      const atFirst = isSpread() ? flipped === 0 : currentStripPage() === 1;
+      const atLast = isSpread() ? flipped >= maxFlipped : currentStripPage() === total;
+      [prev, edgePrev].forEach((b) => b && (b.disabled = atFirst));
+      [next, edgeNext].forEach((b) => b && (b.disabled = atLast));
+
+      const current = isSpread() ? [left, right].filter((p) => p >= 1 && p <= total) : [currentStripPage()];
+      thumbButtons.forEach((b) => {
+        b.classList.toggle("is-current", current.includes(Number(b.dataset.goto)));
+      });
+    }
+
+    // 用每一頁實際的位置去比對，而不是「捲動距離 ÷ 一頁寬度」——
+    // 頁與頁之間有間距，用除的在頁數多的時候會整整差一頁。
+    function currentStripPage() {
+      if (!strip || stripPages.length === 0) return 1;
+      let best = 0;
+      let bestGap = Infinity;
+      stripPages.forEach((el, i) => {
+        const gap = Math.abs(el.offsetLeft - strip.offsetLeft - strip.scrollLeft);
+        if (gap < bestGap) {
+          bestGap = gap;
+          best = i;
+        }
+      });
+      return Math.min(total, Math.max(1, best + 1));
+    }
+
+    function goToSheet(n: number) {
+      flipped = Math.min(maxFlipped, Math.max(0, n));
+      render();
+    }
+
+    /** 跳到某一頁：寬螢幕翻到那一頁所在的跨頁，窄螢幕捲到那一張 */
+    function goToPage(page: number) {
+      const p = Math.min(total, Math.max(1, page));
+      if (isSpread()) {
+        goToSheet(Math.floor(p / 2));
+      } else if (strip) {
+        const target = stripPages[p - 1];
+        if (!target) return;
+        syncingStrip = true;
+        strip.scrollTo({ left: target.offsetLeft - strip.offsetLeft });
+        window.setTimeout(() => {
+          syncingStrip = false;
+          render();
+        }, 400);
+      }
+    }
+
+    function step(dir: number) {
+      if (isSpread()) {
+        goToSheet(flipped + dir);
+      } else {
+        goToPage(currentStripPage() + dir);
+      }
+    }
+
+    prev?.addEventListener("click", () => step(-1));
+    next?.addEventListener("click", () => step(1));
+    edgePrev?.addEventListener("click", () => step(-1));
+    edgeNext?.addEventListener("click", () => step(1));
+
+    thumbButtons.forEach((b) => {
+      b.addEventListener("click", () => {
+        goToPage(Number(b.dataset.goto));
+        if (!isSpread()) return;
+        render();
+      });
+    });
+
+    toggleThumbs?.addEventListener("click", () => {
+      if (!thumbs) return;
+      const open = thumbs.hidden;
+      thumbs.hidden = !open;
+      toggleThumbs.setAttribute("aria-expanded", String(open));
+    });
+
+    fullscreen?.addEventListener("click", () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        root.requestFullscreen?.().catch(() => {
+          /* 有些瀏覽器不給全螢幕，忽略就好，其他功能照常 */
+        });
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      const on = document.fullscreenElement === root;
+      if (fsLabel) fsLabel.textContent = on ? "離開全螢幕" : "全螢幕";
+    });
+
+    strip?.addEventListener("scroll", () => {
+      if (syncingStrip) return;
+      render();
+    });
+
+    // 左右方向鍵：只有在閱讀器正看得到、而且使用者不是在打字時才接手，
+    // 不然會搶走整頁的捲動或表單裡的游標移動。
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      // e.target 不一定是元素（例如焦點在 document 上），所以先確認再問 closest
+      const el = e.target instanceof HTMLElement ? e.target : null;
+      if (el && (el.closest("input, textarea, select") || el.isContentEditable)) return;
+
+      const box = root.getBoundingClientRect();
+      const onScreen = box.bottom > 0 && box.top < window.innerHeight;
+      if (!onScreen) return;
+
+      step(e.key === "ArrowLeft" ? -1 : 1);
+      e.preventDefault();
+    });
+
+    window.addEventListener("resize", render);
+
+    // 網址帶 #p7 之類的錨點時，直接開在那一頁（重點單元的連結就是這樣跳的）
+    function fromHash() {
+      const m = /^#p(\d+)$/.exec(window.location.hash);
+      if (m) goToPage(Number(m[1]));
+    }
+    window.addEventListener("hashchange", fromHash);
+    fromHash();
+
+    render();
+  }
+
+  document.querySelectorAll<HTMLElement>(".fb").forEach(initFlipbook);
+</script>

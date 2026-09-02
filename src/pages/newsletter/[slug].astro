@@ -1,0 +1,20 @@
+---
+/** 每一期電子報自己的固定網址，往期都靠這個頁面。 */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import NewsletterIssue from "../../components/NewsletterIssue.astro";
+import { newsletters, latestNewsletter, coverImage, type Newsletter } from "../../data/newsletters";
+
+export function getStaticPaths() {
+  return newsletters.map((n) => ({ params: { slug: n.slug }, props: { issue: n } }));
+}
+
+const { issue } = Astro.props as { issue: Newsletter };
+---
+
+<BaseLayout
+  title={issue.title}
+  description={`台灣性諮商學會${issue.title}：${issue.intro}`}
+  image={coverImage(issue)}
+>
+  <NewsletterIssue issue={issue} isLatest={issue.slug === latestNewsletter.slug} />
+</BaseLayout>

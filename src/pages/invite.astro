@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHero from "../components/PageHero.astro";
+import LecturerBookingForm from "../components/LecturerBookingForm.astro";
+---
+
+<BaseLayout
+  title="講師邀約"
+  description="邀請台灣性諮商學會安排講師授課，請填寫邀約申請表，秘書處將於 3–7 個工作天內與您聯繫。"
+>
+  <PageHero eyebrow="講師邀約" title="邀請本會安排講師授課" />
+
+  <section class="section">
+    <div class="wrap wrap-narrow">
+      <LecturerBookingForm />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .section {
+    padding: 40px 0 64px;
+  }
+
+  .wrap-narrow {
+    max-width: 760px;
+  }
+</style>

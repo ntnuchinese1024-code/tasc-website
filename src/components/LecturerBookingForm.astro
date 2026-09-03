@@ -1,0 +1,505 @@
+---
+/**
+ * 講師邀約表單。
+ *
+ * 取代原本掛在 BeClass 的《台灣性諮商學會》邀約申請表，直接鑲嵌在官網上。
+ * 官網是靜態站，這裡送出時用瀏覽器端 fetch 打報名系統的
+ * POST /api/lecturer-bookings，資料寫進同一個 Supabase，
+ * 秘書處在報名系統後台的「講師邀約」頁面處理——跟報名表單是同一套後台，
+ * 官網本身仍然是純靜態、可搬遷。
+ */
+import { REGISTRATION_ORIGIN } from "../lib/registration-api";
+
+const EQUIPMENT_OPTIONS = ["麥克風", "投影機/幕", "電腦", "音響"];
+---
+
+<div class="lb-card" data-origin={REGISTRATION_ORIGIN}>
+  <div class="lb-intro">
+    <p>
+      歡迎您來到台灣性諮商學會的邀約申請頁面，本會自 2013 年成立以來，以促進台灣性諮商之專業發展，
+      提供社會大眾整體性健康服務為宗旨。感謝您願意來到這裡，一同為此領域努力！
+    </p>
+    <p>為了讓我們能更清楚您的需求、更迅速地為您安排講師，請詳細填寫以下表單，本會收到後將盡速與您聯繫。</p>
+    <ul>
+      <li>敬請提早 2 個月以上邀約，以提高媒合機率</li>
+      <li>派案至少約需 3–7 個工作天，望請耐心等候</li>
+    </ul>
+    <p class="lb-note">
+      若有其他疑問或急需，歡迎隨時來信：<a href="mailto:tasc.tw@gmail.com">tasc.tw@gmail.com</a>
+    </p>
+  </div>
+
+  <form id="lb-form" class="lb-form" novalidate>
+    {/* 蜜罐欄位：真人看不到也 tab 不到，機器人才會填。名稱刻意取成無語意的
+        hp_check——叫 website 之類的名字會被密碼管理器自動填入，導致表單永遠送不出去
+        （這個教訓在報名系統上真實發生過）。 */}
+    <div class="lb-hp" aria-hidden="true">
+      <label for="lb-hp-check">請勿填寫此欄</label>
+      <input
+        id="lb-hp-check"
+        type="text"
+        name="hp_check"
+        tabindex="-1"
+        autocomplete="off"
+        data-1p-ignore
+        data-lpignore="true"
+        data-form-type="other"
+        data-bwignore
+      />
+    </div>
+
+    <div class="lb-status" data-status role="status" aria-live="polite"></div>
+
+    <fieldset class="lb-fieldset">
+      <legend>聯絡資訊</legend>
+
+      <div class="lb-row">
+        <label for="lb-institution">機構名稱 <span class="req">*</span></label>
+        <input type="text" id="lb-institution" name="institutionName" required />
+        <p class="lb-error" data-error="institutionName"></p>
+      </div>
+
+      <div class="lb-grid-2">
+        <div class="lb-row">
+          <label for="lb-contact-name">聯絡人姓名 <span class="req">*</span></label>
+          <input type="text" id="lb-contact-name" name="contactName" required />
+          <p class="lb-error" data-error="contactName"></p>
+        </div>
+        <div class="lb-row">
+          <label for="lb-contact-title">聯絡人職稱 <span class="req">*</span></label>
+          <input type="text" id="lb-contact-title" name="contactTitle" required />
+          <p class="lb-error" data-error="contactTitle"></p>
+        </div>
+      </div>
+
+      <div class="lb-grid-2">
+        <div class="lb-row">
+          <label for="lb-phone">聯絡電話 <span class="req">*</span></label>
+          <div class="lb-inline">
+            <input type="tel" id="lb-phone" name="phone" required placeholder="02-1234-5678" />
+            <input type="text" name="phoneExt" placeholder="分機（選填）" class="lb-ext" />
+          </div>
+          <p class="lb-error" data-error="phone"></p>
+        </div>
+        <div class="lb-row">
+          <label for="lb-mobile">行動電話（選填）</label>
+          <input type="tel" id="lb-mobile" name="mobile" placeholder="0912345678" />
+          <p class="lb-error" data-error="mobile"></p>
+        </div>
+      </div>
+
+      <div class="lb-row">
+        <label for="lb-email">EMAIL <span class="req">*</span></label>
+        <input type="email" id="lb-email" name="email" required />
+        <p class="lb-hint">後續會用此信箱與您聯繫，學校信箱有可能會阻擋信件，建議先測試看看。</p>
+        <p class="lb-error" data-error="email"></p>
+      </div>
+    </fieldset>
+
+    <fieldset class="lb-fieldset">
+      <legend>課程資訊</legend>
+
+      <div class="lb-row">
+        <label>課程日期與時間（請提供 1–3 個候選時段） <span class="req">*</span></label>
+        <p class="lb-hint">例如：110.08.23，09:00-12:00</p>
+        <input type="text" name="preferredTime1" placeholder="時段 1" class="lb-time" />
+        <input type="text" name="preferredTime2" placeholder="時段 2（選填）" class="lb-time" />
+        <input type="text" name="preferredTime3" placeholder="時段 3（選填）" class="lb-time" />
+        <p class="lb-error" data-error="preferredTimes"></p>
+      </div>
+
+      <div class="lb-row">
+        <label for="lb-location">活動地點／地址 <span class="req">*</span></label>
+        <input type="text" id="lb-location" name="location" required />
+        <p class="lb-error" data-error="location"></p>
+      </div>
+
+      <div class="lb-row">
+        <label>設備（可複選）</label>
+        <div class="lb-checks">
+          {EQUIPMENT_OPTIONS.map((item) => (
+            <label class="lb-check">
+              <input type="checkbox" name="equipment" value={item} />
+              {item}
+            </label>
+          ))}
+        </div>
+        <input type="text" name="equipmentOther" placeholder="其它設備（選填）" />
+      </div>
+
+      <div class="lb-grid-2">
+        <div class="lb-row">
+          <label for="lb-topic">課程主題 <span class="req">*</span></label>
+          <input type="text" id="lb-topic" name="topic" required />
+          <p class="lb-error" data-error="topic"></p>
+        </div>
+        <div class="lb-row">
+          <label for="lb-audience">課程對象 <span class="req">*</span></label>
+          <input type="text" id="lb-audience" name="audience" required />
+          <p class="lb-error" data-error="audience"></p>
+        </div>
+      </div>
+
+      <div class="lb-row">
+        <label for="lb-attendees">預計參加人數 <span class="req">*</span></label>
+        <input type="number" id="lb-attendees" name="expectedAttendees" min="1" required class="lb-number" />
+        <p class="lb-error" data-error="expectedAttendees"></p>
+      </div>
+
+      <div class="lb-row">
+        <label for="lb-expectations">對課程內容的期待 <span class="req">*</span></label>
+        <textarea id="lb-expectations" name="expectations" rows="4" required></textarea>
+        <p class="lb-error" data-error="expectations"></p>
+      </div>
+    </fieldset>
+
+    <fieldset class="lb-fieldset">
+      <legend>費用</legend>
+
+      <div class="lb-row">
+        <label for="lb-fee">講師鐘點費 <span class="req">*</span></label>
+        <input type="text" id="lb-fee" name="fee" required placeholder="如：2000/小時＊3=6000元" />
+        <p class="lb-error" data-error="fee"></p>
+      </div>
+
+      <div class="lb-row">
+        <label>交通費補助 <span class="req">*</span></label>
+        <div class="lb-radios">
+          <label class="lb-radio"><input type="radio" name="travelSubsidy" value="yes" required /> 有</label>
+          <label class="lb-radio"><input type="radio" name="travelSubsidy" value="no" /> 無</label>
+        </div>
+        <p class="lb-hint">若無補助交通費，可能會增加派案難度，敬請理解。</p>
+      </div>
+
+      <div class="lb-row">
+        <label for="lb-subsidy-method">交通費補助方式（選填）</label>
+        <input type="text" id="lb-subsidy-method" name="travelSubsidyMethod" placeholder="如：計程車？高鐵？是否需要保留票根？" />
+      </div>
+
+      <div class="lb-row">
+        <label for="lb-instructor">指定講師（選填）</label>
+        <input type="text" id="lb-instructor" name="preferredInstructor" placeholder="此講師須為本會合作之講師" />
+      </div>
+
+      <div class="lb-row">
+        <label for="lb-group">團報資料（選填）</label>
+        <input type="text" id="lb-group" name="groupInfo" placeholder="若為團體報名，請補充人數與計費方式" />
+      </div>
+    </fieldset>
+
+    <button type="submit" class="btn btn-primary lb-submit" data-submit>送出邀約申請</button>
+  </form>
+</div>
+
+<style>
+  .lb-card {
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 32px 28px;
+  }
+
+  .lb-intro {
+    margin-bottom: 28px;
+    font-size: 0.92rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+
+  .lb-intro p {
+    margin: 0 0 10px;
+  }
+
+  .lb-intro ul {
+    margin: 0 0 10px;
+    padding-left: 1.3em;
+  }
+
+  .lb-note a {
+    color: var(--blue-deep);
+    font-weight: 700;
+  }
+
+  .lb-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0 0 28px;
+  }
+
+  .lb-fieldset legend {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.02rem;
+    color: var(--ink);
+    padding: 0 0 14px;
+    border-bottom: 1px solid var(--line);
+    width: 100%;
+    margin-bottom: 18px;
+  }
+
+  .lb-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .lb-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .lb-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 640px) {
+    .lb-grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .lb-row label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .req {
+    color: var(--red-deep);
+  }
+
+  .lb-row input,
+  .lb-row textarea,
+  .lb-row select {
+    font: inherit;
+    font-size: 0.92rem;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    width: 100%;
+  }
+
+  .lb-row input:focus,
+  .lb-row textarea:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+
+  .lb-row input.is-invalid,
+  .lb-row textarea.is-invalid {
+    border-color: var(--red-deep);
+  }
+
+  .lb-number {
+    max-width: 10em;
+  }
+
+  .lb-inline {
+    display: flex;
+    gap: 8px;
+  }
+
+  .lb-ext {
+    max-width: 9em;
+  }
+
+  .lb-time {
+    margin-bottom: 8px;
+  }
+
+  .lb-time:last-child {
+    margin-bottom: 0;
+  }
+
+  .lb-hint {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  .lb-error {
+    font-size: 0.8rem;
+    color: var(--red-deep);
+    margin: 0;
+    min-height: 0;
+  }
+
+  .lb-error:empty {
+    display: none;
+  }
+
+  .lb-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+
+  .lb-check,
+  .lb-radio {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+
+  .lb-radios {
+    display: flex;
+    gap: 20px;
+  }
+
+  .lb-hp {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+  }
+
+  .lb-submit {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .lb-submit:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .lb-status {
+    font-size: 0.88rem;
+    margin: 0 0 18px;
+    min-height: 0;
+    border-radius: 10px;
+    padding: 0;
+  }
+
+  .lb-status:empty {
+    display: none;
+  }
+
+  .lb-status.is-success {
+    color: var(--green-deep);
+    background: color-mix(in srgb, var(--green) 12%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--green) 30%, var(--line));
+    padding: 14px 16px;
+  }
+
+  .lb-status.is-error {
+    color: var(--red-deep);
+    background: color-mix(in srgb, var(--red) 10%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--red) 30%, var(--line));
+    padding: 14px 16px;
+  }
+</style>
+
+<script>
+  /**
+   * 送出時攔截預設的表單提交，改用 fetch 打報名系統的 API。
+   *
+   * 這裡沒有用任何框架，理由跟 RegistrationPanel.astro 的補正名額腳本一樣：
+   * 官網是純靜態站，多裝一套前端框架換不到什麼好處，vanilla JS 就夠用。
+   */
+  const card = document.querySelector<HTMLElement>(".lb-card");
+  const form = document.querySelector<HTMLFormElement>("#lb-form");
+  const statusBox = document.querySelector<HTMLElement>("[data-status]");
+  const submitBtn = document.querySelector<HTMLButtonElement>("[data-submit]");
+
+  if (card && form && statusBox && submitBtn) {
+    const origin = card.dataset.origin;
+
+    function clearErrors() {
+      form!.querySelectorAll<HTMLElement>("[data-error]").forEach((el) => (el.textContent = ""));
+      form!.querySelectorAll<HTMLElement>(".is-invalid").forEach((el) => el.classList.remove("is-invalid"));
+    }
+
+    function showFieldErrors(fieldErrors: Record<string, string[]>) {
+      for (const [key, messages] of Object.entries(fieldErrors)) {
+        const target = form!.querySelector<HTMLElement>(`[data-error="${key}"]`);
+        if (target) target.textContent = messages[0] ?? "";
+        const input = form!.querySelector<HTMLElement>(`[name="${key}"]`);
+        if (input) input.classList.add("is-invalid");
+      }
+    }
+
+    function setStatus(message: string, kind: "success" | "error" | "") {
+      statusBox!.textContent = message;
+      statusBox!.classList.remove("is-success", "is-error");
+      if (kind) statusBox!.classList.add(kind === "success" ? "is-success" : "is-error");
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearErrors();
+      setStatus("", "");
+
+      const data = new FormData(form);
+      const preferredTimes = [
+        String(data.get("preferredTime1") ?? "").trim(),
+        String(data.get("preferredTime2") ?? "").trim(),
+        String(data.get("preferredTime3") ?? "").trim(),
+      ].filter(Boolean);
+
+      const equipment = data.getAll("equipment").map(String);
+
+      const payload = {
+        institutionName: data.get("institutionName"),
+        contactName: data.get("contactName"),
+        contactTitle: data.get("contactTitle"),
+        phone: data.get("phone"),
+        phoneExt: data.get("phoneExt"),
+        mobile: data.get("mobile"),
+        email: data.get("email"),
+        preferredTimes,
+        location: data.get("location"),
+        equipment,
+        equipmentOther: data.get("equipmentOther"),
+        topic: data.get("topic"),
+        audience: data.get("audience"),
+        expectedAttendees: Number(data.get("expectedAttendees")),
+        expectations: data.get("expectations"),
+        fee: data.get("fee"),
+        travelSubsidy: data.get("travelSubsidy"),
+        travelSubsidyMethod: data.get("travelSubsidyMethod"),
+        preferredInstructor: data.get("preferredInstructor"),
+        groupInfo: data.get("groupInfo"),
+        hp_check: data.get("hp_check"),
+      };
+
+      submitBtn!.disabled = true;
+      submitBtn!.textContent = "送出中…";
+
+      try {
+        const res = await fetch(`${origin}/api/lecturer-bookings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+
+        if (result.ok) {
+          setStatus(
+            result.duplicate
+              ? "這筆申請剛才已經送出過了，秘書處會盡快與您聯繫，不需要重複送出。"
+              : "已收到您的邀約申請！確認信已寄至您填寫的信箱，秘書處將於 3–7 個工作天內與您聯繫。",
+            "success",
+          );
+          form!.reset();
+        } else {
+          setStatus(result.message || "送出時發生問題，請稍後再試，或直接來信 tasc.tw@gmail.com。", "error");
+          if (result.fieldErrors) showFieldErrors(result.fieldErrors);
+        }
+      } catch {
+        setStatus("網路連線出了問題，請確認網路狀況後再試一次，或直接來信 tasc.tw@gmail.com。", "error");
+      } finally {
+        submitBtn!.disabled = false;
+        submitBtn!.textContent = "送出邀約申請";
+      }
+    });
+  }
+</script>

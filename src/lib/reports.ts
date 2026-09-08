@@ -40,11 +40,20 @@ function formatReportDate(iso: string | null): string {
   return `${get("year")}年${get("month")}月${get("day")}日`;
 }
 
-function toUnified(event: EventSummary, reportMd: string | null, gallery: string[]): UnifiedReport {
+function toUnified(
+  event: EventSummary,
+  reportMd: string | null,
+  gallery: string[],
+  keyPoints?: CourseReport["keyPoints"],
+): UnifiedReport {
   const accent = accentVars(event.accent);
 
   return {
     source: "registration",
+    // 「重點整理」圖卡目前只存在本地資料檔，報名系統後台沒有這個欄位。
+    // 同一個 slug 兩邊都有時，正文以後台為準，圖卡則沿用本地那份——
+    // 否則秘書處哪天在後台補寫這篇，圖卡會無聲無息地消失。
+    keyPoints,
     slug: event.slug,
     title: event.title,
     // 報導日期用「課程實際舉辦的日子」，這是讀者關心的時間點，不是編輯發布的時間
@@ -73,8 +82,10 @@ export async function getAllReports(): Promise<UnifiedReport[]> {
   const remote = await getPublishedReports();
 
   // 列表頁不需要全文，但需要導言與封面；全文只在內頁抓
+  const localBySlug = new Map(localReports.map((r) => [r.slug, r]));
+
   const fromRegistration: UnifiedReport[] = remote.map((event) =>
-    toUnified(event, null, []),
+    toUnified(event, null, [], localBySlug.get(event.slug)?.keyPoints),
   );
 
   const remoteSlugs = new Set(fromRegistration.map((r) => r.slug));
@@ -101,7 +112,8 @@ export async function getReport(
     const detail = await getEventDetail(slug);
     if (detail?.report_md) {
       const gallery = (detail.report_gallery ?? []).map((image) => image.url);
-      return toUnified(detail, detail.report_md, gallery);
+      const localKeyPoints = localReports.find((r) => r.slug === slug)?.keyPoints;
+      return toUnified(detail, detail.report_md, gallery, localKeyPoints);
     }
   }
 

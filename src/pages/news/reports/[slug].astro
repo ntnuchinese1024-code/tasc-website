@@ -1,6 +1,7 @@
 ---
 import ArticleLayout from "../../../layouts/ArticleLayout.astro";
 import CoursePoster from "../../../components/CoursePoster.astro";
+import ReportKeyPoints from "../../../components/ReportKeyPoints.astro";
 import { getAllReports, getReport } from "../../../lib/reports";
 
 export async function getStaticPaths() {
@@ -17,7 +18,7 @@ export async function getStaticPaths() {
 
 const {
   title, date, speaker, writer, tags, color, colorText, lead,
-  poster, images = [], sections = [], bodyHtml,
+  poster, images = [], sections = [], keyPoints, bodyHtml,
 } = Astro.props;
 
 // 第一張圖放文章開頭當主視覺，其餘（少數報導有兩張）擺在文末
@@ -37,6 +38,8 @@ const [cover, ...moreImages] = poster ? [poster, ...images] : images;
 
   <p class="lead-para">{lead}</p>
   {writer && <p class="byline">撰文・{writer}</p>}
+
+  {keyPoints && keyPoints.length > 0 && <ReportKeyPoints points={keyPoints} />}
 
   {/* 報名系統寫的報導帶 HTML（Markdown 轉出來的）；搬遷前的本地報導仍是 sections */}
   {bodyHtml ? (

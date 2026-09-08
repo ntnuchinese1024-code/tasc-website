@@ -1,0 +1,179 @@
+---
+/**
+ * 課程報導的「重點整理」圖卡。
+ *
+ * 用途：把一篇報導的核心要點整理成一塊視覺區塊，放在導言之後、正文之前，
+ * 讓讀者三十秒內先掌握全貌，再決定要不要細讀。
+ *
+ * 怎麼加：在 src/data/course-reports.ts 的那篇報導裡加上 keyPoints 欄位就會出現，
+ * 不寫就不會出現。每一點的 items 建議兩到三句，一句一個概念。
+ * 顏色會自動依序取用學會標誌的四色＋輔助二色，不必自己指定。
+ */
+interface Props {
+  title?: string;
+  points: { heading: string; items: string[] }[];
+}
+
+const { title = "重點整理", points } = Astro.props;
+
+// 標誌色序：藍、紅、綠、橙、洋紅。裝飾用原色，文字用 -deep 版（原色對白底不過 AA）
+const palette = [
+  { dot: "var(--blue)", text: "var(--blue-deep)" },
+  { dot: "var(--red)", text: "var(--red-deep)" },
+  { dot: "var(--green)", text: "var(--green-deep)" },
+  { dot: "var(--orange)", text: "var(--orange-deep)" },
+  { dot: "var(--magenta)", text: "var(--magenta-deep)" },
+];
+---
+
+<aside class="keypoints" aria-label={title}>
+  <p class="keypoints-title">{title}</p>
+
+  <ol class="keypoints-list">
+    {points.map((point, i) => {
+      const tone = palette[i % palette.length];
+      return (
+        <li style={`--dot: ${tone.dot}; --dot-text: ${tone.text}`}>
+          <span class="num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+          <div class="body">
+            <h3>{point.heading}</h3>
+            <ul>
+              {point.items.map((item) => <li>{item}</li>)}
+            </ul>
+          </div>
+        </li>
+      );
+    })}
+  </ol>
+</aside>
+
+<style>
+  .keypoints {
+    margin: 8px 0 36px;
+    padding: 26px 28px 22px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .keypoints-title {
+    font-family: var(--font-display);
+    font-size: 0.95rem !important;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--ink) !important;
+    margin: 0 0 18px !important;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* 標題左側那一小段色條，取當篇報導的主色 */
+  .keypoints-title::before {
+    content: "";
+    display: inline-block;
+    width: 22px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+    vertical-align: 0.32em;
+    margin-right: 10px;
+  }
+
+  .keypoints-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .keypoints-list > li {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-top: 1px dashed var(--line);
+  }
+
+  .keypoints-list > li:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .keypoints-list > li:last-child {
+    padding-bottom: 0;
+  }
+
+  /* 編號：色環包住數字，不用實心底色，才不會跟內文搶注意力 */
+  .num {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    margin-top: 2px;
+    border: 2px solid var(--dot);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--dot-text);
+    background: color-mix(in srgb, var(--dot) 10%, var(--card));
+  }
+
+  .body {
+    min-width: 0;
+  }
+
+  .keypoints h3 {
+    font-size: 0.98rem;
+    line-height: 1.5;
+    color: var(--dot-text);
+    margin: 3px 0 6px;
+  }
+
+  .keypoints .body ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .keypoints .body li {
+    position: relative;
+    padding-left: 13px;
+    font-size: 0.92rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+    margin-bottom: 3px;
+  }
+
+  .keypoints .body li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.78em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--dot);
+  }
+
+  .keypoints .body li:last-child {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 560px) {
+    .keypoints {
+      padding: 22px 18px 18px;
+      border-radius: 12px;
+    }
+
+    .keypoints-list > li {
+      gap: 11px;
+    }
+
+    .num {
+      width: 26px;
+      height: 26px;
+      font-size: 0.72rem;
+    }
+  }
+</style>

@@ -29,7 +29,7 @@ export const courseReports: CourseReport[] = [
     title: "當代性別事件行為人諮商處遇實務經驗分享交流",
     date: "2026年8月16日",
     speaker: "龍冠華 臨床心理師",
-    writer: "台灣性諮商學會",
+    writer: "李翊平 諮商心理師／性諮商師",
     tags: ["性別事件行為人", "偷窺偷拍", "課程報導"],
     color: "var(--blue)",
     colorText: "var(--blue-deep)",

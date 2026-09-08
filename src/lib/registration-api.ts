@@ -23,6 +23,17 @@ export type EventKind = "course" | "workshop" | "lecture" | "annual" | "other";
 export type AccentName = "blue" | "red" | "green" | "magenta" | "orange" | "gold";
 export type RegistrationStatusCode = "OPEN" | "FULL" | "NOT_OPEN" | "CLOSED" | "DISABLED";
 
+/**
+ * 報導的「重點整理」一則，官網畫成圖卡的一列。
+ *
+ * 選填：報名系統加上這個欄位之前建置的官網、或還沒跑 migration 012 的環境，
+ * 回傳的 JSON 裡不會有它。所以取用端一定要能接受 undefined。
+ */
+export interface ReportKeyPoint {
+  heading: string
+  items: string[]
+}
+
 /** 身分別價目（會員／非會員／學生）。空陣列＝單一價格，看 price。 */
 export interface PriceTier {
   id: string;
@@ -75,6 +86,8 @@ export interface EventSummary {
 
 /** 單頁用的完整欄位。 */
 export interface EventDetail extends EventSummary {
+  /** 報導的重點整理。空陣列或 undefined＝這篇沒有圖卡。 */
+  report_key_points?: ReportKeyPoint[]
   intro_md: string | null;
   target_audience: string | null;
   credits_note: string | null;

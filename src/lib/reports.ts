@@ -18,6 +18,7 @@ import {
   accentVars,
   getPublishedReports,
   getEventDetail,
+  type EventDetail,
   type EventSummary,
 } from "./registration-api";
 
@@ -48,12 +49,18 @@ function toUnified(
 ): UnifiedReport {
   const accent = accentVars(event.accent);
 
+  // 圖卡的來源優先序：報名系統後台 → 本地資料檔。
+  //
+  // 後台（migration 012 之後）有 report_key_points 欄位，報導組自己編；
+  // 但欄位是後來才加的，舊環境或還沒跑 migration 的情況會讀不到，
+  // 這時候就沿用本地資料檔那份，否則已經上線的圖卡會無聲無息地消失。
+  const remoteKeyPoints = (event as EventDetail).report_key_points;
+  const resolvedKeyPoints =
+    remoteKeyPoints && remoteKeyPoints.length > 0 ? remoteKeyPoints : keyPoints;
+
   return {
     source: "registration",
-    // 「重點整理」圖卡目前只存在本地資料檔，報名系統後台沒有這個欄位。
-    // 同一個 slug 兩邊都有時，正文以後台為準，圖卡則沿用本地那份——
-    // 否則秘書處哪天在後台補寫這篇，圖卡會無聲無息地消失。
-    keyPoints,
+    keyPoints: resolvedKeyPoints,
     slug: event.slug,
     title: event.title,
     // 報導日期用「課程實際舉辦的日子」，這是讀者關心的時間點，不是編輯發布的時間

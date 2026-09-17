@@ -112,7 +112,10 @@ export const courseReports: CourseReport[] = [
     // slug 跟 migration 013 匯入報名系統時用的那筆一致（foster-family-sexuality-2026），
     // 之後後台補寫同一篇才會覆蓋這裡，而不是變成兩篇。
     slug: "foster-family-sexuality-2026",
-    poster: "/images/courses/2026-08-15-寄養家庭性議題.jpg",
+    // 封面用學會臉書那張「課後紀實報導」圖（含講師與現場照片），
+    // 不是招生用的課程海報——報名早就結束了，海報上的費用與截止日對讀者沒有意義。
+    // 課程海報本身仍留在 public/images/courses/，最新消息頁那張活動卡片還在用。
+    poster: "/images/courses/2026-08-15-寄養家庭性議題-課後報導.jpg",
     title: "寄養家庭中的性議題：理解、陪伴與合作實務",
     date: "2026年8月15日",
     speaker: "王嘉琪 諮商心理師／性諮商師",

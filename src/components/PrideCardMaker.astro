@@ -1,0 +1,584 @@
+---
+/**
+ * 同遊前網路串聯的圖卡產生器（/pride）。
+ *
+ * 全部在瀏覽器裡完成：選照片 → 抽金句 → 下載 PNG。照片從頭到尾不離開使用者的裝置，
+ * 所以不需要主機、資料庫，也沒有個資保管的問題。畫法在 src/lib/pride-card.ts，
+ * 文字在 src/data/pride-2026.ts。
+ */
+import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
+---
+
+<div class="maker" data-maker>
+  <div class="preview">
+    <div class="canvas-frame">
+      <canvas
+        width="1080"
+        height="1080"
+        data-canvas
+        role="img"
+        aria-label="圖卡預覽"
+      ></canvas>
+    </div>
+    <p class="drag-hint" data-drag-hint hidden>在圖上拖曳可以調整照片位置</p>
+    <p class="privacy">
+      <span aria-hidden="true">🔒</span>
+      照片只在你的手機或電腦裡處理，不會上傳到學會或任何伺服器。
+    </p>
+  </div>
+
+  <div class="controls">
+    <section class="step">
+      <h3><span class="step-num">1</span>放一張照片</h3>
+      <div class="row">
+        <label class="btn btn-primary file-btn">
+          <input type="file" accept="image/*" data-file hidden />
+          <span data-file-label>選擇照片</span>
+        </label>
+        <button type="button" class="btn btn-ghost" data-remove hidden>移除照片</button>
+      </div>
+      <label class="zoom" data-zoom-wrap hidden>
+        <span>縮放</span>
+        <input type="range" min="1" max="3" step="0.01" value="1" data-zoom />
+      </label>
+      <p class="note" data-file-error hidden role="alert"></p>
+      <p class="note">不放照片也可以，會是一張純文字的金句卡。</p>
+    </section>
+
+    <section class="step">
+      <h3><span class="step-num">2</span>挑一句話</h3>
+      <div class="chips" role="radiogroup" aria-label="金句類型">
+        {quoteSets.map((set, i) => (
+          <button type="button" class="chip" role="radio" aria-checked={i === 0 ? "true" : "false"} data-set={set.id}>
+            {set.label}
+          </button>
+        ))}
+        <button type="button" class="chip" role="radio" aria-checked="false" data-set="custom">自己寫</button>
+      </div>
+
+      <blockquote class="current-quote" data-quote-text aria-live="polite"></blockquote>
+
+      <div class="row" data-draw-buttons>
+        <button type="button" class="btn btn-ghost" data-prev disabled>⬅ 上一句</button>
+        <button type="button" class="btn btn-primary" data-random>🎲 隨機換一句</button>
+      </div>
+
+      <div class="custom" data-custom-wrap hidden>
+        <label for="pride-custom">你想說的話（{CUSTOM_QUOTE_MAX} 字以內，按 Enter 可以換行）</label>
+        <textarea id="pride-custom" rows="3" maxlength={CUSTOM_QUOTE_MAX} data-custom placeholder="例如：我的性別，我的聲音，我的選擇。"></textarea>
+        <p class="note"><span data-custom-count>0</span> / {CUSTOM_QUOTE_MAX}</p>
+      </div>
+    </section>
+
+    <section class="step">
+      <h3><span class="step-num">3</span>存下來、發出去</h3>
+      <div class="row">
+        <button type="button" class="btn btn-primary" data-download>💾 下載專屬圖卡</button>
+        <button type="button" class="btn btn-ghost" data-share hidden>📤 分享／存到相簿</button>
+      </div>
+      <p class="note">1080×1080 PNG，IG、FB 貼文或大頭貼都適用。</p>
+    </section>
+  </div>
+</div>
+
+<!-- LINE、FB、IG 的內建瀏覽器常常擋下載，改成顯示圖片讓人長按儲存 -->
+<dialog class="save-dialog" data-save-dialog>
+  <p class="save-title">長按圖片，選「儲存影像」</p>
+  <img data-save-img alt="你的圖卡" />
+  <p class="note">如果沒有儲存選項，請點右上角「⋯」改用 Safari 或 Chrome 開啟這一頁。</p>
+  <form method="dialog"><button class="btn btn-ghost">關閉</button></form>
+</dialog>
+
+<script>
+  import { quoteSets, CARD_SIGNATURE } from "../data/pride-2026";
+  import { SIZE, drawCard, clampOffset, type CardState } from "../lib/pride-card";
+
+  const root = document.querySelector<HTMLElement>("[data-maker]")!;
+  const $ = <T extends Element = HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
+
+  const canvas = $<HTMLCanvasElement>("[data-canvas]");
+  const ctx = canvas.getContext("2d")!;
+  const fileInput = $<HTMLInputElement>("[data-file]");
+  const fileLabel = $("[data-file-label]");
+  const fileError = $("[data-file-error]");
+  const removeBtn = $<HTMLButtonElement>("[data-remove]");
+  const zoomWrap = $("[data-zoom-wrap]");
+  const zoomInput = $<HTMLInputElement>("[data-zoom]");
+  const dragHint = $("[data-drag-hint]");
+  const quoteText = $("[data-quote-text]");
+  const prevBtn = $<HTMLButtonElement>("[data-prev]");
+  const randomBtn = $<HTMLButtonElement>("[data-random]");
+  const drawButtons = $("[data-draw-buttons]");
+  const customWrap = $("[data-custom-wrap]");
+  const customInput = $<HTMLTextAreaElement>("[data-custom]");
+  const customCount = $("[data-custom-count]");
+  const downloadBtn = $<HTMLButtonElement>("[data-download]");
+  const shareBtn = $<HTMLButtonElement>("[data-share]");
+  const saveDialog = document.querySelector<HTMLDialogElement>("[data-save-dialog]")!;
+  const saveImg = document.querySelector<HTMLImageElement>("[data-save-img]")!;
+
+  const state: CardState = {
+    image: null,
+    zoom: 1,
+    offsetX: 0,
+    offsetY: 0,
+    quote: "",
+    signature: CARD_SIGNATURE,
+  };
+
+  /* ---- 重畫（拖曳時一幀最多畫一次） ---- */
+  let frame = 0;
+  function render() {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      drawCard(ctx, state);
+      canvas.setAttribute("aria-label", `圖卡預覽：${state.quote.replace(/\n/g, "")}`);
+    });
+  }
+
+  /* ---- 金句：抽籤與上一句 ---- */
+  let currentSet = quoteSets[0].id;
+  const history: string[] = [];
+  let historyPos = -1;
+  /** 每一類一個「籤筒」，抽完一輪才重新洗牌，避免連續抽到同一句 */
+  const bags = new Map<string, string[]>();
+
+  function drawFromBag(setId: string): string {
+    const set = quoteSets.find((s) => s.id === setId)!;
+    let bag = bags.get(setId) ?? [];
+    if (bag.length === 0) {
+      bag = [...set.quotes].sort(() => Math.random() - 0.5);
+      // 新的一輪第一句不要剛好是畫面上那句
+      if (bag.length > 1 && bag[bag.length - 1] === state.quote) bag.unshift(bag.pop()!);
+    }
+    const q = bag.pop()!;
+    bags.set(setId, bag);
+    return q;
+  }
+
+  function showQuote(q: string) {
+    state.quote = q;
+    quoteText.textContent = q.replace(/\n/g, "");
+    prevBtn.disabled = historyPos <= 0;
+    render();
+  }
+
+  function pushQuote(q: string) {
+    history.splice(historyPos + 1);
+    history.push(q);
+    historyPos = history.length - 1;
+    showQuote(q);
+  }
+
+  randomBtn.addEventListener("click", () => pushQuote(drawFromBag(currentSet)));
+  prevBtn.addEventListener("click", () => {
+    if (historyPos <= 0) return;
+    historyPos -= 1;
+    showQuote(history[historyPos]);
+  });
+
+  const CUSTOM_PLACEHOLDER = "寫下\n你想說的話";
+
+  function selectSet(id: string) {
+    currentSet = id;
+    root.querySelectorAll<HTMLButtonElement>("[data-set]").forEach((b) => {
+      b.setAttribute("aria-checked", String(b.dataset.set === id));
+    });
+    const isCustom = id === "custom";
+    customWrap.hidden = !isCustom;
+    drawButtons.hidden = isCustom;
+    quoteText.hidden = isCustom;
+    if (isCustom) {
+      state.quote = customInput.value.trim() || CUSTOM_PLACEHOLDER;
+      render();
+      customInput.focus();
+    } else {
+      pushQuote(drawFromBag(id));
+    }
+  }
+
+  root.querySelectorAll<HTMLButtonElement>("[data-set]").forEach((b) => {
+    b.addEventListener("click", () => selectSet(b.dataset.set!));
+  });
+
+  customInput.addEventListener("input", () => {
+    customCount.textContent = String(Array.from(customInput.value).length);
+    state.quote = customInput.value.trim() || CUSTOM_PLACEHOLDER;
+    render();
+  });
+
+  /* ---- 照片 ---- */
+  let objectUrl = "";
+
+  function setPhotoControls(hasPhoto: boolean) {
+    removeBtn.hidden = !hasPhoto;
+    zoomWrap.hidden = !hasPhoto;
+    dragHint.hidden = !hasPhoto;
+    canvas.classList.toggle("is-draggable", hasPhoto);
+    fileLabel.textContent = hasPhoto ? "換一張照片" : "選擇照片";
+  }
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = "";
+    if (!file) return;
+    fileError.hidden = true;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = url;
+      state.image = img;
+      state.zoom = 1;
+      state.offsetX = 0;
+      state.offsetY = 0;
+      zoomInput.value = "1";
+      setPhotoControls(true);
+      render();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      fileError.textContent = "這張照片的格式瀏覽器讀不出來，請換一張 JPG 或 PNG 試試。";
+      fileError.hidden = false;
+    };
+    img.src = url;
+  });
+
+  removeBtn.addEventListener("click", () => {
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    objectUrl = "";
+    state.image = null;
+    setPhotoControls(false);
+    render();
+  });
+
+  function applyOffset(x: number, y: number) {
+    if (!state.image) return;
+    const c = clampOffset(state.image, state.zoom, x, y);
+    state.offsetX = c.x;
+    state.offsetY = c.y;
+    render();
+  }
+
+  zoomInput.addEventListener("input", () => {
+    state.zoom = Number(zoomInput.value);
+    applyOffset(state.offsetX, state.offsetY);
+  });
+
+  let drag: { id: number; x: number; y: number } | null = null;
+  canvas.addEventListener("pointerdown", (e) => {
+    if (!state.image) return;
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    // 螢幕上的位移換算成 1080 畫布上的位移
+    const ratio = SIZE / canvas.getBoundingClientRect().width;
+    applyOffset(state.offsetX + (e.clientX - drag.x) * ratio, state.offsetY + (e.clientY - drag.y) * ratio);
+    drag.x = e.clientX;
+    drag.y = e.clientY;
+  });
+  const endDrag = () => (drag = null);
+  canvas.addEventListener("pointerup", endDrag);
+  canvas.addEventListener("pointercancel", endDrag);
+
+  /* ---- 匯出 ---- */
+  const FILE_NAME = "台灣性諮商學會-2026同志遊行圖卡.png";
+
+  function toBlob(): Promise<Blob> {
+    if (frame) {
+      cancelAnimationFrame(frame);
+      frame = 0;
+    }
+    drawCard(ctx, state);
+    return new Promise((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png"),
+    );
+  }
+
+  const inAppBrowser = /Line\/|FBAN|FBAV|FB_IAB|Instagram/i.test(navigator.userAgent);
+
+  downloadBtn.addEventListener("click", async () => {
+    const blob = await toBlob();
+    const url = URL.createObjectURL(blob);
+    if (inAppBrowser && typeof saveDialog.showModal === "function") {
+      saveImg.src = url;
+      saveDialog.showModal();
+      saveDialog.addEventListener("close", () => URL.revokeObjectURL(url), { once: true });
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = FILE_NAME;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  });
+
+  // 手機上的系統分享選單可以直接「儲存影像」到相簿，或分享到 IG／LINE
+  const probe = new File([new Blob()], FILE_NAME, { type: "image/png" });
+  if (navigator.canShare?.({ files: [probe] })) {
+    shareBtn.hidden = false;
+    shareBtn.addEventListener("click", async () => {
+      const blob = await toBlob();
+      const file = new File([blob], FILE_NAME, { type: "image/png" });
+      try {
+        await navigator.share({ files: [file] });
+      } catch {
+        // 使用者自己按了取消，不用處理
+      }
+    });
+  }
+
+  selectSet(currentSet);
+</script>
+
+<style>
+  /* .btn 的 display:inline-block 會蓋過 hidden 屬性，這裡搶回來 */
+  [hidden] {
+    display: none !important;
+  }
+
+  .maker {
+    display: grid;
+    gap: 32px;
+    align-items: start;
+  }
+
+  @media (min-width: 900px) {
+    .maker {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 44px;
+    }
+
+    .preview {
+      position: sticky;
+      top: 88px;
+    }
+  }
+
+  .canvas-frame {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    background: #211b14;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  /* 有照片時才吃掉觸控手勢，沒照片時在圖上滑動仍然可以捲動頁面 */
+  canvas.is-draggable {
+    cursor: grab;
+    touch-action: none;
+  }
+
+  canvas.is-draggable:active {
+    cursor: grabbing;
+  }
+
+  .drag-hint,
+  .privacy {
+    margin: 12px 0 0;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .privacy {
+    color: var(--green-deep);
+    font-weight: 600;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .step {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 22px 20px;
+  }
+
+  .step h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.08rem;
+    margin-bottom: 16px;
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--blue-deep);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 0.85rem;
+    font-weight: 800;
+    flex: 0 0 auto;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .btn {
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1.5px solid var(--ink);
+  }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .btn:focus-visible,
+  .chip:focus-visible,
+  .file-btn:focus-within {
+    outline: 3px solid var(--blue);
+    outline-offset: 2px;
+  }
+
+  .file-btn {
+    cursor: pointer;
+  }
+
+  .zoom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+
+  .zoom input {
+    flex: 1;
+    accent-color: var(--blue-deep);
+  }
+
+  .note {
+    margin: 12px 0 0;
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    line-height: 1.6;
+  }
+
+  [data-file-error] {
+    color: var(--red-deep);
+    font-weight: 600;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    border: 1.5px solid var(--line);
+    background: var(--bg);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+
+  .chip[aria-checked="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+
+  .current-quote {
+    margin: 18px 0;
+    padding: 4px 0 4px 16px;
+    border-left: 4px solid;
+    border-image: linear-gradient(#e40303, #ff8c00, #ffed00, #008026, #24408e, #732982) 1;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.7;
+    min-height: 3.4em;
+  }
+
+  .custom {
+    margin-top: 16px;
+  }
+
+  .custom label {
+    display: block;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .custom textarea {
+    width: 100%;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    background: var(--bg);
+  }
+
+  .custom textarea:focus {
+    outline: 3px solid var(--blue);
+    outline-offset: 1px;
+    border-color: transparent;
+  }
+
+  .save-dialog {
+    border: 0;
+    border-radius: 16px;
+    padding: 20px;
+    width: min(92vw, 480px);
+    text-align: center;
+  }
+
+  .save-dialog::backdrop {
+    background: rgba(33, 27, 20, 0.7);
+  }
+
+  .save-dialog img {
+    width: 100%;
+    border-radius: 10px;
+    -webkit-touch-callout: default;
+  }
+
+  .save-title {
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+
+  .save-dialog form {
+    margin-top: 12px;
+  }
+</style>

@@ -1,0 +1,430 @@
+---
+/**
+ * 同遊照片牆：棉線 + 木夾子，把會員做好的圖卡夾成一排一排。
+ *
+ * 資料在報名系統（/api/pride-wall），這裡在瀏覽器端抓：
+ *   - 讀不到、或秘書處把活動設成「籌備中」→ 整區不顯示，頁面其他部分照常
+ *   - 「開放上牆」→ 顯示照片牆，並通知 PrideCardMaker 顯示「釘上照片牆」按鈕
+ *   - 「典藏唯讀」→ 顯示照片牆，但不再收新的
+ *
+ * 只會拿到秘書處通過審核的圖卡；自己剛送出的那張會以「審核中」暫時夾在最前面，
+ * 只有自己看得到（沒有真的上牆），重新整理就會消失。
+ */
+---
+
+<section class="wall-section" id="wall" data-wall hidden aria-labelledby="wall-title">
+  <div class="wrap wall-head">
+    <p class="eyebrow wall-eyebrow">同遊照片牆</p>
+    <h2 id="wall-title">把聲音夾在一起</h2>
+    <p class="wall-lead" data-wall-lead></p>
+  </div>
+
+  <div class="board" data-wall-board></div>
+
+  <div class="wrap">
+    <p class="wall-empty" data-wall-empty hidden>
+      牆上還空空的。做好圖卡後按「📌 釘上同遊照片牆」，成為第一張吧！
+    </p>
+  </div>
+</section>
+
+<dialog class="lightbox" data-lightbox aria-label="放大檢視圖卡">
+  <img data-lightbox-img alt="" />
+  <p class="lightbox-name" data-lightbox-name></p>
+  <form method="dialog"><button class="btn btn-ghost">關閉</button></form>
+</dialog>
+
+<script>
+  import { REGISTRATION_ORIGIN } from "../lib/registration-api";
+
+  interface WallItem {
+    id: string;
+    name: string;
+    url: string;
+    pending?: boolean;
+  }
+
+  const section = document.querySelector<HTMLElement>("[data-wall]")!;
+  const board = section.querySelector<HTMLElement>("[data-wall-board]")!;
+  const lead = section.querySelector<HTMLElement>("[data-wall-lead]")!;
+  const empty = section.querySelector<HTMLElement>("[data-wall-empty]")!;
+  const lightbox = document.querySelector<HTMLDialogElement>("[data-lightbox]")!;
+  const lightboxImg = lightbox.querySelector<HTMLImageElement>("[data-lightbox-img]")!;
+  const lightboxName = lightbox.querySelector<HTMLElement>("[data-lightbox-name]")!;
+
+  let items: WallItem[] = [];
+  let approvedCount = 0;
+
+  function announce(mode: string) {
+    document.documentElement.dataset.prideWall = mode;
+    window.dispatchEvent(new CustomEvent("pride-wall:status", { detail: { accepting: mode === "active" } }));
+  }
+
+  /** 用 id 算出固定的小角度，每次重畫同一張照片都歪同一邊，不會跳來跳去 */
+  function tilt(id: string) {
+    let h = 0;
+    for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) | 0;
+    return ((Math.abs(h) % 90) / 10 - 4.5).toFixed(1);
+  }
+
+  function perRow(width: number) {
+    if (width < 520) return 2;
+    if (width < 820) return 3;
+    if (width < 1120) return 4;
+    return 5;
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string) {
+    const node = document.createElement(tag);
+    node.className = cls;
+    return node;
+  }
+
+  function card(item: WallItem, cardW: number) {
+    const btn = el("button", "polaroid");
+    btn.type = "button";
+    btn.style.width = `${cardW}px`;
+    btn.style.setProperty("--tilt", `${tilt(item.id)}deg`);
+    btn.setAttribute("aria-label", `${item.name} 的圖卡${item.pending ? "（審核中）" : ""}，點一下放大`);
+
+    const img = el("img", "polaroid-img");
+    img.src = item.url;
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+
+    const name = el("span", "polaroid-name");
+    name.textContent = item.name;
+
+    btn.append(el("span", "clip"), img, name);
+    if (item.pending) {
+      const badge = el("span", "pending");
+      badge.textContent = "審核中・只有你看得到";
+      btn.append(badge);
+    }
+    btn.addEventListener("click", () => {
+      lightboxImg.src = item.url;
+      lightboxImg.alt = `${item.name} 的圖卡`;
+      lightboxName.textContent = item.name;
+      lightbox.showModal();
+    });
+    return btn;
+  }
+
+  /**
+   * 排版：每一排是一條往下垂的棉線（二次貝茲曲線），照片等距夾在線上。
+   * 線的高度 y = 起點 + 4·下垂量·t·(1−t)，t 是水平位置的比例，
+   * 所以每張照片的夾子都剛好落在線上。
+   */
+  function layout() {
+    const width = board.clientWidth;
+    if (!width) return;
+    const n = perRow(width);
+    const slot = width / n;
+    const cardW = Math.min(220, Math.round(slot * 0.78));
+    const sag = Math.round(Math.min(34, width * 0.03));
+    const cardH = cardW + 44; // 正方形照片 + 拍立得下緣
+    const rowH = 28 + sag + cardH + 36;
+
+    board.replaceChildren();
+    const rows = Math.max(1, Math.ceil(items.length / n));
+
+    for (let r = 0; r < rows; r++) {
+      const rowItems = items.slice(r * n, r * n + n);
+      const row = el("div", "row");
+      // 空牆只有線和夾子，不必預留照片的高度
+      const h = rowItems.length ? rowH : 28 + sag + 56;
+      row.style.height = `${h}px`;
+
+      const y0 = 20;
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("class", "string");
+      svg.setAttribute("viewBox", `0 0 ${width} ${h}`);
+      svg.setAttribute("aria-hidden", "true");
+      const d = `M 0 ${y0} Q ${width / 2} ${y0 + sag * 2} ${width} ${y0}`;
+      for (const [cls, dash] of [["string-line", ""], ["string-twist", "3 5"]]) {
+        const path = document.createElementNS(svgNS, "path");
+        path.setAttribute("d", d);
+        path.setAttribute("class", cls);
+        if (dash) path.setAttribute("stroke-dasharray", dash);
+        svg.append(path);
+      }
+      row.append(svg);
+
+      // 空牆：還是拉一條線、夾三個空夾子，看得出這裡是要夾照片的
+      const slots = rowItems.length ? rowItems.length : 3;
+      for (let i = 0; i < slots; i++) {
+        const x = (width * (i + 0.5)) / slots;
+        const t = x / width;
+        const y = y0 + 4 * sag * t * (1 - t);
+        const item = rowItems[i];
+        const node = item ? card(item, cardW) : el("span", "clip clip-alone");
+        node.style.left = `${x}px`;
+        node.style.top = `${y - 12}px`;
+        row.append(node);
+      }
+      board.append(row);
+    }
+  }
+
+  function refreshText(mode: string) {
+    empty.hidden = items.length > 0;
+    lead.textContent =
+      mode === "archived"
+        ? `遊行圓滿結束，謝謝 ${approvedCount} 位夥伴把自己的聲音夾上來。`
+        : approvedCount > 0
+          ? `已經有 ${approvedCount} 張圖卡夾上牆。做好你的圖卡，按「📌 釘上同遊照片牆」一起加入！`
+          : "做好你的圖卡，按「📌 釘上同遊照片牆」一起加入。每一張都會先經過秘書處確認，再公開上牆。";
+  }
+
+  let mode = "closed";
+
+  async function load() {
+    try {
+      const res = await fetch(`${REGISTRATION_ORIGIN}/api/pride-wall`);
+      if (!res.ok) throw new Error(String(res.status));
+      const data = (await res.json()) as { mode: string; items: WallItem[] };
+      mode = data.mode;
+      if (mode === "closed") return announce("closed");
+      items = [...items.filter((i) => i.pending), ...data.items];
+      approvedCount = data.items.length;
+      section.hidden = false;
+      announce(mode);
+      refreshText(mode);
+      layout();
+    } catch {
+      // 報名系統連不上：照片牆整區不出現，圖卡產生器照常可以用
+      announce("closed");
+    }
+  }
+
+  window.addEventListener("pride-wall:pinned", (e) => {
+    const { name, url } = (e as CustomEvent<{ name: string; url: string }>).detail;
+    items = [{ id: `pending-${Date.now()}`, name, url, pending: true }, ...items];
+    refreshText(mode);
+    layout();
+  });
+
+  let resizeFrame = 0;
+  new ResizeObserver(() => {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(layout);
+  }).observe(board);
+
+  load();
+</script>
+
+<style>
+  [hidden] {
+    display: none !important;
+  }
+
+  .wall-section {
+    padding: 52px 0 40px;
+    /* 牛皮紙：底色 + 兩層極淡的點狀紋理 */
+    background-color: #eadfca;
+    background-image:
+      radial-gradient(rgba(120, 88, 50, 0.08) 1px, transparent 1.2px),
+      radial-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1.4px);
+    background-size: 7px 7px, 11px 11px;
+    background-position: 0 0, 3px 5px;
+    border-top: 1px solid #d8c9ad;
+    border-bottom: 1px solid #d8c9ad;
+    overflow: hidden;
+  }
+
+  .wall-head {
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .wall-eyebrow {
+    color: #8a5a2b;
+  }
+
+  .wall-head h2 {
+    margin-top: 8px;
+    font-size: clamp(1.4rem, 4vw, 1.9rem);
+  }
+
+  .wall-lead {
+    max-width: 40rem;
+    margin: 10px auto 0;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    line-height: 1.8;
+  }
+
+  .board {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 12px;
+  }
+
+  .board :global(.row) {
+    position: relative;
+  }
+
+  .board :global(.string) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .board :global(.string-line) {
+    fill: none;
+    stroke: #b39470;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+
+  /* 棉線的扭紋：同一條路徑疊一層淺色虛線 */
+  .board :global(.string-twist) {
+    fill: none;
+    stroke: #eadcc4;
+    stroke-width: 1.1;
+    opacity: 0.9;
+  }
+
+  .board :global(.polaroid) {
+    position: absolute;
+    transform: translateX(-50%) rotate(var(--tilt));
+    transform-origin: 50% 0;
+    padding: 8px 8px 0;
+    border: 0;
+    background: #fffdf8;
+    box-shadow:
+      0 1px 1px rgba(60, 40, 20, 0.12),
+      0 10px 22px -10px rgba(60, 40, 20, 0.45);
+    cursor: zoom-in;
+    font: inherit;
+    text-align: center;
+  }
+
+  .board :global(.polaroid:focus-visible) {
+    outline: 3px solid var(--blue);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .board :global(.polaroid) {
+      transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+    }
+
+    .board :global(.polaroid:hover) {
+      transform: translateX(-50%) rotate(calc(var(--tilt) * -0.6)) scale(1.03);
+      z-index: 2;
+    }
+  }
+
+  .board :global(.polaroid-img) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: #e6dccb;
+  }
+
+  .board :global(.polaroid-name) {
+    display: block;
+    height: 44px;
+    line-height: 44px;
+    padding: 0 6px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /* 手寫感：macOS 的翩翩體／手札體，Windows 的標楷體，都沒有就退回襯線字 */
+    font-family: "Hannotate TC", "HanziPen TC", "Kaiti TC", "BiauKai", "DFKai-SB", var(--font-display);
+    font-size: 1.05rem;
+    color: #3a2c1e;
+  }
+
+  .board :global(.pending) {
+    position: absolute;
+    top: 16px;
+    right: 14px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(33, 27, 20, 0.78);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  /* 木夾子：兩片木頭 + 中間一圈鐵彈簧 */
+  .board :global(.clip) {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    width: 14px;
+    height: 40px;
+    margin-left: -7px;
+    border-radius: 3px 3px 4px 4px;
+    background:
+      linear-gradient(90deg, transparent 6px, rgba(90, 58, 28, 0.45) 6px, rgba(90, 58, 28, 0.45) 8px, transparent 8px),
+      linear-gradient(180deg, #d9b98f, #b98a58 60%, #a8784a);
+    box-shadow: 0 2px 3px rgba(60, 40, 20, 0.35);
+    z-index: 1;
+  }
+
+  .board :global(.clip::after) {
+    content: "";
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    top: 13px;
+    height: 5px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #d6d6d6, #8c8c8c);
+  }
+
+  .board :global(.clip-alone) {
+    transform: translateX(-50%);
+    margin-left: 0;
+  }
+
+  .wall-empty {
+    margin: 0;
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+
+  .lightbox {
+    border: 0;
+    border-radius: 16px;
+    padding: 16px;
+    width: min(94vw, 600px);
+    text-align: center;
+  }
+
+  .lightbox::backdrop {
+    background: rgba(33, 27, 20, 0.75);
+  }
+
+  .lightbox img {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .lightbox-name {
+    margin: 12px 0;
+    font-family: "Hannotate TC", "HanziPen TC", "Kaiti TC", "BiauKai", "DFKai-SB", var(--font-display);
+    font-size: 1.3rem;
+  }
+
+  .btn {
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1.5px solid var(--ink);
+  }
+</style>

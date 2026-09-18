@@ -2,28 +2,25 @@
 /**
  * 同遊前網路串聯的圖卡產生器（/pride）。
  *
- * 全部在瀏覽器裡完成：選照片 → 抽金句 → 下載 PNG。照片從頭到尾不離開使用者的裝置，
- * 所以不需要主機、資料庫，也沒有個資保管的問題。畫法在 src/lib/pride-card.ts，
- * 文字在 src/data/pride-2026.ts。
+ * 選照片 → 調色調 → 選框型與文字框 → 抽金句 → 下載或分享，全部在瀏覽器裡完成，
+ * 照片不會離開使用者的裝置。只有使用者主動按「釘上照片牆」時，才會把「做好的圖卡」
+ * （不是原始照片）送到報名系統，等秘書處審核後出現在 PrideWall 上。
+ *
+ * 畫法在 src/lib/pride-card.ts，文字在 src/data/pride-2026.ts。
  */
 import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
+import { FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
 ---
 
 <div class="maker" data-maker>
   <div class="preview">
     <div class="canvas-frame">
-      <canvas
-        width="1080"
-        height="1080"
-        data-canvas
-        role="img"
-        aria-label="圖卡預覽"
-      ></canvas>
+      <canvas width="1080" height="1080" data-canvas role="img" aria-label="圖卡預覽"></canvas>
     </div>
     <p class="drag-hint" data-drag-hint hidden>在圖上拖曳可以調整照片位置</p>
     <p class="privacy">
       <span aria-hidden="true">🔒</span>
-      照片只在你的手機或電腦裡處理，不會上傳到學會或任何伺服器。
+      製作過程中，照片只在你的手機或電腦裡處理，不會上傳。
     </p>
   </div>
 
@@ -37,16 +34,51 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
         </label>
         <button type="button" class="btn btn-ghost" data-remove hidden>移除照片</button>
       </div>
-      <label class="zoom" data-zoom-wrap hidden>
-        <span>縮放</span>
-        <input type="range" min="1" max="3" step="0.01" value="1" data-zoom />
-      </label>
       <p class="note" data-file-error hidden role="alert"></p>
-      <p class="note">不放照片也可以，會是一張純文字的金句卡。</p>
+      <p class="note" data-no-photo-note>不放照片也可以，會是一張純文字的金句卡。</p>
+
+      <div class="photo-tools" data-photo-tools hidden>
+        <p class="sub-label">色調</p>
+        <div class="chips" role="radiogroup" aria-label="照片色調" data-group="tone">
+          {TONES.map((t, i) => (
+            <button type="button" class="chip" role="radio" aria-checked={i === 0 ? "true" : "false"} data-value={t.id}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <label class="slider">
+          <span>亮度</span>
+          <input type="range" min="-30" max="30" step="1" value="0" data-brightness />
+        </label>
+        <label class="slider">
+          <span>縮放</span>
+          <input type="range" min="1" max="3" step="0.01" value="1" data-zoom />
+        </label>
+      </div>
     </section>
 
     <section class="step">
-      <h3><span class="step-num">2</span>挑一句話</h3>
+      <h3><span class="step-num">2</span>選一個版型</h3>
+      <p class="sub-label">框型</p>
+      <div class="chips" role="radiogroup" aria-label="框型" data-group="frame">
+        {FRAMES.map((f, i) => (
+          <button type="button" class="chip" role="radio" aria-checked={i === 0 ? "true" : "false"} data-value={f.id}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+      <p class="sub-label">文字框</p>
+      <div class="chips" role="radiogroup" aria-label="文字框" data-group="textStyle">
+        {TEXT_STYLES.map((t, i) => (
+          <button type="button" class="chip" role="radio" aria-checked={i === 0 ? "true" : "false"} data-value={t.id}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+    </section>
+
+    <section class="step">
+      <h3><span class="step-num">3</span>挑一句話</h3>
       <div class="chips" role="radiogroup" aria-label="金句類型">
         {quoteSets.map((set, i) => (
           <button type="button" class="chip" role="radio" aria-checked={i === 0 ? "true" : "false"} data-set={set.id}>
@@ -71,39 +103,100 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
     </section>
 
     <section class="step">
-      <h3><span class="step-num">3</span>存下來、發出去</h3>
+      <h3><span class="step-num">4</span>存下來、發出去</h3>
       <div class="row">
         <button type="button" class="btn btn-primary" data-download>💾 下載專屬圖卡</button>
         <button type="button" class="btn btn-ghost" data-share hidden>📤 分享／存到相簿</button>
       </div>
       <p class="note">1080×1080 PNG，IG、FB 貼文或大頭貼都適用。</p>
+
+      <div class="pin-box" data-pin-box hidden>
+        <button type="button" class="btn btn-pin" data-pin>📌 釘上同遊照片牆</button>
+        <p class="note">把這張圖卡夾到下面的照片牆，寫上你的名字。秘書處看過之後才會公開。</p>
+      </div>
     </section>
   </div>
 </div>
 
 <!-- LINE、FB、IG 的內建瀏覽器常常擋下載，改成顯示圖片讓人長按儲存 -->
-<dialog class="save-dialog" data-save-dialog>
-  <p class="save-title">長按圖片，選「儲存影像」</p>
+<dialog class="modal save-dialog" data-save-dialog>
+  <p class="modal-title">長按圖片，選「儲存影像」</p>
   <img data-save-img alt="你的圖卡" />
   <p class="note">如果沒有儲存選項，請點右上角「⋯」改用 Safari 或 Chrome 開啟這一頁。</p>
   <form method="dialog"><button class="btn btn-ghost">關閉</button></form>
 </dialog>
 
+<dialog class="modal pin-dialog" data-pin-dialog aria-labelledby="pin-title">
+  <form class="pin-form" data-pin-form>
+    <p class="modal-title" id="pin-title">釘上同遊照片牆</p>
+    <img class="pin-preview" data-pin-img alt="要送出的圖卡" />
+
+    <label class="field">
+      <span>署名（寫在拍立得下緣，暱稱也可以）</span>
+      <input type="text" name="name" maxlength="20" required autocomplete="nickname" data-pin-name />
+    </label>
+
+    <!-- 蜜罐：真人看不到也不會填 -->
+    <input type="text" name="hp_check" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp" />
+
+    <label class="consent">
+      <input type="checkbox" name="consent" value="yes" required />
+      <span>
+        我同意這張圖卡經台灣性諮商學會秘書處審核後，公開在學會官網的照片牆上；
+        圖中每一位入鏡的人都知道並同意公開。
+      </span>
+    </label>
+    <p class="note">
+      送出的是做好的圖卡，不是原始照片。之後想撤下，寫信到
+      <a href="mailto:tasc.tw@gmail.com">tasc.tw@gmail.com</a> 即可。
+    </p>
+
+    <p class="pin-status" data-pin-status role="status"></p>
+
+    <div class="row">
+      <button type="submit" class="btn btn-primary" data-pin-submit>送出</button>
+      <button type="button" class="btn btn-ghost" data-pin-cancel>取消</button>
+    </div>
+  </form>
+
+  <div class="pin-done" data-pin-done hidden>
+    <p class="modal-title">📌 夾上去了！</p>
+    <p>秘書處看過之後，你的圖卡就會出現在照片牆上。謝謝你一起發聲 🏳️‍🌈</p>
+    <div class="row">
+      <a href="#wall" class="btn btn-primary" data-pin-to-wall>去看照片牆</a>
+      <button type="button" class="btn btn-ghost" data-pin-close>關閉</button>
+    </div>
+  </div>
+</dialog>
+
 <script>
   import { quoteSets, CARD_SIGNATURE } from "../data/pride-2026";
-  import { SIZE, drawCard, clampOffset, type CardState } from "../lib/pride-card";
+  import {
+    SIZE,
+    drawCard,
+    clampOffset,
+    prepareBase,
+    toneImage,
+    type CardState,
+    type FrameId,
+    type TextStyleId,
+    type ToneId,
+  } from "../lib/pride-card";
+  import { REGISTRATION_ORIGIN } from "../lib/registration-api";
 
   const root = document.querySelector<HTMLElement>("[data-maker]")!;
-  const $ = <T extends Element = HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
+  const $ = <T extends Element = HTMLElement>(sel: string, scope: ParentNode = root) => scope.querySelector<T>(sel)!;
 
   const canvas = $<HTMLCanvasElement>("[data-canvas]");
   const ctx = canvas.getContext("2d")!;
   const fileInput = $<HTMLInputElement>("[data-file]");
   const fileLabel = $("[data-file-label]");
   const fileError = $("[data-file-error]");
+  const noPhotoNote = $("[data-no-photo-note]");
   const removeBtn = $<HTMLButtonElement>("[data-remove]");
-  const zoomWrap = $("[data-zoom-wrap]");
+  const photoTools = $("[data-photo-tools]");
   const zoomInput = $<HTMLInputElement>("[data-zoom]");
+  const brightnessInput = $<HTMLInputElement>("[data-brightness]");
   const dragHint = $("[data-drag-hint]");
   const quoteText = $("[data-quote-text]");
   const prevBtn = $<HTMLButtonElement>("[data-prev]");
@@ -114,21 +207,33 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
   const customCount = $("[data-custom-count]");
   const downloadBtn = $<HTMLButtonElement>("[data-download]");
   const shareBtn = $<HTMLButtonElement>("[data-share]");
-  const saveDialog = document.querySelector<HTMLDialogElement>("[data-save-dialog]")!;
-  const saveImg = document.querySelector<HTMLImageElement>("[data-save-img]")!;
+  const pinBox = $("[data-pin-box]");
+  const pinBtn = $<HTMLButtonElement>("[data-pin]");
+  const saveDialog = $<HTMLDialogElement>("[data-save-dialog]", document);
+  const saveImg = $<HTMLImageElement>("[data-save-img]", document);
 
   const state: CardState = {
-    image: null,
+    photo: null,
     zoom: 1,
     offsetX: 0,
     offsetY: 0,
     quote: "",
     signature: CARD_SIGNATURE,
+    frame: "full",
+    textStyle: "caption",
   };
 
   /* ---- 重畫（拖曳時一幀最多畫一次） ---- */
   let frame = 0;
+  /** 每畫一次加一；用來判斷「已送出上牆的那張」是不是還是現在這張 */
+  let version = 0;
   function render() {
+    version += 1;
+    if (pinBtn.dataset.sentVersion && Number(pinBtn.dataset.sentVersion) !== version) {
+      delete pinBtn.dataset.sentVersion;
+      pinBtn.disabled = false;
+      pinBtn.textContent = "📌 釘上同遊照片牆";
+    }
     if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = 0;
@@ -136,6 +241,28 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
       canvas.setAttribute("aria-label", `圖卡預覽：${state.quote.replace(/\n/g, "")}`);
     });
   }
+
+  /* ---- 單選按鈕組（色調、框型、文字框） ---- */
+  function bindGroup(name: string, onChange: (value: string) => void) {
+    const group = $(`[data-group="${name}"]`);
+    group.querySelectorAll<HTMLButtonElement>("[data-value]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        group.querySelectorAll("[data-value]").forEach((b) => b.setAttribute("aria-checked", String(b === btn)));
+        onChange(btn.dataset.value!);
+      });
+    });
+  }
+
+  bindGroup("frame", (v) => {
+    state.frame = v as FrameId;
+    // 換框型時照片範圍的長寬比會變，位移重新夾一次
+    applyOffset(state.offsetX, state.offsetY);
+    render();
+  });
+  bindGroup("textStyle", (v) => {
+    state.textStyle = v as TextStyleId;
+    render();
+  });
 
   /* ---- 金句：抽籤與上一句 ---- */
   let currentSet = quoteSets[0].id;
@@ -208,13 +335,32 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
     render();
   });
 
-  /* ---- 照片 ---- */
-  let objectUrl = "";
+  /* ---- 照片與色調 ---- */
+  let base: HTMLCanvasElement | null = null;
+  let tone: ToneId = "original";
+
+  /** 套色調要逐像素算，連續拉亮度滑桿時只算最後一次 */
+  let toneTimer = 0;
+  function retone() {
+    clearTimeout(toneTimer);
+    toneTimer = window.setTimeout(() => {
+      if (!base) return;
+      state.photo = toneImage(base, tone, Number(brightnessInput.value));
+      render();
+    }, 30);
+  }
+
+  bindGroup("tone", (v) => {
+    tone = v as ToneId;
+    retone();
+  });
+  brightnessInput.addEventListener("input", retone);
 
   function setPhotoControls(hasPhoto: boolean) {
     removeBtn.hidden = !hasPhoto;
-    zoomWrap.hidden = !hasPhoto;
+    photoTools.hidden = !hasPhoto;
     dragHint.hidden = !hasPhoto;
+    noPhotoNote.hidden = hasPhoto;
     canvas.classList.toggle("is-draggable", hasPhoto);
     fileLabel.textContent = hasPhoto ? "換一張照片" : "選擇照片";
   }
@@ -227,9 +373,10 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-      objectUrl = url;
-      state.image = img;
+      // 縮成工作尺寸之後原圖就用不到了，馬上釋放
+      base = prepareBase(img);
+      URL.revokeObjectURL(url);
+      state.photo = toneImage(base, tone, Number(brightnessInput.value));
       state.zoom = 1;
       state.offsetX = 0;
       state.offsetY = 0;
@@ -246,16 +393,15 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
   });
 
   removeBtn.addEventListener("click", () => {
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
-    objectUrl = "";
-    state.image = null;
+    base = null;
+    state.photo = null;
     setPhotoControls(false);
     render();
   });
 
   function applyOffset(x: number, y: number) {
-    if (!state.image) return;
-    const c = clampOffset(state.image, state.zoom, x, y);
+    if (!state.photo) return;
+    const c = clampOffset(state, x, y);
     state.offsetX = c.x;
     state.offsetY = c.y;
     render();
@@ -268,7 +414,7 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
 
   let drag: { id: number; x: number; y: number } | null = null;
   canvas.addEventListener("pointerdown", (e) => {
-    if (!state.image) return;
+    if (!state.photo) return;
     drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
     canvas.setPointerCapture(e.pointerId);
   });
@@ -287,14 +433,14 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
   /* ---- 匯出 ---- */
   const FILE_NAME = "台灣性諮商學會-2026同志遊行圖卡.png";
 
-  function toBlob(): Promise<Blob> {
+  function toBlob(type = "image/png", quality?: number): Promise<Blob> {
     if (frame) {
       cancelAnimationFrame(frame);
       frame = 0;
     }
     drawCard(ctx, state);
     return new Promise((resolve, reject) =>
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png"),
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), type, quality),
     );
   }
 
@@ -332,6 +478,81 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
       }
     });
   }
+
+  /* ---- 釘上照片牆 ---- */
+  const pinDialog = $<HTMLDialogElement>("[data-pin-dialog]", document);
+  const pinForm = $<HTMLFormElement>("[data-pin-form]", pinDialog);
+  const pinDone = $("[data-pin-done]", pinDialog);
+  const pinImg = $<HTMLImageElement>("[data-pin-img]", pinDialog);
+  const pinName = $<HTMLInputElement>("[data-pin-name]", pinDialog);
+  const pinStatus = $("[data-pin-status]", pinDialog);
+  const pinSubmit = $<HTMLButtonElement>("[data-pin-submit]", pinDialog);
+  let pinBlob: Blob | null = null;
+  let pinUrl = "";
+
+  // 照片牆（PrideWall）讀到報名系統的狀態後會告訴這裡要不要顯示按鈕
+  const showPin = (accepting: boolean) => (pinBox.hidden = !accepting);
+  showPin(document.documentElement.dataset.prideWall === "active");
+  window.addEventListener("pride-wall:status", (e) => showPin((e as CustomEvent).detail.accepting));
+
+  /** 上牆用 JPEG：同一張 1080 圖，PNG 要 1–2MB，JPEG 只要兩三百 KB */
+  async function wallBlob(): Promise<Blob> {
+    let blob = await toBlob("image/jpeg", 0.9);
+    if (blob.size > 1_400_000) blob = await toBlob("image/jpeg", 0.78);
+    return blob;
+  }
+
+  pinBtn.addEventListener("click", async () => {
+    pinBlob = await wallBlob();
+    if (pinUrl) URL.revokeObjectURL(pinUrl);
+    pinUrl = URL.createObjectURL(pinBlob);
+    pinImg.src = pinUrl;
+    pinForm.hidden = false;
+    pinDone.hidden = true;
+    pinStatus.textContent = "";
+    pinStatus.classList.remove("is-error");
+    pinDialog.showModal();
+    pinName.focus();
+  });
+
+  $("[data-pin-cancel]", pinDialog).addEventListener("click", () => pinDialog.close());
+  $("[data-pin-close]", pinDialog).addEventListener("click", () => pinDialog.close());
+  $("[data-pin-to-wall]", pinDialog).addEventListener("click", () => pinDialog.close());
+
+  pinForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    // 送出中或已經送過就不再送：網路慢時使用者常會連按
+    if (!pinBlob || pinSubmit.disabled) return;
+    const data = new FormData(pinForm);
+    data.set("name", pinName.value.trim());
+    data.set("image", pinBlob, "card.jpg");
+
+    pinSubmit.disabled = true;
+    pinStatus.classList.remove("is-error");
+    pinStatus.textContent = "送出中…";
+    try {
+      const res = await fetch(`${REGISTRATION_ORIGIN}/api/pride-wall`, { method: "POST", body: data });
+      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: string };
+      if (!res.ok || !body.ok) throw new Error(body.message ?? "送出失敗，請稍後再試一次。");
+
+      pinForm.hidden = true;
+      pinDone.hidden = false;
+      pinBtn.disabled = true;
+      pinBtn.textContent = "已送出 ✓（改動圖卡後可以再送一張）";
+      pinBtn.dataset.sentVersion = String(version);
+      window.dispatchEvent(
+        new CustomEvent("pride-wall:pinned", { detail: { name: pinName.value.trim(), url: pinUrl } }),
+      );
+      pinUrl = ""; // 交給照片牆顯示「審核中」的那張，不要在這裡釋放
+      pinBlob = null;
+    } catch (err) {
+      pinStatus.classList.add("is-error");
+      pinStatus.textContent =
+        err instanceof TypeError ? "連不上照片牆，請檢查網路後再試一次。" : (err as Error).message;
+    } finally {
+      pinSubmit.disabled = false;
+    }
+  });
 
   selectSet(currentSet);
 </script>
@@ -431,6 +652,24 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
     flex: 0 0 auto;
   }
 
+  .sub-label {
+    margin: 16px 0 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+  }
+
+  .step h3 + .sub-label {
+    margin-top: 0;
+  }
+
+  .photo-tools {
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--line);
+  }
+
   .row {
     display: flex;
     flex-wrap: wrap;
@@ -449,7 +688,7 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
   }
 
   .btn:disabled {
-    opacity: 0.4;
+    opacity: 0.45;
     cursor: default;
   }
 
@@ -464,16 +703,20 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
     cursor: pointer;
   }
 
-  .zoom {
+  .slider {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-top: 16px;
+    margin-top: 14px;
     font-size: 0.9rem;
     color: var(--ink-soft);
   }
 
-  .zoom input {
+  .slider span {
+    flex: 0 0 2.5em;
+  }
+
+  .slider input {
     flex: 1;
     accent-color: var(--blue-deep);
   }
@@ -483,6 +726,10 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
     font-size: 0.82rem;
     color: var(--ink-faint);
     line-height: 1.6;
+  }
+
+  .note a {
+    color: var(--blue-deep);
   }
 
   [data-file-error] {
@@ -538,33 +785,62 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
     margin-bottom: 8px;
   }
 
-  .custom textarea {
+  textarea,
+  .field input {
     width: 100%;
     border: 1.5px solid var(--line);
     border-radius: 12px;
     padding: 12px 14px;
     font: inherit;
     font-size: 1rem;
-    resize: vertical;
     background: var(--bg);
   }
 
-  .custom textarea:focus {
+  textarea {
+    resize: vertical;
+  }
+
+  textarea:focus,
+  .field input:focus {
     outline: 3px solid var(--blue);
     outline-offset: 1px;
     border-color: transparent;
   }
 
-  .save-dialog {
-    border: 0;
-    border-radius: 16px;
-    padding: 20px;
-    width: min(92vw, 480px);
-    text-align: center;
+  .pin-box {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
   }
 
-  .save-dialog::backdrop {
+  .btn-pin {
+    background: #8a5a2b;
+    color: #fff;
+    box-shadow: 0 8px 20px -10px rgba(138, 90, 43, 0.7);
+  }
+
+  /* ---- 對話框 ---- */
+  .modal {
+    border: 0;
+    border-radius: 16px;
+    padding: 22px;
+    width: min(92vw, 480px);
+    max-height: 92vh;
+  }
+
+  .modal::backdrop {
     background: rgba(33, 27, 20, 0.7);
+  }
+
+  .modal-title {
+    margin: 0 0 12px;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .save-dialog {
+    text-align: center;
   }
 
   .save-dialog img {
@@ -573,12 +849,67 @@ import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
     -webkit-touch-callout: default;
   }
 
-  .save-title {
-    margin: 0 0 12px;
-    font-weight: 700;
-  }
-
   .save-dialog form {
     margin-top: 12px;
+  }
+
+  .pin-preview {
+    width: 46%;
+    margin: 0 auto 16px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+
+  .field {
+    display: block;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+
+  .field span {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .consent {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 16px;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+
+  .consent input {
+    margin-top: 5px;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    accent-color: var(--blue-deep);
+  }
+
+  .pin-status {
+    min-height: 1.4em;
+    margin: 12px 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+
+  .pin-status.is-error {
+    color: var(--red-deep);
+  }
+
+  .pin-done p {
+    line-height: 1.75;
   }
 </style>

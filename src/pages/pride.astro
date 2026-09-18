@@ -2,24 +2,30 @@
 /**
  * 公關組「同遊前網路串聯」活動頁：2026 臺灣同志遊行。
  *
- * 會員在這裡做自己的挺同圖卡（換頭貼、發文響應），並一鍵複製活動 hashtag。
- * 金句與 hashtag 都在 src/data/pride-2026.ts；遊行結束後想撤掉，刪掉這個檔案，
- * 並把 public/llms.txt 裡的那一行拿掉即可。
+ * 會員在這裡做自己的挺同圖卡（換頭貼、發文響應），可以把圖卡釘上同遊照片牆，
+ * 並一鍵複製活動 hashtag。
+ *
+ * 金句與 hashtag 都在 src/data/pride-2026.ts。照片牆的資料在報名系統
+ * （/api/pride-wall，後台 /admin/pride-wall 審核與開關）；報名系統把活動設成
+ * 「籌備中」時，照片牆與「釘上照片牆」按鈕會自動消失，這一頁其他部分照常。
+ *
+ * 遊行結束後想撤掉：刪掉這個檔案，並把 public/llms.txt 裡的那一行拿掉即可。
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHero from "../components/PageHero.astro";
 import PrideCardMaker from "../components/PrideCardMaker.astro";
+import PrideWall from "../components/PrideWall.astro";
 import { coreHashtags, extraHashtags, captionTemplate, parade } from "../data/pride-2026";
 ---
 
 <BaseLayout
   title="我挺同我驕傲・2026 臺灣同志遊行圖卡"
-  description="台灣性諮商學會邀請你一起響應 2026 臺灣同志遊行：放一張照片、抽一句話，做一張自己的挺同圖卡。照片只在你的裝置上處理，不會上傳。"
+  description="台灣性諮商學會邀請你一起響應 2026 臺灣同志遊行：放一張照片、選個版型、抽一句話，做一張自己的挺同圖卡，也可以夾上同遊照片牆。"
 >
   <PageHero
     eyebrow="公關組・同遊前網路串聯"
     title="做一張你的挺同圖卡"
-    lead="放一張照片、抽一句話，一分鐘就能做好。換上大頭貼或發文響應，10 月 31 日，我們在遊行現場見。"
+    lead="放一張照片、選個版型、抽一句話，一分鐘就能做好。換上大頭貼、發文響應，或夾上同遊照片牆——10 月 31 日，我們在遊行現場見。"
   />
 
   <section class="section">
@@ -27,6 +33,8 @@ import { coreHashtags, extraHashtags, captionTemplate, parade } from "../data/pr
       <PrideCardMaker />
     </div>
   </section>
+
+  <PrideWall />
 
   <section class="section section-alt">
     <div class="wrap wrap-narrow">

@@ -10,8 +10,10 @@ interface Props {
   description?: string;
   /** 這一頁分享出去要用的預覽圖，從 / 開頭寫。沒給就用學會標誌。 */
   image?: string;
+  /** 還沒正式公開、只給內部看的頁面：請搜尋引擎不要收錄。記得同時從 sitemap 排除。 */
+  noindex?: boolean;
 }
-const { title, description = "台灣性諮商學會（TASC）", image } = Astro.props;
+const { title, description = "台灣性諮商學會（TASC）", image, noindex = false } = Astro.props;
 
 // 這一頁的「正版網址」。同一頁如果同時能從 tasctaiwan.tw、www.tasctaiwan.tw
 // 或舊的 netlify 網址打開，canonical 會告訴 Google 只認 astro.config.mjs 裡設定的那一個，
@@ -48,7 +50,7 @@ const orgJsonLd = {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    {IS_PREVIEW && <meta name="robots" content="noindex, nofollow" />}
+    {(IS_PREVIEW || noindex) && <meta name="robots" content="noindex, nofollow" />}
     {canonical && <link rel="canonical" href={canonical} />}
 
     {/* 分享到 Facebook／LINE 時的預覽卡片。沒有這些的話只會顯示一條乾巴巴的網址。 */}

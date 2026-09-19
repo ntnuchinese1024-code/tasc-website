@@ -73,8 +73,8 @@ export const CUSTOM_QUOTE_MAX = 40;
 /** 圖卡底部的署名。 */
 export const CARD_SIGNATURE = "台灣性諮商學會 ‧ #2026臺灣同志遊行 #我挺同我驕傲";
 
-/** 公關組活動計畫指定的三個 hashtag。 */
-export const coreHashtags = ["#性諮商學會", "#我挺同我驕傲", "#2026臺灣同志遊行"];
+/** 公關組活動計畫指定的三個 hashtag。學會名要寫全稱「台灣性諮商學會」。 */
+export const coreHashtags = ["#台灣性諮商學會", "#我挺同我驕傲", "#2026臺灣同志遊行"];
 
 /** 可以一起帶上的延伸 hashtag：第一個是今年遊行官方主題。 */
 export const extraHashtags = ["#聲做伙聽路做伙行", "#性別平等", "#多元共融"];

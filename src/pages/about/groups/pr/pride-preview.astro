@@ -75,6 +75,7 @@ import { coreHashtags, extraHashtags, captionTemplate, parade } from "../../../.
       </div>
 
       <p class="copy-status" data-copy-status aria-live="polite"></p>
+      <textarea class="manual-copy" data-manual-copy readonly rows="3" hidden aria-label="要複製的文字"></textarea>
     </div>
   </section>
 
@@ -92,42 +93,74 @@ import { coreHashtags, extraHashtags, captionTemplate, parade } from "../../../.
 
 <script>
   const status = document.querySelector<HTMLElement>("[data-copy-status]")!;
+  const manual = document.querySelector<HTMLTextAreaElement>("[data-manual-copy]")!;
   let timer = 0;
 
-  async function copy(text: string) {
+  /**
+   * 舊式複製：在點擊的當下「同步」選取文字再複製。
+   *
+   * 一定要同步、而且要先試這個：LINE、FB 的內建瀏覽器和 iPhone 只承認
+   * 「使用者剛點下去那一瞬間」的複製。如果先 await 新式的 clipboard API、
+   * 等它失敗才退回這裡，那一瞬間已經過了，會安靜地什麼都沒複製到。
+   */
+  function legacyCopy(text: string): boolean {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    // 16px 以上 iPhone 才不會自動放大畫面；不設 readonly，iPhone 才選得起來
+    ta.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;";
+    document.body.append(ta);
+    ta.focus();
+    ta.setSelectionRange(0, text.length);
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {
+      ok = false;
+    }
+    ta.remove();
+    return ok;
+  }
+
+  async function copy(text: string): Promise<boolean> {
+    if (legacyCopy(text)) return true;
     try {
       await navigator.clipboard.writeText(text);
       return true;
     } catch {
-      // 舊瀏覽器或 LINE 內建瀏覽器沒有 clipboard API，退回傳統做法
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.append(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      ta.remove();
-      return ok;
+      return false;
     }
+  }
+
+  /** 兩種方法都失敗：把文字放在看得到的框裡、先幫忙選好，讓人長按自己拷貝 */
+  function showManual(text: string) {
+    manual.value = text;
+    manual.hidden = false;
+    manual.focus();
+    manual.setSelectionRange(0, text.length);
   }
 
   document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const ok = await copy(btn.dataset.copy!);
+      const text = btn.dataset.copy!;
+      const ok = await copy(text);
       const original = btn.dataset.label ?? btn.textContent!;
       btn.dataset.label = original;
       btn.textContent = ok ? "已複製 ✓" : original;
-      status.textContent = ok ? "已複製到剪貼簿" : "複製失敗，請長按文字自行複製";
       status.classList.toggle("is-error", !ok);
+      if (ok) {
+        status.textContent = "已複製到剪貼簿，可以直接貼到貼文裡。";
+        manual.hidden = true;
+      } else {
+        status.textContent = "這個瀏覽器不讓網頁直接複製。文字已經放在下面並選好了，請長按選「拷貝」。";
+        showManual(text);
+      }
       clearTimeout(timer);
       timer = window.setTimeout(() => {
         document.querySelectorAll<HTMLButtonElement>("[data-copy][data-label]").forEach((b) => {
           b.textContent = b.dataset.label!;
         });
-        status.textContent = "";
-      }, 1800);
+        if (ok) status.textContent = "";
+      }, 2500);
     });
   });
 </script>
@@ -249,5 +282,17 @@ import { coreHashtags, extraHashtags, captionTemplate, parade } from "../../../.
 
   .copy-status.is-error {
     color: var(--red-deep);
+  }
+
+  .manual-copy {
+    width: 100%;
+    margin-top: 8px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font: inherit;
+    font-size: 16px;
+    background: var(--card);
+    resize: none;
   }
 </style>

@@ -4,7 +4,7 @@ import FigureRing from "../components/decor/FigureRing.astro";
 import FigureMark from "../components/decor/FigureMark.astro";
 import ArcField from "../components/decor/ArcField.astro";
 import VideoEmbed from "../components/VideoEmbed.astro";
-import AnniversaryBanner from "../components/AnniversaryBanner.astro";
+import PrideBanner from "../components/PrideBanner.astro";
 import { wrapHeadingHtml } from "../lib/wrap-heading";
 import { latestNewsletter, assetBase, formatDate } from "../data/newsletters";
 import {
@@ -90,8 +90,8 @@ const events = (await getOpenCourses())
     </div>
   </header>
 
-  {/* 2026 會慶橫幅。活動結束、典藏一段時間之後想撤掉，把這一行刪掉就好。 */}
-  <AnniversaryBanner />
+  {/* 10 月同志遊行月橫幅。遊行結束想撤掉，把這一行跟 PrideBanner.astro 一起刪掉就好。 */}
+  <PrideBanner />
 
   <section class="pillars">
     <div class="wrap">

@@ -1,0 +1,88 @@
+---
+/**
+ * 首頁的「同遊前網路串聯」橫幅：10 月同志遊行月的主打活動。
+ *
+ * 遊行結束、/pride 頁面想撤掉的話，把 index.astro 裡的 <PrideBanner /> 這行
+ * 跟這個檔案一起刪掉即可；/pride 頁面本身何時撤下見 pride.astro 開頭的註解。
+ */
+---
+
+<section class="pride-banner" aria-labelledby="pride-banner-title">
+  <div class="wrap pride-inner">
+    <p class="pride-eyebrow">2026 年 10 月・同遊前網路串聯</p>
+    <h2 id="pride-banner-title">跟學會旗一起走上街頭</h2>
+    <p class="pride-note">
+      做一張你的挺同圖卡，夾上同遊照片牆；也可以填表加入學會的遊行隊伍——
+      10/30（五）跨性別遊行、10/31（六）臺灣同志遊行，我們在現場見。
+    </p>
+    <a class="pride-cta" href="/pride">前往同遊專頁 →</a>
+  </div>
+</section>
+
+<style>
+  .pride-banner {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    text-align: center;
+    background: linear-gradient(
+      100deg,
+      var(--red) 0%,
+      var(--orange) 20%,
+      var(--gold) 40%,
+      var(--green) 60%,
+      var(--blue) 80%,
+      var(--magenta) 100%
+    );
+  }
+
+  /* 疊一層底色，讓彩色漸層不要搶過文字的可讀性 */
+  .pride-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--ink) 72%, transparent);
+  }
+
+  .pride-inner {
+    padding: 44px 0 50px;
+  }
+
+  .pride-eyebrow {
+    margin: 0;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    opacity: 0.9;
+  }
+
+  .pride-banner h2 {
+    margin: 14px 0 0;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 4.6vw, 2.2rem);
+  }
+
+  .pride-note {
+    margin: 14px auto 0;
+    max-width: 44ch;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.95rem;
+    line-height: 1.9;
+  }
+
+  .pride-cta {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 13px 28px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.6);
+  }
+</style>

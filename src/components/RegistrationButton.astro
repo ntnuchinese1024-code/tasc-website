@@ -1,0 +1,76 @@
+---
+/**
+ * 報名按鈕（含即時名額）。
+ *
+ * 頁面先以靜態內容渲染出可用的按鈕，載入後再跟報名系統問目前名額，
+ * 問到了才把數字補上去。所以就算報名系統暫時掛掉或使用者關掉 JavaScript，
+ * 按鈕本身仍然可以點、連結仍然有效——只是看不到即時名額而已。
+ */
+import { REGISTRATION_ORIGIN, registrationUrl } from "../lib/registration-api";
+
+interface Props {
+  /** 報名系統後台「複製報名連結」裡的網址代稱 */
+  slug: string;
+  label?: string;
+}
+
+const { slug, label = "我要報名" } = Astro.props;
+---
+
+<div class="registration-cta" data-slug={slug} data-origin={REGISTRATION_ORIGIN}>
+  <a class="btn btn-primary registration-btn" href={registrationUrl(slug)}>
+    {label}
+  </a>
+  <p class="registration-status" data-status hidden></p>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>(".registration-cta").forEach(async (root) => {
+    const { slug, origin } = root.dataset;
+    const note = root.querySelector<HTMLParagraphElement>("[data-status]");
+    const button = root.querySelector<HTMLAnchorElement>(".registration-btn");
+    if (!slug || !origin || !note || !button) return;
+
+    try {
+      const response = await fetch(`${origin}/api/events/${slug}/status`);
+      if (!response.ok) return;
+
+      const data = await response.json();
+
+      const text: Record<string, string> = {
+        OPEN: data.remaining === null ? "開放報名中" : `尚餘 ${data.remaining} 個名額`,
+        FULL: "名額已滿",
+        NOT_OPEN: "尚未開放報名",
+        CLOSED: "報名已截止",
+      };
+
+      if (text[data.status]) {
+        note.textContent = text[data.status];
+        note.hidden = false;
+      }
+
+      if (!data.is_open) {
+        button.classList.add("is-disabled");
+      }
+    } catch {
+      // 問不到就安靜地維持原樣，不要在頁面上跳錯誤訊息嚇到訪客
+    }
+  });
+</script>
+
+<style>
+  .registration-cta {
+    margin: 0.5rem 0;
+  }
+
+  .registration-btn.is-disabled {
+    background: var(--ink-faint);
+    pointer-events: none;
+  }
+
+  .registration-status {
+    margin: 0.6rem 0 0;
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+  }
+</style>

@@ -25,7 +25,11 @@ import BaseLayout from "../../../../layouts/BaseLayout.astro";
 import PageHero from "../../../../components/PageHero.astro";
 import PrideCardMaker from "../../../../components/PrideCardMaker.astro";
 import PrideWall from "../../../../components/PrideWall.astro";
+import RegistrationButton from "../../../../components/RegistrationButton.astro";
 import { coreHashtags, extraHashtags, captionTemplate, parade } from "../../../../data/pride-2026";
+
+/** 報名系統後台「複製報名連結」裡的網址代稱，秘書處在 /admin/events 建好這場活動後填進來。 */
+const marchSignupSlug = "pride-march-2026";
 ---
 
 <BaseLayout
@@ -79,13 +83,52 @@ import { coreHashtags, extraHashtags, captionTemplate, parade } from "../../../.
     </div>
   </section>
 
-  <section class="section">
+  <section class="section section-alt">
     <div class="wrap wrap-narrow">
-      <h2>一起走上街頭</h2>
+      <h2>跟學會旗一起走上街頭</h2>
       <p class="section-lead">
-        第 24 屆臺灣同志遊行將於 {parade.date}在{parade.place}舉行，今年的主題是「聲做伙聽，路做伙行」。
-        免報名，當天直接到現場就能加入。詳細流程與路線請見
-        <a href={parade.url} target="_blank" rel="noopener">遊行官方網站</a>。
+        在諮商室裡，我們練習不帶評價地聽見每一種慾望、親密與認同；走上街頭，
+        是把同一份練習帶到陽光下。學會舉旗同遊，不只是響應一場遊行，
+        也是讓正在為自己的性別、性傾向或關係樣貌掙扎的來談者知道：
+        幫助他們的人，平時就站在他們這一邊。夥伴們不必自己一個人去，
+        跟著學會旗幟，我們一起走。
+      </p>
+
+      <div class="march-card">
+        <p class="march-tag">10/30（五）</p>
+        <h3>第 8 屆台灣跨性別遊行</h3>
+        <p class="march-meta">18:30 集合・台大醫院捷運站前</p>
+        <p class="march-note">
+          尋找學會旗幟與彩虹旗，現場找林沛辰會長（行前通知會另寄 Email／LINE 說明細節）。
+        </p>
+      </div>
+
+      <div class="march-card">
+        <p class="march-tag">10/31（六）</p>
+        <h3>第 24 屆臺灣同志遊行</h3>
+        <p class="march-meta">13:00 集合・紫色大隊</p>
+        <p class="march-note">
+          尋找學會旗幟與彩虹旗，現場找林沛辰會長（行前通知會另寄 Email／LINE 說明細節）。
+          今年主題是「聲做伙聽，路做伙行」，遊行將於 {parade.date}在{parade.place}舉行。
+        </p>
+      </div>
+
+      <div class="march-cta">
+        <RegistrationButton slug={marchSignupSlug} label="我要加入學會遊行隊伍" />
+        <p class="march-cta-note">
+          填一下姓名與聯絡方式、勾選想參加哪一天，行前通知就會寄到你的信箱。
+          兩場遊行本身都免報名、當天直接到現場也能加入；填表只是方便我們在現場找到彼此、
+          及時傳遞集合地點變動等消息。
+        </p>
+      </div>
+
+      <p class="section-lead march-links">
+        詳細流程與路線：
+        <a href={parade.url} target="_blank" rel="noopener">臺灣同志遊行官方網站</a>
+        ・
+        <a href="https://hotline.org.tw/civicrm/event/info?id=965&reset=1" target="_blank" rel="noopener">
+          台灣跨性別遊行活動頁（熱線協會）
+        </a>
       </p>
     </div>
   </section>
@@ -195,6 +238,60 @@ import { coreHashtags, extraHashtags, captionTemplate, parade } from "../../../.
   .section-lead a {
     color: var(--blue-deep);
     font-weight: 700;
+  }
+
+  .march-card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+  }
+
+  .march-tag {
+    display: inline-block;
+    margin: 0 0 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--magenta-deep);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .march-card h3 {
+    margin: 0 0 6px;
+    font-size: 1.05rem;
+  }
+
+  .march-meta {
+    margin: 0 0 8px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .march-note {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: var(--ink-soft);
+  }
+
+  .march-cta {
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .march-cta-note {
+    margin: 0.75rem auto 0;
+    max-width: 34rem;
+    font-size: 0.85rem;
+    line-height: 1.75;
+    color: var(--ink-faint);
+  }
+
+  .march-links {
+    margin-top: 28px;
   }
 
   .tag-card {

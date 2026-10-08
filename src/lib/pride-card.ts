@@ -7,6 +7,7 @@
  * 版面由兩個獨立的選擇組成（1080×1080，IG／FB 正方形規格）：
  *   框型 frame      ：滿版 / 彩虹框 / 拍立得 —— 決定照片放在哪個範圍、外圍怎麼裝飾
  *   文字框 textStyle：字幕 / 白色字卡 / 對話泡泡 —— 決定金句怎麼疊在照片上
+ * 金句與署名還可以選置左 / 置中 / 置右（align），三種文字框都適用。
  * 另外照片可以套色調（toneImage），在畫之前先處理好。
  */
 
@@ -14,6 +15,7 @@ export const SIZE = 1080;
 
 export type FrameId = "full" | "rainbow" | "polaroid";
 export type TextStyleId = "caption" | "card" | "bubble";
+export type AlignId = "left" | "center" | "right";
 export type ToneId = "original" | "warm" | "fresh" | "vintage" | "mono" | "vivid";
 
 export const FRAMES: { id: FrameId; label: string }[] = [
@@ -26,6 +28,12 @@ export const TEXT_STYLES: { id: TextStyleId; label: string }[] = [
   { id: "caption", label: "字幕" },
   { id: "card", label: "白色字卡" },
   { id: "bubble", label: "對話泡泡" },
+];
+
+export const ALIGNS: { id: AlignId; label: string }[] = [
+  { id: "left", label: "置左" },
+  { id: "center", label: "置中" },
+  { id: "right", label: "置右" },
 ];
 
 export const TONES: { id: ToneId; label: string }[] = [
@@ -55,6 +63,7 @@ export interface CardState {
   signature: string;
   frame: FrameId;
   textStyle: TextStyleId;
+  align: AlignId;
 }
 
 interface Rect {
@@ -450,6 +459,13 @@ function textScale(r: Rect) {
   return Math.min(1, (r.h / SIZE) * 1.1);
 }
 
+/** 在寬 w 的範圍裡，依對齊方式算出 fillText 的 x（ctx.textAlign 要先設成同一個 align） */
+function alignX(align: AlignId, x: number, w: number) {
+  if (align === "center") return x + w / 2;
+  if (align === "right") return x + w;
+  return x;
+}
+
 function drawLines(ctx: CanvasRenderingContext2D, lines: string[], x: number, firstBaseline: number, size: number) {
   const lineHeight = size * 1.42;
   ctx.font = `700 ${size}px ${FONT_QUOTE}`;
@@ -462,6 +478,8 @@ function drawLines(ctx: CanvasRenderingContext2D, lines: string[], x: number, fi
 function drawCaption(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, withSignature: boolean) {
   const pad = Math.round(r.w * 0.078);
   const maxWidth = r.w - pad * 2;
+  const tx = alignX(s.align, r.x + pad, maxWidth);
+  ctx.textAlign = s.align;
 
   const from = r.y + r.h * 0.34;
   const g = ctx.createLinearGradient(0, from, 0, r.y + r.h);
@@ -477,13 +495,14 @@ function drawCaption(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, withS
   const blockBottom = withSignature ? bottom - 88 : bottom;
   const firstBaseline = blockBottom - lineHeight * (lines.length - 1);
 
-  drawRainbowBar(ctx, r.x + pad, firstBaseline - size - 40);
+  const barW = 26 * RAINBOW.length;
+  drawRainbowBar(ctx, alignX(s.align, r.x + pad, maxWidth - barW), firstBaseline - size - 40);
 
   ctx.save();
   ctx.fillStyle = "#FFFFFF";
   ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
   ctx.shadowBlur = 14;
-  drawLines(ctx, lines, r.x + pad, firstBaseline, size);
+  drawLines(ctx, lines, tx, firstBaseline, size);
   ctx.restore();
 
   if (withSignature) {
@@ -491,7 +510,7 @@ function drawCaption(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, withS
     ctx.fillRect(r.x + pad, bottom - 44, maxWidth, 1.5);
     ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
     fitSignature(ctx, s.signature, maxWidth);
-    ctx.fillText(s.signature, r.x + pad, bottom);
+    ctx.fillText(s.signature, tx, bottom);
   }
 }
 
@@ -528,8 +547,10 @@ function drawTextCard(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, with
   ctx.restore();
 
   const firstBaseline = card.y + inner + 14 + size * 0.86;
+  const tx = alignX(s.align, card.x + inner, maxWidth);
+  ctx.textAlign = s.align;
   ctx.fillStyle = INK;
-  drawLines(ctx, lines, card.x + inner, firstBaseline, size);
+  drawLines(ctx, lines, tx, firstBaseline, size);
 
   if (withSignature) {
     const sigY = card.y + card.h - inner * 0.8;
@@ -537,11 +558,14 @@ function drawTextCard(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, with
     ctx.fillRect(card.x + inner, sigY - 44, maxWidth, 1.5);
     ctx.fillStyle = INK_SOFT;
     fitSignature(ctx, s.signature, maxWidth, 26);
-    ctx.fillText(s.signature, card.x + inner, sigY);
+    ctx.fillText(s.signature, tx, sigY);
   }
 }
 
-/** 對話泡泡：白色泡泡從左下角冒出來，呼應今年主題「聲做伙聽」 */
+/**
+ * 對話泡泡：白色泡泡從下方冒出來，呼應今年主題「聲做伙聽」。
+ * 泡泡本身跟著對齊方式擺在左／中／右；置右時尾巴翻到右邊。
+ */
 function drawBubble(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, withSignature: boolean) {
   const margin = 56;
   const inner = 46;
@@ -554,7 +578,12 @@ function drawBubble(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, withSi
   const bw = Math.max(textW + inner * 2, 360);
   const bh = inner * 2 + size + lineHeight * (lines.length - 1) - size * 0.14;
   const tail = 46;
-  const b: Rect = { x: r.x + margin, y: r.y + r.h - sigSpace - tail - bh, w: bw, h: bh };
+  const b: Rect = {
+    x: alignX(s.align, r.x + margin, r.w - margin * 2 - bw),
+    y: r.y + r.h - sigSpace - tail - bh,
+    w: bw,
+    h: bh,
+  };
 
   // 署名在泡泡下方，墊一層淡淡的暗色讓白字看得清楚
   if (withSignature) {
@@ -573,7 +602,11 @@ function drawBubble(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, withSi
   ctx.fillStyle = "#FFFFFF";
   roundRectPath(ctx, b, 44);
   ctx.fill();
-  // 泡泡的小尾巴
+  // 泡泡的小尾巴（置右時左右鏡射）
+  if (s.align === "right") {
+    ctx.translate(b.x * 2 + b.w, 0);
+    ctx.scale(-1, 1);
+  }
   ctx.beginPath();
   ctx.moveTo(b.x + 70, b.y + b.h - 2);
   ctx.quadraticCurveTo(b.x + 64, b.y + b.h + tail * 0.7, b.x + 34, b.y + b.h + tail);
@@ -590,8 +623,9 @@ function drawBubble(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, withSi
     ctx.fill();
   });
 
+  ctx.textAlign = s.align;
   ctx.fillStyle = INK;
-  drawLines(ctx, lines, b.x + inner, b.y + inner + size * 0.86, size);
+  drawLines(ctx, lines, alignX(s.align, b.x + inner, b.w - inner * 2), b.y + inner + size * 0.86, size);
 
   if (withSignature) {
     ctx.save();
@@ -599,7 +633,7 @@ function drawBubble(ctx: CanvasRenderingContext2D, s: CardState, r: Rect, withSi
     ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
     ctx.shadowBlur = 10;
     fitSignature(ctx, s.signature, r.w - margin * 2);
-    ctx.fillText(s.signature, r.x + margin, r.y + r.h - 48);
+    ctx.fillText(s.signature, alignX(s.align, r.x + margin, r.w - margin * 2), r.y + r.h - 48);
     ctx.restore();
   }
 }
@@ -696,6 +730,7 @@ export function drawCard(ctx: CanvasRenderingContext2D, s: CardState) {
 
   ctx.clearRect(0, 0, SIZE, SIZE);
   ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
   if (s.frame === "rainbow") drawRainbowBorder(ctx);
   if (s.frame === "polaroid") drawPolaroidPaper(ctx);
 

@@ -9,7 +9,7 @@
  * 畫法在 src/lib/pride-card.ts，文字在 src/data/pride-2026.ts。
  */
 import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
-import { FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
+import { ALIGNS, FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
 ---
 
 <div class="maker" data-maker>
@@ -72,6 +72,14 @@ import { FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
         {TEXT_STYLES.map((t, i) => (
           <button type="button" class="chip" role="radio" aria-checked={i === 0 ? "true" : "false"} data-value={t.id}>
             {t.label}
+          </button>
+        ))}
+      </div>
+      <p class="sub-label">文字對齊</p>
+      <div class="chips" role="radiogroup" aria-label="文字對齊" data-group="align">
+        {ALIGNS.map((a, i) => (
+          <button type="button" class="chip" role="radio" aria-checked={i === 0 ? "true" : "false"} data-value={a.id}>
+            {a.label}
           </button>
         ))}
       </div>
@@ -180,6 +188,7 @@ import { FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
     type CardState,
     type FrameId,
     type TextStyleId,
+    type AlignId,
     type ToneId,
   } from "../lib/pride-card";
   import { REGISTRATION_ORIGIN } from "../lib/registration-api";
@@ -221,6 +230,7 @@ import { FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
     signature: CARD_SIGNATURE,
     frame: "full",
     textStyle: "caption",
+    align: "left",
   };
 
   /* ---- 重畫（拖曳時一幀最多畫一次） ---- */
@@ -261,6 +271,10 @@ import { FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
   });
   bindGroup("textStyle", (v) => {
     state.textStyle = v as TextStyleId;
+    render();
+  });
+  bindGroup("align", (v) => {
+    state.align = v as AlignId;
     render();
   });
 

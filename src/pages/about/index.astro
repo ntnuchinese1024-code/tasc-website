@@ -448,7 +448,8 @@ const charterChapters = [
     max-width: 100%;
   }
 
-  /* 五個工作小組：不排成一長排，而是會自動換行的卡片區，窄螢幕也塞得下 */
+  /* 六個工作小組：不排成一長排，而是會自動換行的卡片區，窄螢幕也塞得下；
+     寬螢幕排成 3×2，不會變成 4＋2 一邊重一邊輕 */
   .org-groups {
     position: relative;
     margin-top: 26px;
@@ -457,6 +458,14 @@ const charterChapters = [
     justify-content: center;
     gap: 12px;
     width: min(40rem, 100%);
+  }
+
+  @media (min-width: 641px) {
+    .org-groups {
+      display: grid;
+      grid-template-columns: repeat(3, auto);
+      justify-content: center;
+    }
   }
 
   /* 從秘書處垂下來接到卡片區的那一小段線 */

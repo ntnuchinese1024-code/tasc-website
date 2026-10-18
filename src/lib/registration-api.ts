@@ -163,6 +163,19 @@ export async function getPublishedReports(): Promise<EventSummary[]> {
   return data.items ?? [];
 }
 
+/**
+ * 所有公開的活動（招生中＋已有報導的歷史活動）。
+ * 給活動回饋問卷頁用：每一場都先生好問卷頁，開不開放由瀏覽器端即時問報名系統。
+ */
+export async function getAllEvents(): Promise<EventSummary[]> {
+  const data = await fetchJson<ListResponse>("/api/events?scope=all&limit=200", {
+    scope: "all",
+    count: 0,
+    items: [],
+  });
+  return data.items ?? [];
+}
+
 /** 單一課程的完整內容。找不到時回 null，呼叫端自行處理。 */
 export async function getEventDetail(slug: string): Promise<EventDetail | null> {
   const data = await fetchJson<EventDetail | { error: string } | null>(

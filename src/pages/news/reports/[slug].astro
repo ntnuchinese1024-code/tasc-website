@@ -2,6 +2,7 @@
 import ArticleLayout from "../../../layouts/ArticleLayout.astro";
 import CoursePoster from "../../../components/CoursePoster.astro";
 import ReportKeyPoints from "../../../components/ReportKeyPoints.astro";
+import EventFeedbackForm from "../../../components/EventFeedbackForm.astro";
 import { getAllReports, getReport } from "../../../lib/reports";
 
 export async function getStaticPaths() {
@@ -17,7 +18,7 @@ export async function getStaticPaths() {
 }
 
 const {
-  title, date, speaker, writer, tags, color, colorText, lead,
+  slug, source, title, date, speaker, writer, tags, color, colorText, lead,
   poster, images = [], sections = [], keyPoints, bodyHtml,
 } = Astro.props;
 
@@ -62,6 +63,13 @@ const [cover, ...moreImages] = poster ? [poster, ...images] : images;
       {tags.map((t: string) => <span>#{t}</span>)}
     </div>
   )}
+
+  {/* 回饋問卷：只有報名系統的活動才有；秘書處在後台開放時才會出現，關閉後整塊消失 */}
+  {source === "registration" && (
+    <div class="report-feedback">
+      <EventFeedbackForm slug={slug} mode="embed" />
+    </div>
+  )}
 </ArticleLayout>
 
 <style>
@@ -103,6 +111,10 @@ const [cover, ...moreImages] = poster ? [poster, ...images] : images;
     margin-top: 32px;
     padding-top: 20px;
     border-top: 1px dashed var(--line);
+  }
+
+  .report-feedback {
+    margin-top: 40px;
   }
 
   .tag-row span {

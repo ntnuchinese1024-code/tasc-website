@@ -1,0 +1,55 @@
+---
+/**
+ * 活動回饋問卷頁：/news/feedback/<slug>/
+ *
+ * 每一場公開的活動在建置時都會生一頁，但問卷開不開放是秘書處在報名系統後台決定的，
+ * 頁面載入時才即時去問（見 EventFeedbackForm.astro）。
+ * 這個網址就是要貼進課程報導、LINE 群組或做成 QR code 的那一個。
+ *
+ * 不讓搜尋引擎收錄：問卷是給參加過的學員填的，不是要被陌生人搜到的內容。
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHero from "../../../components/PageHero.astro";
+import EventFeedbackForm from "../../../components/EventFeedbackForm.astro";
+import { wrapHeadingHtml } from "../../../lib/wrap-heading";
+import { formatEventTime, getAllEvents, type EventSummary } from "../../../lib/registration-api";
+
+export async function getStaticPaths() {
+  const events = await getAllEvents();
+  return events.map((event) => ({ params: { slug: event.slug }, props: { event } }));
+}
+
+interface Props {
+  event: EventSummary;
+}
+
+const { event } = Astro.props;
+const when = formatEventTime(event.starts_at, event.ends_at);
+---
+
+<BaseLayout title={`${event.title} 回饋問卷`} description={`${event.title}的匿名回饋問卷`} noindex>
+  <PageHero
+    breadcrumb={{ label: "最新消息", href: "/news" }}
+    eyebrow="活動回饋問卷"
+    title={wrapHeadingHtml(event.title)}
+    titleIsHtml={true}
+    lead={when ? `活動時間：${when}` : undefined}
+    decor={false}
+  />
+
+  <section class="section">
+    <div class="wrap wrap-narrow">
+      <EventFeedbackForm slug={event.slug} mode="page" />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .section {
+    padding: 40px 0 64px;
+  }
+
+  .wrap-narrow {
+    max-width: 760px;
+  }
+</style>

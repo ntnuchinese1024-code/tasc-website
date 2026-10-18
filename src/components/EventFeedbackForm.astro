@@ -1,0 +1,622 @@
+---
+/**
+ * 活動回饋問卷（匿名）。
+ *
+ * 跟講師邀約表單同一套做法：官網是靜態站，送出時用瀏覽器端 fetch 打報名系統的
+ * POST /api/events/<slug>/feedback，資料寫進同一個 Supabase，秘書處在報名系統後台的
+ * 「活動回饋」頁看結果。問卷不收姓名、Email，也不跟報名名單比對。
+ *
+ * 「現在開不開放」是在瀏覽器端即時問報名系統的（GET 同一支 API），
+ * 所以秘書處在後台切開關之後，官網不必重新建置就會生效。
+ *
+ * mode：
+ *   page  — 獨立的問卷頁（/news/feedback/<slug>）。沒開放時顯示「目前未開放」。
+ *   embed — 嵌在課程報導文末。沒開放時整塊不出現，讀者完全看不到。
+ */
+import { REGISTRATION_ORIGIN } from "../lib/registration-api";
+
+interface Props {
+  slug: string;
+  mode?: "page" | "embed";
+}
+
+const { slug, mode = "page" } = Astro.props;
+
+const RATING_LABELS = ["1", "2", "3", "4", "5"];
+---
+
+<div class="fb-card" data-feedback data-origin={REGISTRATION_ORIGIN} data-slug={slug} data-mode={mode} hidden={mode === "embed"}>
+  <div class="fb-state" data-state-loading hidden={mode === "embed"}>
+    <p>正在讀取問卷…</p>
+  </div>
+
+  <div class="fb-state" data-state-closed hidden>
+    <p class="fb-state-title">這份回饋問卷目前沒有開放填寫</p>
+    <p>如果你是剛參加完活動的學員，可能是秘書處還沒開放，請稍後再回來看看，或來信 <span class="fb-mail">tasc.tw@gmail.com</span>。</p>
+  </div>
+
+  <div class="fb-state fb-thanks" data-state-done hidden>
+    <p class="fb-state-title">已收到你的回饋，謝謝你！</p>
+    <p>你寫下的每一句話，學會都會認真讀。</p>
+    <button type="button" class="fb-link-btn" data-again>再填一份</button>
+  </div>
+
+  <form class="fb-form" data-form novalidate hidden>
+    {mode === "embed" && <h2 class="fb-heading">參加了這場活動嗎？留下你的回饋</h2>}
+
+    <div class="fb-intro">
+      <p>
+        這是一份<strong>匿名問卷</strong>：不會詢問姓名、不會收集 Email，也不會跟報名名單比對。
+        大約 3 分鐘可以完成。
+      </p>
+      <p>最後一題會詢問是否同意我們在課程報導中匿名引用你的文字，你可以自由選擇。</p>
+    </div>
+
+    {/* 蜜罐：名稱刻意無語意，避免被密碼管理器自動填入（見 LecturerBookingForm 的說明） */}
+    <div class="fb-hp" aria-hidden="true">
+      <label for={`fb-hp-${slug}`}>請勿填寫此欄</label>
+      <input id={`fb-hp-${slug}`} type="text" name="hp_check" tabindex="-1" autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other" data-bwignore />
+    </div>
+
+    <div class="fb-status" data-status role="status" aria-live="polite"></div>
+
+    <fieldset class="fb-q">
+      <legend>整體而言，你對這次活動的滿意程度？ <span class="req">*</span></legend>
+      <div class="fb-scale">
+        <span class="fb-scale-end">非常不滿意</span>
+        <div class="fb-scale-dots">
+          {RATING_LABELS.map((n) => (
+            <label class="fb-dot">
+              <input type="radio" name="ratingOverall" value={n} required />
+              <span>{n}</span>
+            </label>
+          ))}
+        </div>
+        <span class="fb-scale-end">非常滿意</span>
+      </div>
+      <p class="fb-error" data-error="ratingOverall"></p>
+    </fieldset>
+
+    <fieldset class="fb-q">
+      <legend>這次活動讓我對這個主題有新的理解。 <span class="req">*</span></legend>
+      <div class="fb-scale">
+        <span class="fb-scale-end">非常不同意</span>
+        <div class="fb-scale-dots">
+          {RATING_LABELS.map((n) => (
+            <label class="fb-dot">
+              <input type="radio" name="ratingInsight" value={n} required />
+              <span>{n}</span>
+            </label>
+          ))}
+        </div>
+        <span class="fb-scale-end">非常同意</span>
+      </div>
+      <p class="fb-error" data-error="ratingInsight"></p>
+    </fieldset>
+
+    <div class="fb-q">
+      <label for={`fb-reflection-${slug}`} class="fb-label">參訪／課程心得 <span class="req">*</span></label>
+      <p class="fb-hint">看到了什麼、想到了什麼、感受到什麼都可以，長短不拘。</p>
+      <textarea id={`fb-reflection-${slug}`} name="reflection" rows="6" maxlength="3000" required></textarea>
+      <p class="fb-error" data-error="reflection"></p>
+    </div>
+
+    <div class="fb-q">
+      <label for={`fb-highlight-${slug}`} class="fb-label">印象最深刻的展品、故事或片刻是什麼？</label>
+      <textarea id={`fb-highlight-${slug}`} name="highlight" rows="3" maxlength="1000"></textarea>
+      <p class="fb-error" data-error="highlight"></p>
+    </div>
+
+    <div class="fb-q">
+      <label for={`fb-message-${slug}`} class="fb-label">想對學會說的話</label>
+      <p class="fb-hint">建議、鼓勵、希望學會辦的活動主題……都歡迎。</p>
+      <textarea id={`fb-message-${slug}`} name="messageToAssociation" rows="3" maxlength="2000"></textarea>
+      <p class="fb-error" data-error="messageToAssociation"></p>
+    </div>
+
+    <fieldset class="fb-q fb-consent">
+      <legend>是否同意學會在課程報導中，以匿名方式引用你的「心得」與「想對學會說的話」？ <span class="req">*</span></legend>
+      <p class="fb-hint">引用時不會出現姓名或任何可以辨識你的資訊。</p>
+      <div class="fb-options">
+        <label class="fb-option"><input type="radio" name="quoteConsent" value="EDITED" required /> 同意匿名引用（可為篇幅略作刪節，不改變原意）</label>
+        <label class="fb-option"><input type="radio" name="quoteConsent" value="VERBATIM" /> 同意匿名引用，但請一字不改</label>
+        <label class="fb-option"><input type="radio" name="quoteConsent" value="NONE" /> 不同意引用，僅供學會內部參考</label>
+      </div>
+      <p class="fb-error" data-error="quoteConsent"></p>
+    </fieldset>
+
+    <fieldset class="fb-q" data-attribution hidden>
+      <legend>引用時希望怎麼署名？ <span class="req">*</span></legend>
+      <div class="fb-options">
+        <label class="fb-option"><input type="radio" name="quoteAttribution" value="NONE" /> 完全不標示</label>
+        <label class="fb-option"><input type="radio" name="quoteAttribution" value="PARTICIPANT" /> 標示為「參訪學員」</label>
+        <label class="fb-option"><input type="radio" name="quoteAttribution" value="ROLE" /> 標示身分類別</label>
+      </div>
+      <p class="fb-error" data-error="quoteAttribution"></p>
+      <div class="fb-role" data-role hidden>
+        <label for={`fb-role-${slug}`} class="fb-label">希望標示的身分</label>
+        <input type="text" id={`fb-role-${slug}`} name="quoteRole" maxlength="30" placeholder="例如：研究生、諮商心理師、社工" />
+        <p class="fb-error" data-error="quoteRole"></p>
+      </div>
+    </fieldset>
+
+    <button type="submit" class="btn btn-primary fb-submit" data-submit>送出回饋</button>
+  </form>
+</div>
+
+<style>
+  .fb-card {
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 32px 28px;
+  }
+
+  @media (max-width: 640px) {
+    .fb-card {
+      padding: 24px 18px;
+    }
+  }
+
+  /* .fb-q 這些區塊設了 display:flex，會蓋過 hidden 屬性預設的 display:none */
+  .fb-card[hidden],
+  .fb-card [hidden] {
+    display: none !important;
+  }
+
+  .fb-heading {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 14px;
+  }
+
+  .fb-intro {
+    margin-bottom: 26px;
+    font-size: 0.92rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+
+  .fb-intro p {
+    margin: 0 0 8px;
+  }
+
+  .fb-intro strong {
+    color: var(--ink);
+  }
+
+  .fb-q {
+    border: none;
+    padding: 0;
+    margin: 0 0 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .fb-q legend,
+  .fb-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.7;
+    padding: 0;
+    margin-bottom: 4px;
+  }
+
+  .req {
+    color: var(--red-deep);
+  }
+
+  .fb-hint {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    margin: -4px 0 2px;
+  }
+
+  .fb-q textarea,
+  .fb-q input[type="text"] {
+    font: inherit;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+
+  .fb-q textarea:focus,
+  .fb-q input[type="text"]:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+
+  .fb-q .is-invalid {
+    border-color: var(--red-deep);
+  }
+
+  /* 1–5 分的圓點量尺 */
+  .fb-scale {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .fb-scale-end {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+  }
+
+  .fb-scale-dots {
+    display: flex;
+    gap: 8px;
+  }
+
+  .fb-dot {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .fb-dot input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .fb-dot span {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: var(--card);
+    font-weight: 700;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+
+  .fb-dot:hover span {
+    border-color: var(--blue);
+  }
+
+  .fb-dot input:checked + span {
+    background: var(--blue-deep);
+    border-color: var(--blue-deep);
+    color: #fff;
+  }
+
+  .fb-dot input:focus-visible + span {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 480px) {
+    .fb-scale {
+      gap: 6px 10px;
+    }
+    .fb-scale-dots {
+      order: -1;
+      width: 100%;
+    }
+    .fb-dot span {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  .fb-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .fb-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--ink);
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .fb-option input {
+    margin-top: 0.3em;
+    flex: none;
+    accent-color: var(--blue-deep);
+  }
+
+  .fb-option:has(input:checked) {
+    border-color: var(--blue);
+    background: color-mix(in srgb, var(--blue) 8%, var(--card));
+  }
+
+  .fb-role {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .fb-error {
+    font-size: 0.8rem;
+    color: var(--red-deep);
+    margin: 0;
+  }
+
+  .fb-error:empty {
+    display: none;
+  }
+
+  .fb-hp {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+  }
+
+  .fb-submit {
+    width: 100%;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+  }
+
+  .fb-submit:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .fb-status {
+    font-size: 0.88rem;
+    border-radius: 10px;
+    margin: 0 0 18px;
+  }
+
+  .fb-status:empty {
+    display: none;
+  }
+
+  .fb-status.is-error {
+    color: var(--red-deep);
+    background: color-mix(in srgb, var(--red) 10%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--red) 30%, var(--line));
+    padding: 14px 16px;
+  }
+
+  .fb-state {
+    font-size: 0.92rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+
+  .fb-state p {
+    margin: 0 0 6px;
+  }
+
+  .fb-state-title {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .fb-thanks .fb-state-title {
+    color: var(--green-deep);
+  }
+
+  .fb-mail {
+    font-weight: 700;
+    color: var(--blue-deep);
+    user-select: all;
+  }
+
+  .fb-link-btn {
+    margin-top: 6px;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--blue-deep);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  /**
+   * 問卷的瀏覽器端邏輯：讀開放狀態 → 顯示表單 → fetch 送出。
+   * 一頁可能同時有多份（理論上），所以每個 [data-feedback] 各自初始化。
+   */
+  type Fields = Record<string, string[] | undefined>;
+
+  function initFeedback(card: HTMLElement) {
+    const origin = card.dataset.origin!;
+    const slug = card.dataset.slug!;
+    const mode = card.dataset.mode;
+    const api = `${origin}/api/events/${encodeURIComponent(slug)}/feedback`;
+    const doneKey = `tasc-feedback-done:${slug}`;
+
+    const form = card.querySelector<HTMLFormElement>("[data-form]")!;
+    const loading = card.querySelector<HTMLElement>("[data-state-loading]")!;
+    const closed = card.querySelector<HTMLElement>("[data-state-closed]")!;
+    const done = card.querySelector<HTMLElement>("[data-state-done]")!;
+    const statusBox = card.querySelector<HTMLElement>("[data-status]")!;
+    const submitBtn = card.querySelector<HTMLButtonElement>("[data-submit]")!;
+    const attribution = card.querySelector<HTMLElement>("[data-attribution]")!;
+    const roleBox = card.querySelector<HTMLElement>("[data-role]")!;
+
+    function show(which: "loading" | "closed" | "done" | "form") {
+      loading.hidden = which !== "loading";
+      closed.hidden = which !== "closed";
+      done.hidden = which !== "done";
+      form.hidden = which !== "form";
+    }
+
+    function remembered(): boolean {
+      try {
+        return localStorage.getItem(doneKey) === "1";
+      } catch {
+        return false;
+      }
+    }
+
+    function remember() {
+      try {
+        localStorage.setItem(doneKey, "1");
+      } catch {
+        /* 私密瀏覽模式等情況寫不進去，不影響送出 */
+      }
+    }
+
+    // 署名方式只在同意引用時出現；身分類別只在選了「標示身分類別」時出現
+    function syncConditional() {
+      const consent = new FormData(form).get("quoteConsent");
+      attribution.hidden = !consent || consent === "NONE";
+      roleBox.hidden = attribution.hidden || new FormData(form).get("quoteAttribution") !== "ROLE";
+    }
+    form.addEventListener("change", syncConditional);
+
+    function clearErrors() {
+      form.querySelectorAll<HTMLElement>("[data-error]").forEach((el) => (el.textContent = ""));
+      form.querySelectorAll<HTMLElement>(".is-invalid").forEach((el) => el.classList.remove("is-invalid"));
+    }
+
+    function showFieldErrors(fieldErrors: Fields) {
+      let first: HTMLElement | null = null;
+      for (const [key, messages] of Object.entries(fieldErrors)) {
+        const target = form.querySelector<HTMLElement>(`[data-error="${key}"]`);
+        if (target) {
+          target.textContent = messages?.[0] ?? "";
+          first ??= target;
+        }
+        const input = form.querySelector<HTMLElement>(`textarea[name="${key}"], input[type="text"][name="${key}"]`);
+        input?.classList.add("is-invalid");
+      }
+      first?.closest(".fb-q")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function setError(message: string) {
+      statusBox.textContent = message;
+      statusBox.classList.toggle("is-error", message !== "");
+    }
+
+    /** 送出前先在瀏覽器擋一次最常見的漏填，伺服器端還會再驗證一次。 */
+    function localCheck(data: FormData): Fields {
+      const errors: Fields = {};
+      if (!data.get("ratingOverall")) errors.ratingOverall = ["請為「整體滿意度」評分。"];
+      if (!data.get("ratingInsight")) errors.ratingInsight = ["請為這一題評分。"];
+      if (!String(data.get("reflection") ?? "").trim()) errors.reflection = ["請寫下你的心得，幾句話也可以。"];
+      const consent = data.get("quoteConsent");
+      if (!consent) errors.quoteConsent = ["請選擇是否同意在報導中匿名引用。"];
+      if (consent && consent !== "NONE") {
+        const attr = data.get("quoteAttribution");
+        if (!attr) errors.quoteAttribution = ["請選擇引用時的署名方式。"];
+        if (attr === "ROLE" && !String(data.get("quoteRole") ?? "").trim())
+          errors.quoteRole = ["請填寫希望標示的身分，例如：研究生。"];
+      }
+      return errors;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearErrors();
+      setError("");
+
+      const data = new FormData(form);
+      const errors = localCheck(data);
+      if (Object.keys(errors).length > 0) {
+        setError("還有幾題沒有完成，請看標示紅色的地方。");
+        showFieldErrors(errors);
+        return;
+      }
+
+      const consent = String(data.get("quoteConsent"));
+      const payload = {
+        ratingOverall: Number(data.get("ratingOverall")),
+        ratingInsight: Number(data.get("ratingInsight")),
+        reflection: data.get("reflection"),
+        highlight: data.get("highlight"),
+        messageToAssociation: data.get("messageToAssociation"),
+        quoteConsent: consent,
+        quoteAttribution: consent === "NONE" ? "" : data.get("quoteAttribution") ?? "",
+        quoteRole: data.get("quoteRole") ?? "",
+        hp_check: data.get("hp_check"),
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "送出中…";
+
+      try {
+        const res = await fetch(api, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+
+        if (result.ok) {
+          remember();
+          form.reset();
+          syncConditional();
+          show("done");
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (result.code === "CLOSED") {
+          show("closed");
+        } else {
+          setError(result.message || "送出時發生問題，請稍後再試，或來信 tasc.tw@gmail.com。");
+          if (result.fieldErrors) showFieldErrors(result.fieldErrors);
+        }
+      } catch {
+        setError("網路連線出了問題，請確認網路狀況後再試一次。你填的內容還在，不會不見。");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "送出回饋";
+      }
+    });
+
+    card.querySelector("[data-again]")?.addEventListener("click", () => show("form"));
+
+    // ---- 讀取開放狀態 -------------------------------------------------------
+    (async () => {
+      let open = false;
+      try {
+        const res = await fetch(api, { headers: { Accept: "application/json" } });
+        const status = await res.json();
+        open = status?.ok === true && status.open === true;
+      } catch {
+        open = false;
+      }
+
+      if (!open) {
+        // 嵌在報導裡的問卷沒開放就整塊不出現；獨立問卷頁則說明目前未開放
+        if (mode === "embed") return;
+        show("closed");
+        return;
+      }
+
+      card.hidden = false;
+      show(remembered() ? "done" : "form");
+    })();
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-feedback]").forEach(initFeedback);
+</script>

@@ -1,0 +1,197 @@
+---
+/**
+ * 課程報導的「夥伴們的回饋」留言框。
+ *
+ * 用途：把回饋問卷裡同意匿名引用的心得，用對話泡泡＋小圖示呈現在報導文末，
+ * 不顯示任何姓名——圖示是依順序輪流套用的裝飾，跟填答者是誰沒有關係。
+ *
+ * 怎麼加：在 src/data/course-reports.ts 的那篇報導裡加上 voices 欄位就會出現，
+ * 不寫或空陣列就不會出現。
+ */
+interface Props {
+  title?: string;
+  voices: { text: string; who?: string }[];
+}
+
+const { title = "夥伴們的回饋", voices } = Astro.props;
+
+// 跟重點整理圖卡同一組標誌色；bg 是泡泡的淡底色
+const palette = [
+  { dot: "var(--red)", text: "var(--red-deep)", bg: "#FDEDEA" },
+  { dot: "var(--blue)", text: "var(--blue-deep)", bg: "#E6F5FD" },
+  { dot: "var(--green)", text: "var(--green-deep)", bg: "#E8F6EB" },
+  { dot: "var(--orange)", text: "var(--orange-deep)", bg: "#FDEFE7" },
+  { dot: "var(--magenta)", text: "var(--magenta-deep)", bg: "#FDE7F1" },
+];
+
+// 小圖示：水滴、愛心、星星、花、雲、葉子，輪流使用
+const icons = ["drop", "heart", "star", "flower", "cloud", "leaf"] as const;
+---
+
+<section class="voices" aria-label={title}>
+  <p class="voices-title">{title}</p>
+  <p class="voices-note">以下摘自參加夥伴的匿名回饋，皆經填答者同意引用。</p>
+
+  <ul class="voices-list">
+    {voices.map((voice, i) => {
+      const tone = palette[i % palette.length];
+      const icon = icons[i % icons.length];
+      return (
+        <li class={i % 2 ? "flip" : ""} style={`--dot: ${tone.dot}; --dot-text: ${tone.text}; --bubble: ${tone.bg}`}>
+          <span class="avatar" aria-hidden="true">
+            <svg viewBox="0 0 40 40" width="40" height="40">
+              {icon === "drop" && <path d="M20 6c5 7 10 12 10 18a10 10 0 0 1-20 0c0-6 5-11 10-18z" />}
+              {icon === "heart" && <path d="M20 32S7 24 7 15.5A6.5 6.5 0 0 1 20 12a6.5 6.5 0 0 1 13 3.5C33 24 20 32 20 32z" />}
+              {icon === "star" && <path d="M20 6l4 9 9.5 1-7 6.5 2 9.5L20 27l-8.5 5 2-9.5-7-6.5 9.5-1z" />}
+              {icon === "flower" && (
+                <>
+                  <circle cx="20" cy="11.5" r="6" /><circle cx="28.5" cy="20" r="6" />
+                  <circle cx="20" cy="28.5" r="6" /><circle cx="11.5" cy="20" r="6" />
+                </>
+              )}
+              {icon === "cloud" && <path d="M12 29a7 7 0 0 1-.8-14A9 9 0 0 1 28.6 14 7.5 7.5 0 0 1 28 29z" />}
+              {icon === "leaf" && <path d="M9 31C9 17 18 9 32 8c0 15-8 23-21 23z" />}
+              {/* 每個圖示都有一張小臉 */}
+              <circle class="eye" cx={icon === "drop" ? 16.5 : 16} cy={icon === "drop" ? 23 : 19} r="1.5" />
+              <circle class="eye" cx={icon === "drop" ? 23.5 : 24} cy={icon === "drop" ? 23 : 19} r="1.5" />
+              <path class="smile" d={icon === "drop" ? "M17 27q3 2.5 6 0" : "M16.5 23q3.5 2.8 7 0"} />
+            </svg>
+          </span>
+          <figure class="bubble">
+            <blockquote>{voice.text}</blockquote>
+            <figcaption>— {voice.who || "匿名夥伴"}</figcaption>
+          </figure>
+        </li>
+      );
+    })}
+  </ul>
+</section>
+
+<style>
+  .voices {
+    margin: 40px 0 8px;
+  }
+
+  .voices-title {
+    font-family: var(--font-display);
+    font-size: 0.95rem !important;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--ink) !important;
+    margin: 0 0 6px !important;
+  }
+
+  .voices-title::before {
+    content: "";
+    display: inline-block;
+    width: 22px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+    vertical-align: 0.32em;
+    margin-right: 10px;
+  }
+
+  .voices-note {
+    font-size: 0.82rem !important;
+    color: var(--ink-faint) !important;
+    margin: 0 0 22px !important;
+  }
+
+  .voices-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .voices-list > li {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    max-width: 88%;
+  }
+
+  /* 左右交錯，像一串聊天訊息 */
+  .voices-list > li.flip {
+    flex-direction: row-reverse;
+    align-self: flex-end;
+  }
+
+  .avatar {
+    flex: none;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    display: grid;
+    place-items: center;
+  }
+
+  .avatar svg {
+    width: 34px;
+    height: 34px;
+    fill: var(--dot);
+    stroke: none;
+  }
+
+  .avatar .eye {
+    fill: var(--ink);
+  }
+
+  .avatar .smile {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  .bubble {
+    position: relative;
+    margin: 0;
+    padding: 14px 18px 12px;
+    background: var(--bubble);
+    border-radius: 18px 18px 18px 6px;
+  }
+
+  .flip .bubble {
+    border-radius: 18px 18px 6px 18px;
+  }
+
+  .bubble blockquote {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 0.96rem;
+    line-height: 1.9;
+    color: var(--ink);
+    white-space: pre-line;
+  }
+
+  .bubble figcaption {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: var(--dot-text);
+    text-align: right;
+  }
+
+  @media (max-width: 560px) {
+    .voices-list > li {
+      max-width: 100%;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+    }
+
+    .avatar svg {
+      width: 28px;
+      height: 28px;
+    }
+  }
+</style>

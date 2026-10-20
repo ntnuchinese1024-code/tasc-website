@@ -119,8 +119,9 @@ export async function getReport(
     const detail = await getEventDetail(slug);
     if (detail?.report_md) {
       const gallery = (detail.report_gallery ?? []).map((image) => image.url);
-      const localKeyPoints = localReports.find((r) => r.slug === slug)?.keyPoints;
-      return toUnified(detail, detail.report_md, gallery, localKeyPoints);
+      const local = localReports.find((r) => r.slug === slug);
+      // 回饋留言框目前只存在本地資料檔，後台補寫報導時一併沿用
+      return { ...toUnified(detail, detail.report_md, gallery, local?.keyPoints), voices: local?.voices };
     }
   }
 

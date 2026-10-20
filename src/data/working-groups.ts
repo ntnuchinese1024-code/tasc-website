@@ -31,6 +31,29 @@ export interface GroupFact {
   value: string;
 }
 
+/**
+ * 小組正在辦或準備要辦的計畫（目前只有學術組在用）。
+ * 計畫原始檔同樣放在 public/downloads/；內容依計畫書原文整理，不要自行增補時間或人數。
+ */
+export interface GroupPlan {
+  /** 頁內錨點，例如 /about/groups/academic#hunt */
+  id: string;
+  /** 活動類型標籤，例如「線上讀書會」 */
+  kind: string;
+  /** 目前狀態，例如「招募中」「籌備中」 */
+  status: string;
+  title: string;
+  /** 段落，依計畫書原文 */
+  intro: string[];
+  facts: GroupFact[];
+  pdf?: { file: string; size: string; name: string };
+  /**
+   * 報名系統裡這個活動的 slug。報名系統開放報名時，頁面才會出現「前往報名」按鈕，
+   * 連到 /news/upcoming/<slug>/；還沒上架或已截止就不顯示，免得連到不存在的頁面。
+   */
+  signupSlug?: string;
+}
+
 export interface WorkingGroup {
   slug: string;
   /** 網站上的簡稱，也是組織架構圖上的節點名稱 */
@@ -47,6 +70,8 @@ export interface WorkingGroup {
   /** 原始 PDF 在 public/downloads/ 底下的檔名 */
   pdf: { file: string; size: string };
   articles: CharterArticle[];
+  /** 小組的計畫，沒有就不顯示整個區塊 */
+  plans?: GroupPlan[];
 }
 
 export const workingGroups: WorkingGroup[] = [
@@ -305,6 +330,52 @@ export const workingGroups: WorkingGroup[] = [
       { label: "會議頻率", value: "每年至少 1 次，必要時召開臨時會議" },
     ],
     pdf: { file: "台灣性諮商學會學術組-組織簡則.pdf", size: "89 KB" },
+    plans: [
+      {
+        id: "hunt",
+        kind: "線上讀書會",
+        status: "招募中",
+        title: "獵捕計畫——校園性侵害與權力結構",
+        intro: [
+          "從國內彰師大輔導與諮商學系教授涉及性侵與性騷的震撼案件，到美國常春藤名校康乃爾大學兄弟會爆發的集體性侵與制度性檢討風波，這些新聞一再挑戰我們的社會認知：為什麼校園性暴力依舊猖獗？當事件爆發後，大眾習慣將矛頭指向個人的道德瑕疵，或是過度簡化受害者的選擇，然而這樣的思考框架，真的能幫助我們阻止下一個悲劇嗎？",
+          "本次讀書會將帶領大家深度共讀哥大里程碑研究巨著——性公民權：知情同意中，曖昧不明的性界線到底是誰界定的？作者珍妮佛．赫希與沙姆斯．康跳脫了傳統「加害者／受害者」的二元對立，透過長期的田野與訪談，犀利剖析校園性侵害議題。邀請對校園安全、性別正義議題有興趣的你，一同加入這場對話。",
+        ],
+        facts: [
+          { label: "帶領人", value: "林榮哲（學會理事・學術組組員）" },
+          {
+            label: "指定讀本",
+            value: "《性公民權：知情同意中，曖昧不明的性界線到底是誰界定的？》（Sexual Citizens: A Landmark Study of Sex, Power, and Assault on Campus）",
+          },
+          { label: "預計時間", value: "2027 年 1 月起，每個月舉行線上讀書會一次，一次 90～120 分鐘；總共六次，每月實際舉行時段由參與成員共同討論決定" },
+          { label: "參與人數", value: "5 人開團，活動上限為 8 人" },
+          { label: "報名條件", value: "對閱讀此議題書籍有興趣的台灣性諮商學會有效會員皆可報名" },
+          { label: "活動形式", value: "於線上讀書會前閱讀完指定範圍，並填寫提問單；線上分享與討論，激盪想法" },
+        ],
+        pdf: { file: "台灣性諮商學會學術組-線上讀書會-獵捕計畫.pdf", size: "132 KB", name: "獵捕計畫——校園性侵害與權力結構 計畫書" },
+        signupSlug: "hunt-sexual-citizens",
+      },
+      {
+        id: "read-new-research",
+        kind: "共學讀書會",
+        status: "12 月開跑・招募中",
+        title: "讀點新的｜性諮商國際研究共學圈",
+        intro: [
+          "不用很懂，一起讀懂。性諮商的國際研究這幾年變化很快，但一個人要持續追國際期刊並不容易。學術組想打造一個不用完美、可以慢慢來的共學場域：每次由 2 位夥伴各帶一篇近年的國際研究，一起把它讀懂，再回頭問——這對我們在台灣的實務有什麼意義？",
+          "中、英文文獻都可以，語言不用擔心：帶領人會示範如何用 AI 工具輔助翻譯、摘要與整理研究架構，並提供導讀摘要範本，讓大家用低門檻的方式接觸文獻。",
+          "正式開始前會先有一次線上啟動聚會，排定每個人帶領的場次、報導負責人，並把每場的文獻定案；文獻由每場的帶領者決定。每次會後撰寫課程報導，刊載於學會網站。",
+        ],
+        facts: [
+          { label: "帶領人", value: "林沛辰（學術組組長）" },
+          { label: "預計時間", value: "2026 年 12 月啟動，三個月一輪、每月兩次，一輪共 6 次，之後常態運作；聚會時段由參與夥伴共同討論決定" },
+          { label: "每次形式", value: "線上 90 分鐘，2 位夥伴各導讀一篇文獻並帶領討論；每人一輪至少主責一次" },
+          { label: "參與人數", value: "每輪 12 個主責名額；有夥伴退出時由候補夥伴補進，隨時歡迎報名" },
+          { label: "報名條件", value: "台灣性諮商學會有效會員，不需要英文能力或研究背景；為維持穩定的討論團體，不開放旁聽" },
+          { label: "認證時數", value: "是否可列入性諮商師認證或換證時數，將再與認證課程組討論" },
+        ],
+        pdf: { file: "台灣性諮商學會學術組-讀點新的-計畫書.pdf", size: "996 KB", name: "讀點新的｜性諮商國際研究共學圈 計畫書" },
+        signupSlug: "read-new-research",
+      },
+    ],
     articles: [
       {
         num: "第一條",

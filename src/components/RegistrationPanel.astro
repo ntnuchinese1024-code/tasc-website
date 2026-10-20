@@ -65,7 +65,9 @@ const href = registrationUrl(event.slug);
   <p class="reg-note" data-note>
     {
       is_open
-        ? "報名表在學會的報名系統上，送出後會立即收到含匯款指引的確認信。"
+        ? event.price > 0 || (event.price_tiers ?? []).some((t) => t.price > 0)
+          ? "報名表在學會的報名系統上，送出後會立即收到含匯款指引的確認信。"
+          : "報名表在學會的報名系統上，送出後會立即收到確認信。"
         : "如仍希望參加，歡迎來信與秘書處聯絡。"
     }
   </p>

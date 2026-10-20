@@ -7,19 +7,28 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHero from "../../../components/PageHero.astro";
 import FileDownload from "../../../components/FileDownload.astro";
 import { workingGroups, cnIndex, type WorkingGroup } from "../../../data/working-groups";
+import { getOpenCourses } from "../../../lib/registration-api";
 
 export function getStaticPaths() {
   return workingGroups.map((g) => ({ params: { slug: g.slug }, props: { group: g } }));
 }
 
 const { group } = Astro.props as { group: WorkingGroup };
-const { name, summary, color, docTitle, approved, facts, pdf, articles } = group;
+const { name, summary, color, docTitle, approved, facts, pdf, articles, plans } = group;
 
 // 主色的深色版才有足夠對比可以當文字色（見 global.css 的色票說明）
 const accent = `var(--${color})`;
 const accentText = `var(--${color}-deep)`;
 
 const others = workingGroups.filter((g) => g.slug !== group.slug);
+
+// 學術組會員共創群組（僅限會員，加入時由管理員確認身分）
+const LINE_GROUP_URL = "https://line.me/ti/g/dMJSF8Tur_";
+
+// 只有報名系統正在收報名的計畫才顯示「前往報名」
+const openSlugs = plans?.some((p) => p.signupSlug)
+  ? new Set((await getOpenCourses()).map((c) => c.slug))
+  : new Set<string>();
 ---
 
 <BaseLayout title={name} description={`台灣性諮商學會${name}組織簡則全文——任務、編制與會議規定。`}>
@@ -43,6 +52,58 @@ const others = workingGroups.filter((g) => g.slug !== group.slug);
         </ul>
       </div>
     </section>
+
+    {plans && plans.length > 0 && (
+      <section class="section plans-section" id="plans">
+        <div class="wrap">
+          <h2 class="plans-title">{name}的計畫</h2>
+          <div class="plans">
+            {plans.map((p) => (
+              <article class="plan" id={p.id}>
+                <div class="plan-tags">
+                  <span class="plan-kind">{p.kind}</span>
+                  <span class="plan-status">{p.status}</span>
+                </div>
+                <h3 class="plan-name">{p.title}</h3>
+                {p.intro.map((t) => <p class="plan-intro">{t}</p>)}
+                <dl class="plan-facts">
+                  {p.facts.map((f) => (
+                    <div class="plan-fact">
+                      <dt>{f.label}</dt>
+                      <dd>{f.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                {p.signupSlug && openSlugs.has(p.signupSlug) && (
+                  <a class="plan-signup" href={`/news/upcoming/${p.signupSlug}/`}>前往報名</a>
+                )}
+                {p.pdf && (
+                  <FileDownload
+                    href={`/downloads/${p.pdf.file}`}
+                    name={p.pdf.name}
+                    format="PDF"
+                    size={p.pdf.size}
+                    accent={accent}
+                  />
+                )}
+              </article>
+            ))}
+          </div>
+          <div class="join">
+            <h3 class="join-title">一起來共創學術組</h3>
+            <p>
+              學術組開了一個 LINE 群組，讓會員一起分享想法、討論學術組接下來可以怎麼走（僅限本會會員）。
+            </p>
+            <a class="plan-signup" href={LINE_GROUP_URL} target="_blank" rel="noopener">加入學術組 LINE 群組</a>
+            <p class="plans-note">
+              也歡迎來信 <a href="mailto:tasc.tw@gmail.com" class="inline-link">tasc.tw@gmail.com</a>
+              或到<a href="/contact" class="inline-link">聯絡我們</a>留言。
+              還不是會員？請先看<a href="/membership" class="inline-link">入會方式</a>。
+            </p>
+          </div>
+        </div>
+      </section>
+    )}
 
     <section class="section section-alt">
       <div class="wrap">
@@ -161,6 +222,154 @@ const others = workingGroups.filter((g) => g.slug !== group.slug);
 
     .fact {
       padding: 14px 16px;
+    }
+  }
+
+  /* ---- 小組計畫 ---------------------------------------------------------- */
+
+  .plans-section {
+    padding-top: 8px;
+  }
+
+  .plans-title {
+    font-size: clamp(1.05rem, 2.6vw, 1.25rem);
+    margin-bottom: 18px;
+  }
+
+  .plans {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .plan {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: 14px;
+    padding: 24px 26px;
+    scroll-margin-top: 96px;
+  }
+
+  .plan-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .plan-kind,
+  .plan-status {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .plan-kind {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .plan-status {
+    border: 1.5px solid var(--accent);
+    color: var(--accent-text);
+  }
+
+  .plan-name {
+    font-size: clamp(1.1rem, 3vw, 1.35rem);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .plan-intro {
+    margin: 0 0 10px;
+    font-size: 0.92rem;
+    line-height: 1.9;
+    color: var(--ink-soft);
+  }
+
+  .plan-facts {
+    margin: 18px 0 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  .plan-fact {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    gap: 0 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .plan-fact dt {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--accent-text);
+    line-height: 1.8;
+  }
+
+  .plan-fact dd {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--ink);
+  }
+
+  .plan-signup {
+    display: inline-block;
+    margin-bottom: 16px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    background: var(--accent-text);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.92rem;
+    text-decoration: none;
+  }
+
+  .plan-signup:hover {
+    opacity: 0.9;
+  }
+
+  .join {
+    margin-top: 24px;
+    padding: 22px 26px;
+    border-radius: 14px;
+    background: var(--bg-alt);
+  }
+
+  .join-title {
+    font-size: 1.05rem;
+    margin-bottom: 8px;
+  }
+
+  .join p {
+    margin: 0 0 14px;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--ink-soft);
+  }
+
+  .join .plan-signup {
+    background: #06C755;
+  }
+
+  .plans-note {
+    margin: 18px 0 0;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 640px) {
+    .plan {
+      padding: 18px 18px;
+    }
+
+    .plan-fact {
+      grid-template-columns: 1fr;
+      gap: 2px;
     }
   }
 

@@ -12,7 +12,7 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHero from "../../../components/PageHero.astro";
 import EventFeedbackForm from "../../../components/EventFeedbackForm.astro";
 import { wrapHeadingHtml } from "../../../lib/wrap-heading";
-import { formatEventTime, getAllEvents, type EventSummary } from "../../../lib/registration-api";
+import { eventTimeText, getAllEvents, type EventSummary } from "../../../lib/registration-api";
 
 export async function getStaticPaths() {
   const events = await getAllEvents();
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const { event } = Astro.props;
-const when = formatEventTime(event.starts_at, event.ends_at);
+const when = eventTimeText(event);
 ---
 
 <BaseLayout title={`${event.title} 回饋問卷`} description={`${event.title}的匿名回饋問卷`} noindex>

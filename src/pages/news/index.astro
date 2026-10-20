@@ -6,7 +6,8 @@ import { wrapHeadingHtml } from "../../lib/wrap-heading";
 import {
   getOpenCourses,
   accentVars,
-  formatEventTime,
+  eventTimeText,
+  TIME_NOTES,
   formatPriceSummary,
   type EventSummary,
 } from "../../lib/registration-api";
@@ -43,7 +44,9 @@ function toEventItem(course: EventSummary): EventItem {
         day: "numeric",
         weekday: "narrow",
       }).format(new Date(course.starts_at))
-    : "時間另行公告";
+    : TIME_NOTES[course.slug]
+      ? "時段共同決定"
+      : "時間另行公告";
 
   const seats =
     course.registration.status === "OPEN"
@@ -63,7 +66,7 @@ function toEventItem(course: EventSummary): EventItem {
     title: course.title,
     body: course.description ?? "",
     meta: [
-      formatEventTime(course.starts_at, course.ends_at),
+      eventTimeText(course),
       course.location,
       formatPriceSummary(course.price, course.price_tiers),
       seats,

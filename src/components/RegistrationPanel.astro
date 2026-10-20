@@ -10,7 +10,7 @@
  * 訪客看到的是稍舊的名額而不是空白或錯誤。
  */
 import {
-  formatEventTime,
+  eventTimeText,
   formatPriceSummary,
   REGISTRATION_LABEL,
   REGISTRATION_ORIGIN,
@@ -34,7 +34,7 @@ const href = registrationUrl(event.slug);
   <dl class="reg-list">
     <div>
       <dt>時間</dt>
-      <dd>{formatEventTime(event.starts_at, event.ends_at)}</dd>
+      <dd>{eventTimeText(event)}</dd>
     </div>
     <div>
       <dt>地點</dt>

@@ -190,9 +190,28 @@ export async function getEventDetail(slug: string): Promise<EventDetail | null> 
 // 呈現用的小工具
 // -----------------------------------------------------------------------------
 
+/**
+ * 還沒排定日期的活動，時間欄位要顯示的說明（以報名系統的 slug 為準）。
+ * 例如學術組的讀書會：開跑月份已知，但每次時段由參與成員共同決定，
+ * 不適合寫成「另行公告」。日期排定後在後台補上開始時間，這裡就不會用到。
+ */
+export const TIME_NOTES: Record<string, string> = {
+  "read-new-research": "2026 年 12 月起，每月兩次；時段由參與成員共同決定",
+  "hunt-sexual-citizens": "2027 年 1 月起，每月一次；時段由參與成員共同決定",
+};
+
+/** 活動的時間文字：有開始時間就照實顯示，沒有就用上面的說明或「時間另行公告」。 */
+export function eventTimeText(event: { slug: string; starts_at: string | null; ends_at: string | null }): string {
+  return formatEventTime(event.starts_at, event.ends_at, TIME_NOTES[event.slug]);
+}
+
 /** 2026年9月19日（週六）09:30–16:30 */
-export function formatEventTime(startsAt: string | null, endsAt: string | null): string {
-  if (!startsAt) return "時間另行公告";
+export function formatEventTime(
+  startsAt: string | null,
+  endsAt: string | null,
+  fallback = "時間另行公告",
+): string {
+  if (!startsAt) return fallback;
 
   const start = new Date(startsAt);
   const datePart = new Intl.DateTimeFormat("zh-TW", {

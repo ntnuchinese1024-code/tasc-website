@@ -8,7 +8,14 @@
  *
  * 畫法在 src/lib/pride-card.ts，文字在 src/data/pride-2026.ts。
  */
-import { quoteSets, CUSTOM_QUOTE_MAX } from "../data/pride-2026";
+import {
+  quoteSets,
+  CUSTOM_QUOTE_MAX,
+  CARD_NAME,
+  cardHashtagOptions,
+  CARD_DEFAULT_TAGS,
+  CARD_TAG_MAX,
+} from "../data/pride-2026";
 import { ALIGNS, FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
 ---
 
@@ -111,7 +118,20 @@ import { ALIGNS, FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
     </section>
 
     <section class="step">
-      <h3><span class="step-num">4</span>存下來、發出去</h3>
+      <h3><span class="step-num">4</span>選圖卡上的 hashtag</h3>
+      <p class="note tag-hint">「{CARD_NAME}」一定會印在圖卡上；其他最多再勾 {CARD_TAG_MAX} 個。</p>
+      <div class="chips" role="group" aria-label="圖卡上的 hashtag" data-card-tags>
+        <span class="chip chip-locked" aria-label={`${CARD_NAME}（固定）`}>🔒 {CARD_NAME}</span>
+        {cardHashtagOptions.map((t) => (
+          <button type="button" class="chip" role="checkbox" aria-checked={CARD_DEFAULT_TAGS.includes(t) ? "true" : "false"} data-tag={t}>
+            {t}
+          </button>
+        ))}
+      </div>
+    </section>
+
+    <section class="step">
+      <h3><span class="step-num">5</span>存下來、發出去</h3>
       <div class="row">
         <button type="button" class="btn btn-primary" data-download>💾 下載專屬圖卡</button>
         <button type="button" class="btn btn-ghost" data-share hidden>📤 分享／存到相簿</button>
@@ -178,7 +198,7 @@ import { ALIGNS, FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
 </dialog>
 
 <script>
-  import { quoteSets, CARD_SIGNATURE } from "../data/pride-2026";
+  import { quoteSets, cardSignature, CARD_DEFAULT_TAGS, CARD_TAG_MAX } from "../data/pride-2026";
   import {
     SIZE,
     drawCard,
@@ -227,7 +247,7 @@ import { ALIGNS, FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
     offsetX: 0,
     offsetY: 0,
     quote: "",
-    signature: CARD_SIGNATURE,
+    signature: cardSignature(CARD_DEFAULT_TAGS),
     frame: "full",
     textStyle: "caption",
     align: "left",
@@ -277,6 +297,25 @@ import { ALIGNS, FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
     state.align = v as AlignId;
     render();
   });
+
+  /* ---- 圖卡上的 hashtag（複選，學會名固定） ---- */
+  const tagButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-tag]")];
+  function syncTags() {
+    const picked = tagButtons.filter((b) => b.getAttribute("aria-checked") === "true");
+    // 勾滿了，其他還沒勾的先停用
+    tagButtons.forEach((b) => {
+      b.disabled = picked.length >= CARD_TAG_MAX && !picked.includes(b);
+    });
+    state.signature = cardSignature(picked.map((b) => b.dataset.tag!));
+    render();
+  }
+  tagButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      btn.setAttribute("aria-checked", String(btn.getAttribute("aria-checked") !== "true"));
+      syncTags();
+    });
+  });
+  syncTags();
 
   /* ---- 金句：抽籤與上一句 ---- */
   let currentSet = quoteSets[0].id;
@@ -774,6 +813,22 @@ import { ALIGNS, FRAMES, TEXT_STYLES, TONES } from "../lib/pride-card";
     background: var(--ink);
     border-color: var(--ink);
     color: #fff;
+  }
+
+  .chip:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .chip-locked {
+    background: var(--magenta-deep);
+    border-color: var(--magenta-deep);
+    color: #fff;
+    cursor: default;
+  }
+
+  .tag-hint {
+    margin: 0 0 12px;
   }
 
   .current-quote {

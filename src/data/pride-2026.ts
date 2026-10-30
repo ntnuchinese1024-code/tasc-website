@@ -70,8 +70,6 @@ export const quoteSets: QuoteSet[] = [
 /** 「自己寫一句」的字數上限。超過就算縮小字級也塞不進圖卡。 */
 export const CUSTOM_QUOTE_MAX = 40;
 
-/** 圖卡底部的署名。 */
-export const CARD_SIGNATURE = "台灣性諮商學會 ‧ #2026臺灣同志遊行 #我挺同我驕傲";
 
 /** 公關組活動計畫指定的三個 hashtag。學會名要寫全稱「台灣性諮商學會」。 */
 export const coreHashtags = ["#台灣性諮商學會", "#我挺同我驕傲", "#2026臺灣同志遊行"];
@@ -79,8 +77,30 @@ export const coreHashtags = ["#台灣性諮商學會", "#我挺同我驕傲", "#
 /** 可以一起帶上的延伸 hashtag：第一個是今年遊行官方主題。 */
 export const extraHashtags = ["#聲做伙聽路做伙行", "#性別平等", "#多元共融"];
 
-/** 挺跨性別的 hashtag：在活動頁自成一組，可以單獨複製。 */
+/** 10/30 跨性別遊行指定的 hashtag。學會名一定要放。 */
+export const transCoreHashtags = ["#台灣性諮商學會", "#2026台灣跨性別遊行"];
+
+/** 挺跨性別、可以一起帶上的延伸 hashtag。 */
 export const transHashtags = ["#挺跨性別", "#跨性別權益就是人權", "#TransRightsAreHumanRights", "#跨性別友善"];
+
+/** 圖卡底部的署名：學會名一定會出現，後面接使用者自己勾選的 hashtag。 */
+export const CARD_NAME = "台灣性諮商學會";
+
+/** 圖卡上可以勾選的 hashtag（學會名固定出現，所以不在選項裡）。 */
+export const cardHashtagOptions = [
+  ...new Set([...coreHashtags, ...transCoreHashtags, ...extraHashtags, ...transHashtags]),
+].filter((t) => t !== "#台灣性諮商學會");
+
+/** 一打開頁面預設勾好的 hashtag。 */
+export const CARD_DEFAULT_TAGS = ["#2026臺灣同志遊行", "#我挺同我驕傲"];
+
+/** 最多勾幾個。再多字會縮到手機上看不清楚。 */
+export const CARD_TAG_MAX = 3;
+
+/** 組出圖卡署名：「台灣性諮商學會 ‧ #a #b」；沒勾就只有學會名。 */
+export function cardSignature(tags: string[]) {
+  return tags.length ? `${CARD_NAME} ‧ ${tags.join(" ")}` : CARD_NAME;
+}
 
 /** 「複製發文範本」按下去拿到的內容。 */
 export const captionTemplate = [
@@ -88,6 +108,14 @@ export const captionTemplate = [
   "10/31 臺灣同志遊行，聲做伙聽，路做伙行。",
   "",
   [...coreHashtags, extraHashtags[0]].join(" "),
+].join("\n");
+
+/** 10/30 跨性別遊行版的發文範本。 */
+export const transCaptionTemplate = [
+  "跨性別權益就是人權。🏳️‍⚧️",
+  "10/30 台灣跨性別遊行，台灣性諮商學會跟你一起走。",
+  "",
+  [...transCoreHashtags, transHashtags[0]].join(" "),
 ].join("\n");
 
 export const parade = {

@@ -17,7 +17,7 @@ import PageHero from "../components/PageHero.astro";
 import PrideCardMaker from "../components/PrideCardMaker.astro";
 import PrideWall from "../components/PrideWall.astro";
 import RegistrationButton from "../components/RegistrationButton.astro";
-import { coreHashtags, extraHashtags, captionTemplate, parade } from "../data/pride-2026";
+import { coreHashtags, extraHashtags, transHashtags, captionTemplate, parade } from "../data/pride-2026";
 
 /** 報名系統後台「複製報名連結」裡的網址代稱，秘書處在 /admin/events 建好這場活動後填進來。 */
 const marchSignupSlug = "pride-march-2026";
@@ -57,6 +57,16 @@ const marchSignupSlug = "pride-march-2026";
         </div>
         <div class="tag-actions">
           <button type="button" class="btn btn-primary" data-copy={coreHashtags.join(" ")}>複製活動指定 Hashtag</button>
+        </div>
+      </div>
+
+      <div class="tag-card">
+        <p class="tag-label">挺跨性別 🏳️‍⚧️</p>
+        <div class="tags">
+          {transHashtags.map((t) => <button type="button" class="tag tag-trans" data-copy={t}>{t}</button>)}
+        </div>
+        <div class="tag-actions">
+          <button type="button" class="btn btn-ghost" data-copy={transHashtags.join(" ")}>複製挺跨性別 Hashtag</button>
         </div>
       </div>
 
@@ -327,6 +337,13 @@ const marchSignupSlug = "pride-march-2026";
     background: var(--card);
     color: var(--ink-soft);
     border: 1.5px solid var(--line);
+  }
+
+  /* 跨性別旗配色：粉藍底、粉紅框 */
+  .tag-trans {
+    background: #e3f6fe;
+    color: #1f4e66;
+    border: 1.5px solid #f5a9b8;
   }
 
   .tag:focus-visible,

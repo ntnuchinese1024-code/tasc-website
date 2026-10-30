@@ -79,6 +79,9 @@ export const coreHashtags = ["#台灣性諮商學會", "#我挺同我驕傲", "#
 /** 可以一起帶上的延伸 hashtag：第一個是今年遊行官方主題。 */
 export const extraHashtags = ["#聲做伙聽路做伙行", "#性別平等", "#多元共融"];
 
+/** 挺跨性別的 hashtag：在活動頁自成一組，可以單獨複製。 */
+export const transHashtags = ["#挺跨性別", "#跨性別權益就是人權", "#TransRightsAreHumanRights", "#跨性別友善"];
+
 /** 「複製發文範本」按下去拿到的內容。 */
 export const captionTemplate = [
   "我挺同，我驕傲。🏳️‍🌈",

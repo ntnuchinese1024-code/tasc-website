@@ -2,6 +2,15 @@
 
 台灣性諮商學會（TASC）官網。取代原本到期的 Weebly 網站。核心原則：內容與程式碼要能完全脫離任何平台獨立搬遷（見 `README.md`），未來維護者不一定有工程背景，可能透過 AI 協作編輯內容（見 `docs/維護手冊.md`）。舊站完整內容備份於 `archive/weebly-content/`。這個專案跟同一台機器上的 `sexpsy-website` 完全獨立，不共用 repo、不共用網域、不共用內容——不要把兩者的檔案或設定混在一起。
 
+### 跟報名系統的關係
+
+報名、問卷、會員、後台在另一個 repo `tasc-registration`（Next.js + Supabase，`tasc-registration.vercel.app`）。
+官網建置時抓它的 `/api/events`（課程與報導）；官網上的表單用 fetch POST 到它的 `/api/...`；秘書處在它的 `/admin/*` 管理。
+**學會要做表單、問卷、報名，一律做進這兩個 repo，不要用 Google 表單。**
+報導的 slug 要跟報名系統那場活動一致（例：`event-260820-f2nk`），後台補寫的報導才會覆蓋這裡的同一篇。
+
+換電腦、換帳號或交接時，照 `tasc-registration/docs/搬遷與交接清單.md` 走。推到 `main` 會直接上線，做到一半的內容請推到別的分支。
+
 ## Development
 
 When starting the dev server, use background mode:

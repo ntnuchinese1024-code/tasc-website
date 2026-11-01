@@ -1,0 +1,46 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import CounselorProfileForm from "../../components/CounselorProfileForm.astro";
+---
+
+<BaseLayout
+  title="性諮商師執業資料填寫"
+  description="台灣性諮商學會合格性諮商師填寫工作地區、專長與個人工作網頁，審核後公開在官網的性諮商師地圖與搜尋中。"
+>
+  <PageHero
+    eyebrow="性諮商師"
+    title="讓需要的人，找得到你"
+    lead="填寫你的工作地區、專長議題與個人工作網頁，秘書處確認後，就會出現在官網的性諮商師地圖與搜尋中。資料需要更新時，回到這一頁重新填寫即可。"
+  />
+
+  <section class="section">
+    <div class="wrap narrow">
+      <CounselorProfileForm />
+      <p class="back">
+        <a href="/counselors#find">← 回到性諮商師名單</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .section {
+    padding: 36px 0 56px;
+  }
+
+  .narrow {
+    max-width: 860px;
+  }
+
+  .back {
+    margin: 22px 0 0;
+    font-size: 0.88rem;
+  }
+
+  .back a {
+    color: var(--blue-deep);
+    font-weight: 700;
+    text-decoration: none;
+  }
+</style>

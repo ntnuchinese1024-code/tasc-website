@@ -2,12 +2,13 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Logo from "../../components/Logo.astro";
 import PageHero from "../../components/PageHero.astro";
+import CounselorDirectory from "../../components/CounselorDirectory.astro";
+import { ROSTER, ROSTER_UPDATED } from "../../data/counselor-directory";
+import { getCounselorProfiles } from "../../lib/registration-api";
 
-const roster = [
-  "呂嘉惠", "邱雅沂", "黃怡禎", "江欣怡", "王嘉琪", "李竹薇",
-  "李翊平", "陳姿曄", "楊舒聿", "朱柏翰", "黃柏嘉", "劉承駿",
-  "薛卉芝", "謝宜潔", "張維真", "簡苑玲", "許庭韶",
-];
+// 秘書處審核通過的執業資料（建置時抓）。名單上的人有提供資料的，名字會連到他的卡片。
+const profiles = await getCounselorProfiles();
+const profileIdByName = new Map(profiles.map((p) => [p.name, p.id]));
 
 const links = [
   {
@@ -34,26 +35,49 @@ const links = [
 ];
 ---
 
-<BaseLayout title="性諮商師" description="台灣性諮商學會合格性諮商師名單，以及認證、換證、倫理規範相關辦法。">
+<BaseLayout title="性諮商師" description="台灣性諮商學會合格性諮商師名單：用台灣地圖與關鍵字搜尋各縣市的性諮商師、專長與工作網頁，以及認證、換證、倫理規範相關辦法。">
   <PageHero
     eyebrow="性諮商師"
     title="經過認證，才能掛上「性諮商師」這個頭銜"
     lead="在台灣性諮商師的認證有不同的系統，本會是以台灣性教育學會制定的認證系統為準。合格性諮商師均會列在本學會合格性諮商師名錄中，資格證明每六年換證一次。"
   />
 
+  <section class="section" id="find">
+    <div class="wrap">
+      <div class="roster-head">
+        <h2>找一位性諮商師</h2>
+      </div>
+      <p class="section-lead">
+        點選地圖上的縣市，或用關鍵字、專長搜尋，看看各地有哪些合格性諮商師、他們擅長的議題，以及個人工作網頁。
+      </p>
+      <CounselorDirectory profiles={profiles} />
+    </div>
+  </section>
+
   <section class="section" id="roster">
     <div class="wrap">
       <div class="roster-head">
         <h2>合格性諮商師名單</h2>
-        <span class="updated-badge">2024年9月更新</span>
+        <span class="updated-badge">{ROSTER_UPDATED}</span>
       </div>
       <ul class="roster-grid">
-        {roster.map((name) => (
-          <li>
-            <Logo size={20} />
-            {name}
-          </li>
-        ))}
+        {ROSTER.map((name) => {
+          const id = profileIdByName.get(name);
+          return id ? (
+            <li class="has-profile">
+              <a href={`#counselor-${id}`}>
+                <Logo size={20} />
+                {name}
+                <span class="roster-tag">執業資料</span>
+              </a>
+            </li>
+          ) : (
+            <li>
+              <Logo size={20} />
+              {name}
+            </li>
+          );
+        })}
       </ul>
       <p class="section-note">
         依《性諮商師認證辦法》第十條，認證審核通過後，申請者會收到本學會合格性諮商師之證明，並列入此名錄。
@@ -113,6 +137,44 @@ const links = [
     gap: 12px;
     flex-wrap: wrap;
     margin-bottom: 20px;
+  }
+
+  .section-lead {
+    margin: -8px 0 24px;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.8;
+    max-width: 62ch;
+  }
+
+  .roster-grid li.has-profile {
+    padding: 0;
+  }
+
+  .roster-grid li.has-profile a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: background 0.15s;
+  }
+
+  .roster-grid li.has-profile a:hover {
+    background: color-mix(in srgb, var(--blue) 10%, var(--bg-alt));
+  }
+
+  .roster-tag {
+    margin-left: auto;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    background: var(--card);
+    border-radius: 999px;
+    padding: 2px 7px;
   }
 
   .updated-badge {

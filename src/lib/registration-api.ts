@@ -176,6 +176,33 @@ export async function getAllEvents(): Promise<EventSummary[]> {
   return data.items ?? [];
 }
 
+/** 性諮商師的公開執業資料（秘書處審核通過的）。不含 Email、證書字號。 */
+export interface CounselorProfile {
+  id: string;
+  name: string;
+  title: string | null;
+  organization: string | null;
+  regions: string[];
+  specialties: string[];
+  audiences: string[];
+  intro: string | null;
+  website_url: string | null;
+  other_url: string | null;
+  updated_at: string;
+}
+
+/**
+ * 名單頁的地圖與搜尋用。報名系統還沒執行 018 migration、或連不上時，
+ * 會回空陣列，名單頁照樣顯示合格名單，只是地圖上沒有數字。
+ */
+export async function getCounselorProfiles(): Promise<CounselorProfile[]> {
+  const data = await fetchJson<{ count: number; items: CounselorProfile[] }>("/api/counselor-profiles", {
+    count: 0,
+    items: [],
+  });
+  return Array.isArray(data.items) ? data.items : [];
+}
+
 /** 單一課程的完整內容。找不到時回 null，呼叫端自行處理。 */
 export async function getEventDetail(slug: string): Promise<EventDetail | null> {
   const data = await fetchJson<EventDetail | { error: string } | null>(

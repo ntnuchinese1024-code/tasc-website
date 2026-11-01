@@ -1,0 +1,1254 @@
+---
+/**
+ * 合格性諮商師名單的「地圖＋搜尋」工具。
+ *
+ * 資料：性諮商師在 /counselors/profile 填寫、秘書處在報名系統後台審核通過的執業資料，
+ * 官網建置時抓下來寫進 HTML（見 lib/registration-api.ts 的 getCounselorProfiles）。
+ * 所以所有卡片都是建置時就產生好的，篩選只是在瀏覽器端切換顯示，Google 也讀得到。
+ *
+ * 地圖：src/data/taiwan-map.json（由 scripts/build-taiwan-map.mjs 產生）。
+ * 「立體」是兩件事疊出來的：SVG 裡把島的外框往下疊幾層當作厚度，
+ * 再用 CSS 把整張圖往後傾斜。點縣市＝篩選該地區；縣市的顏色深淺跟數字，
+ * 會隨著目前的搜尋條件即時變化（例如選了某個專長，就看得到哪裡有這方面的性諮商師）。
+ */
+import map from "../data/taiwan-map.json";
+import {
+  REGIONS,
+  REGION_BY_CODE,
+  REGION_GROUPS,
+  SPECIALTY_ORDER,
+} from "../data/counselor-directory";
+import type { CounselorProfile } from "../lib/registration-api";
+
+interface Props {
+  profiles: CounselorProfile[];
+}
+
+const { profiles } = Astro.props;
+
+const sorted = [...profiles].sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"));
+
+/** 每個縣市幾位（建置時的初始值；瀏覽器端會依搜尋條件重算）。 */
+const countBy: Record<string, number> = {};
+for (const p of sorted) for (const r of p.regions) countBy[r] = (countBy[r] ?? 0) + 1;
+
+const level = (n: number) => (n === 0 ? 0 : n === 1 ? 1 : n <= 3 ? 2 : n <= 6 ? 3 : 4);
+
+/** 專長篩選選單：範本的順序在前，自填的排後面。 */
+const allSpecialties = Array.from(new Set(sorted.flatMap((p) => p.specialties))).sort((a, b) => {
+  const ia = SPECIALTY_ORDER.indexOf(a);
+  const ib = SPECIALTY_ORDER.indexOf(b);
+  if (ia === -1 && ib === -1) return a.localeCompare(b, "zh-Hant");
+  if (ia === -1) return 1;
+  if (ib === -1) return -1;
+  return ia - ib;
+});
+
+/**
+ * 地圖上不放常駐名稱的縣市（滑過或點選時仍會顯示）：太小、會跟鄰居擠在一起的，
+ * 以及小框標題已經寫了名字的金門、馬祖。
+ */
+const NO_LABEL = new Set(["taipei", "keelung", "hsinchu-city", "chiayi-city", "kinmen", "lienchiang"]);
+
+/** 人數小圓點的位置（相對縣市標籤）。北部縣市擠在一起，個別錯開。 */
+const BADGE_OFFSET: Record<string, [number, number]> = {
+  taipei: [-20, -12],
+  "new-taipei": [26, 16],
+  keelung: [14, -14],
+  "hsinchu-city": [-16, -10],
+  "chiayi-city": [-16, -8],
+};
+
+const DEPTH = 12;
+const depthLayers = Array.from({ length: DEPTH }, (_, i) => DEPTH - i);
+
+const mainCounties = map.counties.filter((c) => !map.insets.some((i) => i.code === c.code));
+const insetCounties = map.counties.filter((c) => map.insets.some((i) => i.code === c.code));
+
+const searchBlob = (p: CounselorProfile) =>
+  [
+    p.name,
+    p.title,
+    p.organization,
+    p.intro,
+    ...p.specialties,
+    ...p.audiences,
+    ...p.regions.map((r) => REGION_BY_CODE[r]?.label ?? r),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+};
+
+const SHOWN_SPECIALTIES = 6;
+---
+
+<div class="cd" data-directory>
+  {/* ---- 地圖 ---------------------------------------------------------- */}
+  <div class="cd-map-col">
+    <div class="cd-stage" data-stage>
+      <svg
+        class="tw-map"
+        viewBox={`0 0 ${map.width} ${map.height}`}
+        role="group"
+        aria-label="台灣縣市地圖：點選縣市可以篩選該地區的性諮商師"
+      >
+        <defs>
+          <path id="tw-outline" d={map.outline} />
+          {insetCounties.map((c) => <path id={`tw-depth-${c.code}`} d={c.d} />)}
+        </defs>
+
+        {/* 島的厚度：外框往下疊幾層，越下面越深 */}
+        <g class="tw-depth" aria-hidden="true">
+          {depthLayers.map((y) => (
+            <use href="#tw-outline" y={y} class={y === DEPTH ? "tw-depth-bottom" : undefined} />
+          ))}
+        </g>
+
+        {/* 金門、馬祖的小框 */}
+        {map.insets.map((inset) => (
+          <g class="tw-inset" aria-hidden="true">
+            <rect x={inset.x} y={inset.y} width={inset.w} height={inset.h} rx="10" />
+            <text x={inset.x + 10} y={inset.y + 15} class="tw-inset-title">{inset.title}</text>
+          </g>
+        ))}
+        <g class="tw-depth" aria-hidden="true">
+          {insetCounties.map((c) =>
+            [4, 3, 2, 1].map((y) => <use href={`#tw-depth-${c.code}`} y={y} />),
+          )}
+        </g>
+
+        {/* 縣市本體：可以點、可以用鍵盤選 */}
+        <g class="tw-counties">
+          {[...mainCounties, ...insetCounties].map((c) => {
+            const region = REGION_BY_CODE[c.code];
+            const n = countBy[c.code] ?? 0;
+            return (
+              <path
+                d={c.d}
+                class={`tw-county lv-${level(n)}`}
+                data-code={c.code}
+                data-label={region?.label ?? c.code}
+                data-cx={c.cx}
+                data-cy={c.cy}
+                tabindex="0"
+                role="button"
+                aria-pressed="false"
+                aria-label={`${region?.label ?? c.code}，${n} 位性諮商師`}
+              />
+            );
+          })}
+        </g>
+
+        <g class="tw-labels" aria-hidden="true">
+          {map.counties.map((c) => (
+            <text
+              x={c.cx}
+              y={c.cy}
+              class={`tw-label${NO_LABEL.has(c.code) ? " tw-label-hover" : ""}`}
+              data-label-for={c.code}
+            >
+              {REGION_BY_CODE[c.code]?.short ?? c.code}
+            </text>
+          ))}
+        </g>
+
+        <g class="tw-badges" aria-hidden="true">
+          {map.counties.map((c) => {
+            const n = countBy[c.code] ?? 0;
+            const [dx, dy] = BADGE_OFFSET[c.code] ?? [16, -16];
+            return (
+              <g class="tw-badge" data-badge-for={c.code} transform={`translate(${c.cx + dx} ${c.cy + dy})`} hidden={n === 0}>
+                <circle r="10.5" />
+                <text dy="0.36em">{n}</text>
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+
+      <div class="cd-tip" data-tip hidden></div>
+    </div>
+
+    <div class="cd-legend" aria-hidden="true">
+      <span class="cd-legend-label">人數</span>
+      <span class="sw lv-0"></span><span>0</span>
+      <span class="sw lv-1"></span><span>1</span>
+      <span class="sw lv-2"></span><span>2–3</span>
+      <span class="sw lv-3"></span><span>4–6</span>
+      <span class="sw lv-4"></span><span>7+</span>
+    </div>
+
+    <button type="button" class="cd-online" data-online aria-pressed="false">
+      <span class="cd-online-dot" aria-hidden="true"></span>
+      提供線上諮商
+      <span class="cd-online-n" data-online-count>{countBy.online ?? 0}</span>
+    </button>
+  </div>
+
+  {/* ---- 搜尋與結果 ---------------------------------------------------- */}
+  <div class="cd-panel">
+    <div class="cd-controls" role="search">
+      <label class="cd-search">
+        <span class="sr-only">搜尋性諮商師</span>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m13 13 4 4" /></svg>
+        <input
+          type="search"
+          data-q
+          placeholder="搜尋姓名、專長、機構，例如：伴侶、跨性別"
+          autocomplete="off"
+        />
+      </label>
+
+      <div class="cd-selects">
+        <label>
+          <span class="cd-select-label">地區</span>
+          <select data-region>
+            <option value="">全部地區</option>
+            {REGION_GROUPS.map((group) => (
+              <optgroup label={group}>
+                {REGIONS.filter((r) => r.group === group).map((r) => (
+                  <option value={r.code}>{r.label}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span class="cd-select-label">專長</span>
+          <select data-specialty disabled={allSpecialties.length === 0}>
+            <option value="">全部專長</option>
+            {allSpecialties.map((s) => <option value={s}>{s}</option>)}
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="cd-status">
+      <p data-summary aria-live="polite">
+        {sorted.length > 0 ? `共 ${sorted.length} 位性諮商師提供了執業資料` : "執業資料建置中"}
+      </p>
+      <button type="button" class="cd-clear" data-clear hidden>清除條件</button>
+    </div>
+
+    {sorted.length === 0 ? (
+      <div class="cd-empty-all">
+        <p class="cd-empty-title">性諮商師的執業資料正在陸續建置中</p>
+        <p>
+          合格性諮商師填寫工作地區與專長、經秘書處確認後，就會出現在這張地圖上。
+          在那之前，可以參考下方的合格名單，或來信
+          <span class="cd-mail">tasc.tw@gmail.com</span> 請秘書處協助轉介。
+        </p>
+      </div>
+    ) : (
+      <>
+        <ul class="cd-list" data-list>
+          {sorted.map((p) => {
+            const extra = p.specialties.length - SHOWN_SPECIALTIES;
+            return (
+              <li
+                class="cd-card"
+                id={`counselor-${p.id}`}
+                data-card
+                data-name={p.name}
+                data-regions={p.regions.join(" ")}
+                data-specialties={p.specialties.join("|")}
+                data-search={searchBlob(p)}
+              >
+                <div class="cd-card-head">
+                  <h3 class="cd-name">{p.name}</h3>
+                  {p.title && <span class="cd-title">{p.title}</span>}
+                </div>
+                {p.organization && <p class="cd-org">{p.organization}</p>}
+
+                <ul class="cd-regions" aria-label="工作地區">
+                  {p.regions.map((r) => (
+                    <li class={r === "online" ? "is-online" : undefined}>{REGION_BY_CODE[r]?.label ?? r}</li>
+                  ))}
+                </ul>
+
+                {p.specialties.length > 0 && (
+                  <ul class="cd-tags" aria-label="專長">
+                    {p.specialties.map((s, i) => (
+                      <li class={i >= SHOWN_SPECIALTIES ? "is-extra" : undefined}>{s}</li>
+                    ))}
+                    {extra > 0 && (
+                      <li class="cd-more">
+                        <button type="button" data-more>＋{extra} 項</button>
+                      </li>
+                    )}
+                  </ul>
+                )}
+
+                {p.audiences.length > 0 && (
+                  <p class="cd-aud"><span>服務對象</span>{p.audiences.join("、")}</p>
+                )}
+
+                {p.intro && <p class="cd-intro">{p.intro}</p>}
+
+                {(p.website_url || p.other_url) && (
+                  <div class="cd-links">
+                    {p.website_url && (
+                      <a href={p.website_url} target="_blank" rel="noopener noreferrer nofollow" class="cd-link cd-link-main">
+                        個人工作網頁 <span aria-hidden="true">↗</span>
+                        <span class="cd-host">{hostOf(p.website_url)}</span>
+                      </a>
+                    )}
+                    {p.other_url && (
+                      <a href={p.other_url} target="_blank" rel="noopener noreferrer nofollow" class="cd-link">
+                        其他連結 <span aria-hidden="true">↗</span>
+                        <span class="cd-host">{hostOf(p.other_url)}</span>
+                      </a>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        <div class="cd-empty" data-empty hidden>
+          <p class="cd-empty-title">沒有符合條件的性諮商師</p>
+          <p data-empty-hint>試試看換個關鍵字，或放寬地區、專長的條件。</p>
+          <button type="button" class="cd-online-suggest" data-suggest-online hidden>改看提供線上諮商的性諮商師</button>
+        </div>
+      </>
+    )}
+
+    <a href="/counselors/profile" class="cd-cta">
+      <span>
+        <strong>我是合格性諮商師</strong>
+        填寫或更新我的工作地區、專長與網頁連結
+      </span>
+      <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</div>
+
+<style>
+  .cd {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .cd {
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+  }
+
+  .cd [hidden] {
+    display: none !important;
+  }
+
+  /* ---- 地圖 ---- */
+  .cd-map-col {
+    position: sticky;
+    top: 84px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  @media (max-width: 900px) {
+    .cd-map-col {
+      position: static;
+    }
+  }
+
+  .cd-stage {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    perspective: 1500px;
+    background:
+      radial-gradient(ellipse 70% 55% at 55% 52%, color-mix(in srgb, var(--blue) 9%, transparent), transparent 70%);
+    border-radius: 24px;
+  }
+
+  @media (max-width: 900px) {
+    .cd-stage {
+      max-width: 380px;
+    }
+  }
+
+  .tw-map {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    transform: rotateX(28deg) rotateZ(-3deg) scale(0.98);
+    transform-origin: 50% 60%;
+    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .cd-stage:hover .tw-map,
+  .cd-stage:focus-within .tw-map {
+    transform: rotateX(22deg) rotateZ(-2deg) scale(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tw-map,
+    .tw-county {
+      transition: none !important;
+    }
+  }
+
+  .tw-depth use {
+    fill: #cfc4ab;
+  }
+
+  .tw-depth use.tw-depth-bottom {
+    fill: #b3a68a;
+    filter: drop-shadow(0 10px 10px rgba(33, 27, 20, 0.22));
+  }
+
+  .tw-inset rect {
+    fill: color-mix(in srgb, var(--card) 70%, transparent);
+    stroke: var(--line);
+    stroke-dasharray: 4 3;
+  }
+
+  .tw-inset-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    fill: var(--ink-faint);
+  }
+
+  .tw-county {
+    stroke: #fffdf7;
+    stroke-width: 1.1;
+    stroke-linejoin: round;
+    cursor: pointer;
+    outline: none;
+    transform-box: fill-box;
+    transition: transform 0.22s ease, fill 0.25s ease, filter 0.22s ease;
+  }
+
+  .tw-county.lv-0,
+  .sw.lv-0 {
+    fill: #ece5d4;
+  }
+  .tw-county.lv-1,
+  .sw.lv-1 {
+    fill: #b9dff3;
+  }
+  .tw-county.lv-2,
+  .sw.lv-2 {
+    fill: #74c1e9;
+  }
+  .tw-county.lv-3,
+  .sw.lv-3 {
+    fill: #2a9fd8;
+  }
+  .tw-county.lv-4,
+  .sw.lv-4 {
+    fill: #0b78ac;
+  }
+
+  .tw-county:hover,
+  .tw-county:focus-visible,
+  .tw-county.is-hover {
+    transform: translateY(-5px);
+    filter: drop-shadow(0 5px 0 #b3a68a) brightness(1.04);
+  }
+
+  .tw-county:focus-visible {
+    stroke: var(--ink);
+    stroke-width: 1.6;
+  }
+
+  .tw-county.is-selected {
+    fill: var(--orange);
+    transform: translateY(-8px);
+    filter: drop-shadow(0 8px 0 var(--orange-deep));
+  }
+
+  .tw-map.has-selection .tw-county:not(.is-selected) {
+    opacity: 0.72;
+  }
+
+  .tw-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    fill: var(--ink-soft);
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+    paint-order: stroke;
+    stroke: rgba(255, 253, 247, 0.85);
+    stroke-width: 3px;
+    transition: opacity 0.2s;
+  }
+
+  .tw-label-hover {
+    opacity: 0;
+  }
+
+  .tw-label.is-active {
+    opacity: 1;
+    fill: var(--ink);
+  }
+
+  .tw-badge {
+    pointer-events: none;
+  }
+
+  .tw-badge circle {
+    fill: var(--card);
+    stroke: var(--blue-deep);
+    stroke-width: 1.5;
+  }
+
+  .tw-badge text {
+    font-size: 11px;
+    font-weight: 800;
+    fill: var(--blue-deep);
+    text-anchor: middle;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cd-tip {
+    position: absolute;
+    z-index: 3;
+    transform: translate(-50%, calc(-100% - 12px));
+    background: var(--ink);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.4;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: var(--shadow);
+  }
+
+  .cd-tip small {
+    display: block;
+    font-weight: 400;
+    opacity: 0.8;
+  }
+
+  .cd-legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+
+  .cd-legend-label {
+    font-weight: 700;
+    margin-right: 2px;
+  }
+
+  .sw {
+    width: 14px;
+    height: 10px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-left: 6px;
+    outline: 1px solid rgba(33, 27, 20, 0.08);
+  }
+
+  .cd-online {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 8px 8px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+  }
+
+  .cd-online:hover {
+    border-color: var(--green);
+  }
+
+  .cd-online[aria-pressed="true"] {
+    background: var(--green-deep);
+    border-color: var(--green-deep);
+    color: #fff;
+  }
+
+  .cd-online-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: var(--green);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 25%, transparent);
+  }
+
+  .cd-online-n {
+    min-width: 24px;
+    text-align: center;
+    font-size: 0.75rem;
+    background: var(--bg-alt);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 2px 8px;
+  }
+
+  .cd-online[aria-pressed="true"] .cd-online-n {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  /* ---- 搜尋 ---- */
+  .cd-panel {
+    min-width: 0;
+  }
+
+  .cd-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .cd-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0 12px;
+  }
+
+  .cd-search:focus-within {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+
+  .cd-search svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    fill: none;
+    stroke: var(--ink-faint);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  .cd-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    padding: 11px 0;
+    outline: none;
+  }
+
+  .cd-selects {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 420px) {
+    .cd-selects {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .cd-selects label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .cd-select-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+  }
+
+  .cd-selects select {
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cd-selects select:disabled {
+    opacity: 0.55;
+  }
+
+  .cd-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 16px 2px 12px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .cd-status p {
+    margin: 0;
+  }
+
+  .cd-clear {
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    background: none;
+    border: none;
+    padding: 4px 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ---- 結果卡片 ---- */
+  .cd-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cd-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 20px;
+    scroll-margin-top: 100px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+
+  .cd-card.is-flash {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--orange) 25%, transparent);
+  }
+
+  .cd-card-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  .cd-name {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .cd-title {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
+  .cd-org {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .cd-regions,
+  .cd-tags {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .cd-regions li {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--orange-deep);
+    background: color-mix(in srgb, var(--orange) 10%, var(--card));
+    border-radius: 6px;
+    padding: 2px 8px;
+  }
+
+  .cd-regions li.is-online {
+    color: var(--green-deep);
+    background: color-mix(in srgb, var(--green) 12%, var(--card));
+  }
+
+  .cd-tags li {
+    font-size: 0.78rem;
+    color: var(--blue-deep);
+    background: color-mix(in srgb, var(--blue) 9%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--blue) 20%, var(--line));
+    border-radius: 999px;
+    padding: 3px 10px;
+  }
+
+  .cd-tags li.is-match {
+    background: var(--blue-deep);
+    border-color: var(--blue-deep);
+    color: #fff;
+  }
+
+  .cd-tags:not(.is-open) li.is-extra {
+    display: none;
+  }
+
+  .cd-tags li.cd-more {
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  .cd-more button {
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: var(--bg-alt);
+    border: none;
+    border-radius: 999px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+
+  .cd-aud {
+    margin: 10px 0 0;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  .cd-aud span {
+    font-weight: 700;
+    color: var(--ink-faint);
+    margin-right: 8px;
+  }
+
+  .cd-intro {
+    margin: 10px 0 0;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    line-height: 1.8;
+    white-space: pre-line;
+  }
+
+  .cd-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .cd-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 12px;
+    transition: border-color 0.15s, background 0.15s;
+    max-width: 100%;
+  }
+
+  .cd-link:hover {
+    border-color: var(--blue);
+  }
+
+  .cd-link-main {
+    background: var(--blue-deep);
+    border-color: var(--blue-deep);
+    color: #fff;
+  }
+
+  .cd-link-main:hover {
+    background: #035780;
+  }
+
+  .cd-host {
+    font-size: 0.72rem;
+    font-weight: 400;
+    opacity: 0.75;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 16ch;
+  }
+
+  .cd-empty,
+  .cd-empty-all {
+    background: var(--card);
+    border: 1px dashed var(--line);
+    border-radius: 16px;
+    padding: 26px 22px;
+    font-size: 0.88rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+
+  .cd-empty p,
+  .cd-empty-all p {
+    margin: 0 0 6px;
+  }
+
+  .cd-empty-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.02rem;
+    color: var(--ink);
+  }
+
+  .cd-mail {
+    font-weight: 700;
+    color: var(--blue-deep);
+    user-select: all;
+  }
+
+  .cd-online-suggest {
+    margin-top: 8px;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--green-deep);
+    background: color-mix(in srgb, var(--green) 10%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--green) 30%, var(--line));
+    border-radius: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+
+  .cd-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 18px;
+    padding: 16px 20px;
+    border-radius: 16px;
+    background: var(--bg-alt);
+    text-decoration: none;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .cd-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .cd-cta strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--ink);
+  }
+
+  .cd-cta > span:last-child {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--blue-deep);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+</style>
+
+<script>
+  /**
+   * 地圖與搜尋的瀏覽器端邏輯。
+   *
+   * 狀態只有三個：關鍵字、地區、專長。每次變動就：
+   *   1. 依三個條件決定哪些卡片要顯示
+   *   2. 依「關鍵字＋專長」（不含地區）重算每個縣市的人數，更新地圖顏色與數字
+   *   3. 把條件寫進網址（?q=&region=&specialty=），分享連結時對方看到的是同一個結果
+   */
+  const LABEL: Record<string, string> = {};
+
+  function level(n: number) {
+    return n === 0 ? 0 : n === 1 ? 1 : n <= 3 ? 2 : n <= 6 ? 3 : 4;
+  }
+
+  function init(root: HTMLElement) {
+    const svg = root.querySelector<SVGSVGElement>(".tw-map")!;
+    const stage = root.querySelector<HTMLElement>("[data-stage]")!;
+    const tip = root.querySelector<HTMLElement>("[data-tip]")!;
+    const qInput = root.querySelector<HTMLInputElement>("[data-q]")!;
+    const regionSel = root.querySelector<HTMLSelectElement>("[data-region]")!;
+    const specSel = root.querySelector<HTMLSelectElement>("[data-specialty]")!;
+    const summary = root.querySelector<HTMLElement>("[data-summary]")!;
+    const clearBtn = root.querySelector<HTMLButtonElement>("[data-clear]")!;
+    const onlineBtn = root.querySelector<HTMLButtonElement>("[data-online]")!;
+    const onlineCount = root.querySelector<HTMLElement>("[data-online-count]")!;
+    const empty = root.querySelector<HTMLElement>("[data-empty]");
+    const emptyHint = root.querySelector<HTMLElement>("[data-empty-hint]");
+    const suggestOnline = root.querySelector<HTMLButtonElement>("[data-suggest-online]");
+    const counties = Array.from(root.querySelectorAll<SVGPathElement>(".tw-county"));
+    const cards = Array.from(root.querySelectorAll<HTMLElement>("[data-card]"));
+    const total = cards.length;
+
+    for (const opt of Array.from(regionSel.options)) if (opt.value) LABEL[opt.value] = opt.textContent ?? opt.value;
+
+    const state = { q: "", region: "", specialty: "" };
+
+    // ---- 網址 ↔ 狀態 --------------------------------------------------------
+    const params = new URLSearchParams(location.search);
+    state.q = params.get("q") ?? "";
+    state.region = LABEL[params.get("region") ?? ""] ? params.get("region")! : "";
+    const spec = params.get("specialty") ?? "";
+    state.specialty = Array.from(specSel.options).some((o) => o.value === spec) ? spec : "";
+
+    function writeUrl() {
+      const p = new URLSearchParams(location.search);
+      for (const key of ["q", "region", "specialty"] as const) {
+        if (state[key]) p.set(key, state[key]);
+        else p.delete(key);
+      }
+      const qs = p.toString();
+      history.replaceState(null, "", `${location.pathname}${qs ? `?${qs}` : ""}${location.hash}`);
+    }
+
+    // ---- 篩選 ---------------------------------------------------------------
+    function matchesText(card: HTMLElement) {
+      const tokens = state.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const blob = card.dataset.search ?? "";
+      return tokens.every((t) => blob.includes(t));
+    }
+
+    function matchesSpecialty(card: HTMLElement) {
+      return !state.specialty || (card.dataset.specialties ?? "").split("|").includes(state.specialty);
+    }
+
+    function apply() {
+      const counts: Record<string, number> = {};
+      let shown = 0;
+
+      for (const card of cards) {
+        const base = matchesText(card) && matchesSpecialty(card);
+        const regions = (card.dataset.regions ?? "").split(" ");
+        if (base) for (const r of regions) counts[r] = (counts[r] ?? 0) + 1;
+        const visible = base && (!state.region || regions.includes(state.region));
+        card.hidden = !visible;
+        if (visible) shown += 1;
+
+        card.querySelectorAll<HTMLElement>(".cd-tags li").forEach((li) => {
+          li.classList.toggle("is-match", !!state.specialty && li.textContent === state.specialty);
+        });
+        // 選了某個專長而它被收在「＋N 項」裡時，直接展開
+        if (state.specialty) {
+          const tags = card.querySelector(".cd-tags");
+          if (tags?.querySelector(".is-extra.is-match")) tags.classList.add("is-open");
+        }
+      }
+
+      // 地圖
+      for (const path of counties) {
+        const code = path.dataset.code!;
+        const n = counts[code] ?? 0;
+        path.setAttribute("class", `tw-county lv-${level(n)}${state.region === code ? " is-selected" : ""}`);
+        path.setAttribute("aria-pressed", String(state.region === code));
+        path.setAttribute("aria-label", `${path.dataset.label}，${n} 位性諮商師`);
+        const badge = root.querySelector<SVGGElement>(`[data-badge-for="${code}"]`);
+        if (badge) {
+          badge.toggleAttribute("hidden", n === 0);
+          badge.querySelector("text")!.textContent = String(n);
+        }
+        root.querySelector(`[data-label-for="${code}"]`)?.classList.toggle("is-active", state.region === code);
+      }
+      svg.classList.toggle("has-selection", !!state.region && state.region !== "online");
+
+      onlineCount.textContent = String(counts.online ?? 0);
+      onlineBtn.setAttribute("aria-pressed", String(state.region === "online"));
+      regionSel.value = state.region;
+      specSel.value = state.specialty;
+      if (qInput.value !== state.q) qInput.value = state.q;
+
+      // 文字
+      const filtered = !!(state.q.trim() || state.region || state.specialty);
+      clearBtn.hidden = !filtered;
+      if (total > 0) {
+        const parts: string[] = [];
+        if (state.region) parts.push(LABEL[state.region]);
+        if (state.specialty) parts.push(`專長「${state.specialty}」`);
+        if (state.q.trim()) parts.push(`關鍵字「${state.q.trim()}」`);
+        summary.textContent = filtered
+          ? `${parts.join("・")}：找到 ${shown} 位`
+          : `共 ${total} 位性諮商師提供了執業資料`;
+      }
+
+      if (empty) {
+        empty.hidden = shown > 0 || total === 0;
+        const canGoOnline = !!state.region && state.region !== "online" && (counts.online ?? 0) > 0;
+        if (suggestOnline) suggestOnline.hidden = !canGoOnline;
+        if (emptyHint) {
+          emptyHint.textContent = state.region && state.region !== "online"
+            ? `${LABEL[state.region]}目前還沒有符合條件的性諮商師登錄資料。${canGoOnline ? "不受地點限制的話，可以考慮線上諮商：" : "可以放寬條件，或來信 tasc.tw@gmail.com 請秘書處協助轉介。"}`
+            : "試試看換個關鍵字，或放寬地區、專長的條件。";
+        }
+      }
+
+      writeUrl();
+    }
+
+    function setRegion(code: string) {
+      state.region = state.region === code ? "" : code;
+      apply();
+    }
+
+    // ---- 事件 ---------------------------------------------------------------
+    let typing: number | undefined;
+    qInput.addEventListener("input", () => {
+      window.clearTimeout(typing);
+      typing = window.setTimeout(() => {
+        state.q = qInput.value;
+        apply();
+      }, 120);
+    });
+    regionSel.addEventListener("change", () => {
+      state.region = regionSel.value;
+      apply();
+    });
+    specSel.addEventListener("change", () => {
+      state.specialty = specSel.value;
+      apply();
+    });
+    onlineBtn.addEventListener("click", () => setRegion("online"));
+    suggestOnline?.addEventListener("click", () => setRegion("online"));
+    clearBtn.addEventListener("click", () => {
+      state.q = "";
+      state.region = "";
+      state.specialty = "";
+      apply();
+    });
+
+    root.querySelectorAll<HTMLButtonElement>("[data-more]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        btn.closest(".cd-tags")?.classList.add("is-open");
+        btn.closest("li")?.remove();
+      }),
+    );
+
+    // 地圖：點選、鍵盤、提示框
+    function showTip(path: SVGPathElement, clientX?: number, clientY?: number) {
+      const box = stage.getBoundingClientRect();
+      let x: number;
+      let y: number;
+      if (clientX !== undefined && clientY !== undefined) {
+        x = clientX - box.left;
+        y = clientY - box.top;
+      } else {
+        const r = path.getBoundingClientRect();
+        x = r.left + r.width / 2 - box.left;
+        y = r.top - box.top + 6;
+      }
+      const n = path.getAttribute("aria-label")?.match(/(\d+) 位/)?.[1] ?? "0";
+      tip.innerHTML = "";
+      tip.append(path.dataset.label ?? "");
+      const small = document.createElement("small");
+      small.textContent = n === "0" ? "目前沒有登錄資料" : `${n} 位性諮商師・點一下查看`;
+      tip.append(small);
+      tip.style.left = `${x}px`;
+      tip.style.top = `${y}px`;
+      tip.hidden = false;
+      root.querySelector(`[data-label-for="${path.dataset.code}"]`)?.classList.add("is-active");
+    }
+
+    /** 手機上地圖跟清單是上下排的，點了縣市要帶到結果那裡，不然看不出有變化。 */
+    function pickFromMap(code: string) {
+      setRegion(code);
+      tip.hidden = true;
+      if (state.region && window.matchMedia("(max-width: 900px)").matches) {
+        summary.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    function hideTip(path: SVGPathElement) {
+      tip.hidden = true;
+      if (state.region !== path.dataset.code) {
+        root.querySelector(`[data-label-for="${path.dataset.code}"]`)?.classList.remove("is-active");
+      }
+    }
+
+    for (const path of counties) {
+      // 把滑過的縣市移到最上層，抬起來時才不會被南邊的鄰居蓋住
+      path.addEventListener("pointerenter", () => path.parentNode?.appendChild(path));
+      path.addEventListener("pointermove", (e) => showTip(path, e.clientX, e.clientY));
+      path.addEventListener("pointerleave", () => hideTip(path));
+      path.addEventListener("focus", () => showTip(path));
+      path.addEventListener("blur", () => hideTip(path));
+      path.addEventListener("click", () => pickFromMap(path.dataset.code!));
+      path.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          pickFromMap(path.dataset.code!);
+        }
+      });
+    }
+
+    // 從合格名單點名字過來：#counselor-<id> 或 ?name=
+    function flashFromHash() {
+      const target = location.hash.startsWith("#counselor-") ? root.querySelector<HTMLElement>(location.hash) : null;
+      if (!target) return;
+      if (target.hidden) {
+        state.q = "";
+        state.region = "";
+        state.specialty = "";
+        apply();
+      }
+      target.classList.add("is-flash");
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      window.setTimeout(() => target.classList.remove("is-flash"), 2400);
+    }
+    window.addEventListener("hashchange", flashFromHash);
+
+    apply();
+    flashFromHash();
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-directory]").forEach(init);
+</script>

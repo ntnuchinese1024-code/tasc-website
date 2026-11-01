@@ -1,0 +1,909 @@
+---
+/**
+ * 性諮商師執業資料填寫表。
+ *
+ * 跟講師邀約、活動回饋同一套做法：官網是靜態站，送出時用瀏覽器端 fetch 打報名系統的
+ * POST /api/counselor-profiles，資料寫進同一個 Supabase。送出後是「待審核」，
+ * 秘書處在報名系統後台「性諮商師」頁確認姓名在合格名單內、按通過後，官網重新建置，
+ * 名單頁的地圖與搜尋就找得到。
+ *
+ * 專長：範本（可複選的標籤）＋自由填寫，合計最多 MAX_SPECIALTIES 項。
+ */
+import { REGISTRATION_ORIGIN } from "../lib/registration-api";
+import {
+  AUDIENCE_TEMPLATES,
+  MAX_AUDIENCES,
+  MAX_SPECIALTIES,
+  REGION_GROUPS,
+  REGIONS,
+  SPECIALTY_TEMPLATES,
+} from "../data/counselor-directory";
+---
+
+<div class="cp-card" data-cp data-origin={REGISTRATION_ORIGIN} data-max-spec={MAX_SPECIALTIES} data-max-aud={MAX_AUDIENCES}>
+  <div class="cp-state cp-thanks" data-done hidden>
+    <p class="cp-state-title">已收到你的資料，謝謝你！</p>
+    <p>
+      秘書處確認後就會公開在<a href="/counselors#find">性諮商師名單</a>的地圖上，通常需要幾個工作天。
+      之後想更新內容，回到這一頁重新填寫送出即可，新的資料通過後，舊的會自動下架。
+    </p>
+    <button type="button" class="cp-link-btn" data-again>再填一份</button>
+  </div>
+
+  <form class="cp-form" data-form novalidate>
+    <div class="cp-intro">
+      <p>
+        這份表單給<strong>台灣性諮商學會合格性諮商師</strong>填寫。送出後由秘書處核對合格名單，
+        通過後會公開在官網的性諮商師地圖與搜尋中，讓需要的人找得到你。
+      </p>
+      <p>標示 <span class="req">*</span> 的為必填。Email 與證書字號只供秘書處聯絡、核對，不會公開。</p>
+    </div>
+
+    {/* 蜜罐：名稱刻意無語意，避免被密碼管理器自動填入 */}
+    <div class="cp-hp" aria-hidden="true">
+      <label for="cp-hp">請勿填寫此欄</label>
+      <input id="cp-hp" type="text" name="hp_check" tabindex="-1" autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other" data-bwignore />
+    </div>
+
+    <div class="cp-status" data-status role="status" aria-live="polite"></div>
+
+    {/* ---- 1. 基本資料 ---- */}
+    <fieldset class="cp-section">
+      <legend><span class="cp-step">1</span>基本資料</legend>
+
+      <div class="cp-grid">
+        <div class="cp-q">
+          <label for="cp-name" class="cp-label">姓名 <span class="req">*</span></label>
+          <p class="cp-hint">請與合格性諮商師名單上的姓名相同。</p>
+          <input id="cp-name" name="name" type="text" maxlength="20" autocomplete="name" required />
+          <p class="cp-error" data-error="name"></p>
+        </div>
+
+        <div class="cp-q">
+          <label for="cp-email" class="cp-label">Email <span class="req">*</span></label>
+          <p class="cp-hint">不公開，秘書處用來通知審核結果。</p>
+          <input id="cp-email" name="email" type="email" maxlength="254" autocomplete="email" required />
+          <p class="cp-error" data-error="email"></p>
+        </div>
+
+        <div class="cp-q">
+          <label for="cp-cert" class="cp-label">性諮商師證書字號</label>
+          <p class="cp-hint">不公開，方便秘書處核對。</p>
+          <input id="cp-cert" name="certNumber" type="text" maxlength="40" />
+          <p class="cp-error" data-error="certNumber"></p>
+        </div>
+
+        <div class="cp-q">
+          <label for="cp-title" class="cp-label">專業身分</label>
+          <p class="cp-hint">例如：諮商心理師、臨床心理師、社工師、醫師。</p>
+          <input id="cp-title" name="title" type="text" maxlength="40" list="cp-title-list" />
+          <datalist id="cp-title-list">
+            <option value="諮商心理師"></option>
+            <option value="臨床心理師"></option>
+            <option value="社會工作師"></option>
+            <option value="精神科醫師"></option>
+            <option value="婦產科醫師"></option>
+            <option value="泌尿科醫師"></option>
+            <option value="護理師"></option>
+            <option value="性教育工作者"></option>
+          </datalist>
+          <p class="cp-error" data-error="title"></p>
+        </div>
+
+        <div class="cp-q cp-span">
+          <label for="cp-org" class="cp-label">服務機構／工作室</label>
+          <input id="cp-org" name="organization" type="text" maxlength="60" placeholder="例如：○○心理諮商所" />
+          <p class="cp-error" data-error="organization"></p>
+        </div>
+      </div>
+    </fieldset>
+
+    {/* ---- 2. 工作地區 ---- */}
+    <fieldset class="cp-section">
+      <legend><span class="cp-step">2</span>工作地區 <span class="req">*</span></legend>
+      <p class="cp-hint">可複選。有提供線上諮商的話，也請勾選「線上諮商」，外縣市的人也找得到你。</p>
+
+      <div class="cp-regions">
+        {REGION_GROUPS.map((group) => (
+          <div class="cp-region-group">
+            <span class="cp-group-name">{group}</span>
+            <div class="cp-chips">
+              {REGIONS.filter((r) => r.group === group).map((r) => (
+                <label class={`cp-chip${r.code === "online" ? " cp-chip-online" : ""}`}>
+                  <input type="checkbox" name="regions" value={r.code} />
+                  <span>{r.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p class="cp-error" data-error="regions"></p>
+    </fieldset>
+
+    {/* ---- 3. 專長 ---- */}
+    <fieldset class="cp-section">
+      <legend><span class="cp-step">3</span>專長議題 <span class="req">*</span></legend>
+      <p class="cp-hint">
+        從範本點選，或在下方自由填寫，合計最多 {MAX_SPECIALTIES} 項。民眾可以用專長篩選，建議挑最主要、最有把握的幾項。
+        <span class="cp-counter" data-spec-counter>已選 0 / {MAX_SPECIALTIES}</span>
+      </p>
+
+      <div class="cp-templates">
+        {SPECIALTY_TEMPLATES.map((g, i) => (
+          <details class="cp-tpl" open={i < 2}>
+            <summary>
+              {g.group}
+              <span class="cp-tpl-n" data-group-count></span>
+            </summary>
+            <div class="cp-chips">
+              {g.items.map((item) => (
+                <label class="cp-chip">
+                  <input type="checkbox" name="specialties" value={item} />
+                  <span>{item}</span>
+                </label>
+              ))}
+            </div>
+          </details>
+        ))}
+      </div>
+
+      <div class="cp-q cp-custom">
+        <label for="cp-spec-custom" class="cp-label">其他專長（自由填寫）</label>
+        <p class="cp-hint">範本沒有的，打完一項按 Enter 或「加入」；每項 30 字以內。</p>
+        <div class="cp-custom-row">
+          <input id="cp-spec-custom" type="text" maxlength="30" data-custom-input placeholder="例如：性與靈性、校園性平事件諮詢" />
+          <button type="button" class="cp-add" data-custom-add>加入</button>
+        </div>
+        <ul class="cp-custom-list" data-custom-list aria-label="自填的專長"></ul>
+      </div>
+      <p class="cp-error" data-error="specialties"></p>
+    </fieldset>
+
+    {/* ---- 4. 服務對象 ---- */}
+    <fieldset class="cp-section">
+      <legend><span class="cp-step">4</span>服務對象</legend>
+      <p class="cp-hint">可複選，最多 {MAX_AUDIENCES} 項。</p>
+      <div class="cp-chips">
+        {AUDIENCE_TEMPLATES.map((a) => (
+          <label class="cp-chip">
+            <input type="checkbox" name="audiences" value={a} />
+            <span>{a}</span>
+          </label>
+        ))}
+      </div>
+      <p class="cp-error" data-error="audiences"></p>
+    </fieldset>
+
+    {/* ---- 5. 介紹與連結 ---- */}
+    <fieldset class="cp-section">
+      <legend><span class="cp-step">5</span>簡介與連結</legend>
+
+      <div class="cp-q">
+        <label for="cp-intro" class="cp-label">一段簡短的自我介紹</label>
+        <p class="cp-hint">工作取向、想對來談者說的話……300 字以內。<span class="cp-counter" data-intro-counter>0 / 300</span></p>
+        <textarea id="cp-intro" name="intro" rows="4" maxlength="300"></textarea>
+        <p class="cp-error" data-error="intro"></p>
+      </div>
+
+      <div class="cp-grid">
+        <div class="cp-q">
+          <label for="cp-web" class="cp-label">個人工作網頁</label>
+          <p class="cp-hint">個人網站、工作室或機構的介紹頁。</p>
+          <input id="cp-web" name="websiteUrl" type="url" maxlength="300" inputmode="url" placeholder="https://" />
+          <p class="cp-error" data-error="websiteUrl"></p>
+        </div>
+        <div class="cp-q">
+          <label for="cp-other" class="cp-label">其他連結</label>
+          <p class="cp-hint">預約頁面、粉絲專頁、Podcast 等。</p>
+          <input id="cp-other" name="otherUrl" type="url" maxlength="300" inputmode="url" placeholder="https://" />
+          <p class="cp-error" data-error="otherUrl"></p>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="cp-q cp-consent">
+      <label class="cp-check">
+        <input type="checkbox" name="consent" value="yes" />
+        <span>
+          我是台灣性諮商學會合格性諮商師，同意學會將上述<strong>姓名、專業身分、服務機構、工作地區、專長、服務對象、簡介與連結</strong>
+          公開在官網的性諮商師名單中（Email 與證書字號不公開）。日後可以來信要求修改或下架。 <span class="req">*</span>
+        </span>
+      </label>
+      <p class="cp-error" data-error="consent"></p>
+    </div>
+
+    <button type="submit" class="btn btn-primary cp-submit" data-submit>送出資料</button>
+  </form>
+</div>
+
+<style>
+  .cp-card {
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 32px 28px;
+  }
+
+  @media (max-width: 640px) {
+    .cp-card {
+      padding: 22px 16px;
+    }
+  }
+
+  .cp-card [hidden] {
+    display: none !important;
+  }
+
+  .cp-intro {
+    font-size: 0.92rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+    margin-bottom: 22px;
+  }
+
+  .cp-intro p {
+    margin: 0 0 8px;
+  }
+
+  .cp-intro strong {
+    color: var(--ink);
+  }
+
+  .req {
+    color: var(--red-deep);
+  }
+
+  .cp-section {
+    border: none;
+    margin: 0 0 18px;
+    padding: 22px 20px;
+    background: var(--card);
+    border-radius: 14px;
+    min-width: 0;
+  }
+
+  @media (max-width: 640px) {
+    .cp-section {
+      padding: 18px 14px;
+    }
+  }
+
+  .cp-section legend {
+    float: left;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--ink);
+    padding: 0;
+    margin-bottom: 10px;
+  }
+
+  .cp-section legend + * {
+    clear: both;
+  }
+
+  .cp-step {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--blue-deep);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+  }
+
+  .cp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 18px;
+  }
+
+  @media (max-width: 640px) {
+    .cp-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .cp-span {
+    grid-column: 1 / -1;
+  }
+
+  .cp-q {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+    min-width: 0;
+  }
+
+  .cp-label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .cp-hint {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    margin: -2px 0 4px;
+    line-height: 1.7;
+  }
+
+  .cp-counter {
+    display: inline-block;
+    margin-left: 8px;
+    font-weight: 700;
+    color: var(--blue-deep);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cp-counter.is-full {
+    color: var(--red-deep);
+  }
+
+  .cp-q input[type="text"],
+  .cp-q input[type="email"],
+  .cp-q input[type="url"],
+  .cp-q textarea {
+    font: inherit;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+
+  .cp-q input:focus,
+  .cp-q textarea:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+
+  .cp-q .is-invalid {
+    border-color: var(--red-deep);
+  }
+
+  /* ---- 可點選的標籤 ---- */
+  .cp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cp-chip {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .cp-chip input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .cp-chip span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 14px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+
+  .cp-chip span::before {
+    content: "＋";
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+  }
+
+  .cp-chip:hover span {
+    border-color: var(--blue);
+  }
+
+  .cp-chip input:checked + span {
+    background: var(--blue-deep);
+    border-color: var(--blue-deep);
+    color: #fff;
+  }
+
+  .cp-chip input:checked + span::before {
+    content: "✓";
+    color: #fff;
+  }
+
+  .cp-chip input:focus-visible + span {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+
+  .cp-chip input:disabled + span {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .cp-chip-online input:checked + span {
+    background: var(--green-deep);
+    border-color: var(--green-deep);
+  }
+
+  .cp-regions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cp-region-group {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+
+  @media (max-width: 520px) {
+    .cp-region-group {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+  }
+
+  .cp-group-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink-faint);
+    padding-top: 8px;
+  }
+
+  @media (max-width: 520px) {
+    .cp-group-name {
+      padding-top: 0;
+    }
+  }
+
+  .cp-templates {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .cp-tpl {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg);
+  }
+
+  .cp-tpl summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .cp-tpl summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .cp-tpl summary::after {
+    content: "▾";
+    margin-left: auto;
+    color: var(--ink-faint);
+    transition: transform 0.2s;
+  }
+
+  .cp-tpl[open] summary::after {
+    transform: rotate(180deg);
+  }
+
+  .cp-tpl-n {
+    font-size: 0.72rem;
+    color: #fff;
+    background: var(--blue-deep);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+
+  .cp-tpl-n:empty {
+    display: none;
+  }
+
+  .cp-tpl .cp-chips {
+    padding: 0 14px 14px;
+  }
+
+  .cp-tpl .cp-chip span {
+    background: var(--card);
+  }
+
+  .cp-custom-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .cp-add {
+    flex: none;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    background: var(--card);
+    border: 1px solid var(--blue);
+    border-radius: 8px;
+    padding: 0 16px;
+    cursor: pointer;
+  }
+
+  .cp-add:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .cp-custom-list {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cp-custom-list li {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.86rem;
+    color: #fff;
+    background: var(--magenta-deep);
+    border-radius: 999px;
+    padding: 5px 6px 5px 14px;
+  }
+
+  .cp-custom-list button {
+    font: inherit;
+    font-size: 0.85rem;
+    line-height: 1;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+    border: none;
+    border-radius: 999px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+  }
+
+  .cp-consent {
+    margin: 4px 0 20px;
+  }
+
+  .cp-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+
+  .cp-check input {
+    margin-top: 0.4em;
+    flex: none;
+    accent-color: var(--blue-deep);
+    width: 16px;
+    height: 16px;
+  }
+
+  .cp-check strong {
+    color: var(--ink);
+  }
+
+  .cp-error {
+    font-size: 0.8rem;
+    color: var(--red-deep);
+    margin: 0;
+  }
+
+  .cp-error:empty {
+    display: none;
+  }
+
+  .cp-hp {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+  }
+
+  .cp-submit {
+    width: 100%;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+  }
+
+  .cp-submit:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .cp-status {
+    font-size: 0.88rem;
+    border-radius: 10px;
+    margin: 0 0 18px;
+  }
+
+  .cp-status:empty {
+    display: none;
+  }
+
+  .cp-status.is-error {
+    color: var(--red-deep);
+    background: color-mix(in srgb, var(--red) 10%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--red) 30%, var(--line));
+    padding: 14px 16px;
+  }
+
+  .cp-state {
+    font-size: 0.92rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+
+  .cp-state p {
+    margin: 0 0 6px;
+  }
+
+  .cp-state-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--green-deep);
+  }
+
+  .cp-link-btn {
+    margin-top: 6px;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--blue-deep);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  type Fields = Record<string, string[] | undefined>;
+
+  function initProfileForm(card: HTMLElement) {
+    const api = `${card.dataset.origin}/api/counselor-profiles`;
+    const maxSpec = Number(card.dataset.maxSpec);
+    const maxAud = Number(card.dataset.maxAud);
+
+    const form = card.querySelector<HTMLFormElement>("[data-form]")!;
+    const done = card.querySelector<HTMLElement>("[data-done]")!;
+    const statusBox = card.querySelector<HTMLElement>("[data-status]")!;
+    const submitBtn = card.querySelector<HTMLButtonElement>("[data-submit]")!;
+    const specCounter = card.querySelector<HTMLElement>("[data-spec-counter]")!;
+    const introCounter = card.querySelector<HTMLElement>("[data-intro-counter]")!;
+    const intro = form.querySelector<HTMLTextAreaElement>('textarea[name="intro"]')!;
+    const customInput = card.querySelector<HTMLInputElement>("[data-custom-input]")!;
+    const customAdd = card.querySelector<HTMLButtonElement>("[data-custom-add]")!;
+    const customList = card.querySelector<HTMLElement>("[data-custom-list]")!;
+
+    const specBoxes = () => Array.from(form.querySelectorAll<HTMLInputElement>('input[name="specialties"]'));
+    const audBoxes = () => Array.from(form.querySelectorAll<HTMLInputElement>('input[name="audiences"]'));
+    let custom: string[] = [];
+
+    function selectedSpecialties(): string[] {
+      return [...specBoxes().filter((b) => b.checked).map((b) => b.value), ...custom];
+    }
+
+    /** 達到上限時，沒勾的範本與「加入」按鈕先停用，免得送出才被擋。 */
+    function syncLimits() {
+      const n = selectedSpecialties().length;
+      specCounter.textContent = `已選 ${n} / ${maxSpec}`;
+      specCounter.classList.toggle("is-full", n >= maxSpec);
+      for (const box of specBoxes()) box.disabled = !box.checked && n >= maxSpec;
+      customAdd.disabled = n >= maxSpec;
+
+      const a = audBoxes().filter((b) => b.checked).length;
+      for (const box of audBoxes()) box.disabled = !box.checked && a >= maxAud;
+
+      card.querySelectorAll<HTMLDetailsElement>(".cp-tpl").forEach((d) => {
+        const count = d.querySelectorAll('input[name="specialties"]:checked').length;
+        d.querySelector("[data-group-count]")!.textContent = count > 0 ? String(count) : "";
+      });
+    }
+
+    function renderCustom() {
+      customList.replaceChildren(
+        ...custom.map((text) => {
+          const li = document.createElement("li");
+          li.append(text);
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.textContent = "×";
+          remove.setAttribute("aria-label", `移除「${text}」`);
+          remove.addEventListener("click", () => {
+            custom = custom.filter((t) => t !== text);
+            renderCustom();
+            syncLimits();
+          });
+          li.append(remove);
+          return li;
+        }),
+      );
+    }
+
+    function addCustom() {
+      // 一次貼好幾項也可以：用頓號、逗號或換行分開
+      const items = customInput.value
+        .split(/[、，,;；\n]/)
+        .map((s) => s.trim().slice(0, 30))
+        .filter(Boolean);
+      const existing = new Set(selectedSpecialties());
+      for (const item of items) {
+        if (existing.has(item) || selectedSpecialties().length >= maxSpec) continue;
+        // 跟範本同名的，直接勾範本就好
+        const tpl = specBoxes().find((b) => b.value === item);
+        if (tpl) tpl.checked = true;
+        else custom.push(item);
+        existing.add(item);
+      }
+      customInput.value = "";
+      renderCustom();
+      syncLimits();
+    }
+
+    customAdd.addEventListener("click", addCustom);
+    customInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.isComposing) {
+        e.preventDefault();
+        addCustom();
+      }
+    });
+    form.addEventListener("change", syncLimits);
+    intro.addEventListener("input", () => {
+      introCounter.textContent = `${intro.value.length} / 300`;
+    });
+
+    function clearErrors() {
+      form.querySelectorAll<HTMLElement>("[data-error]").forEach((el) => (el.textContent = ""));
+      form.querySelectorAll<HTMLElement>(".is-invalid").forEach((el) => el.classList.remove("is-invalid"));
+    }
+
+    function showFieldErrors(fieldErrors: Fields) {
+      let first: HTMLElement | null = null;
+      for (const [key, messages] of Object.entries(fieldErrors)) {
+        const target = form.querySelector<HTMLElement>(`[data-error="${key}"]`);
+        if (target) {
+          target.textContent = messages?.[0] ?? "";
+          first ??= target;
+        }
+        form.querySelector<HTMLElement>(`input[name="${key}"]:not([type="checkbox"]), textarea[name="${key}"]`)?.classList.add("is-invalid");
+      }
+      (first?.closest(".cp-q, .cp-section") ?? first)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function setError(message: string) {
+      statusBox.textContent = message;
+      statusBox.classList.toggle("is-error", message !== "");
+    }
+
+    const val = (name: string) => String(new FormData(form).get(name) ?? "").trim();
+
+    function localCheck(): Fields {
+      const errors: Fields = {};
+      if (val("name").length < 2) errors.name = ["請填寫姓名（需與合格名單上的姓名相同）。"];
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val("email"))) errors.email = ["請填寫正確的 Email，秘書處會用它通知你審核結果。"];
+      if (new FormData(form).getAll("regions").length === 0) errors.regions = ["請至少勾選一個工作地區。"];
+      if (selectedSpecialties().length === 0) errors.specialties = ["請至少選擇或填寫一項專長。"];
+      if (new FormData(form).get("consent") !== "yes") errors.consent = ["請勾選同意，我們才能把資料公開在官網上。"];
+      return errors;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearErrors();
+      setError("");
+
+      // 自填欄裡打了字但還沒按「加入」，就幫忙加進去
+      if (customInput.value.trim()) addCustom();
+
+      const errors = localCheck();
+      if (Object.keys(errors).length > 0) {
+        setError("還有幾項沒有完成，請看標示紅色的地方。");
+        showFieldErrors(errors);
+        return;
+      }
+
+      const data = new FormData(form);
+      const payload = {
+        name: val("name"),
+        email: val("email"),
+        certNumber: val("certNumber"),
+        title: val("title"),
+        organization: val("organization"),
+        regions: data.getAll("regions").map(String),
+        specialties: selectedSpecialties(),
+        audiences: data.getAll("audiences").map(String),
+        intro: val("intro"),
+        websiteUrl: val("websiteUrl"),
+        otherUrl: val("otherUrl"),
+        consent: data.get("consent"),
+        hp_check: data.get("hp_check"),
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "送出中…";
+
+      try {
+        const res = await fetch(api, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json().catch(() => ({}));
+
+        if (result.ok) {
+          form.reset();
+          custom = [];
+          renderCustom();
+          syncLimits();
+          introCounter.textContent = "0 / 300";
+          form.hidden = true;
+          done.hidden = false;
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          setError(result.message || "送出時發生問題，請稍後再試，或來信 tasc.tw@gmail.com。");
+          if (result.fieldErrors) showFieldErrors(result.fieldErrors);
+          else statusBox.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      } catch {
+        setError("網路連線出了問題，請確認網路狀況後再試一次。你填的內容還在，不會不見。");
+        statusBox.scrollIntoView({ behavior: "smooth", block: "center" });
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "送出資料";
+      }
+    });
+
+    card.querySelector("[data-again]")?.addEventListener("click", () => {
+      done.hidden = true;
+      form.hidden = false;
+    });
+
+    syncLimits();
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-cp]").forEach(initProfileForm);
+</script>

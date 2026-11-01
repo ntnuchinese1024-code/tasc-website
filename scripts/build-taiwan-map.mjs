@@ -60,8 +60,8 @@ const mainProjection = geoMercator().fitExtent(
 
 /** 左上角的兩個離島小框。 */
 const INSETS = [
-  { id: "Z", box: [PAD, PAD, 128, 96], title: "連江縣（馬祖）" },
-  { id: "W", box: [PAD, PAD + 112, 128, 84], title: "金門縣" },
+  { id: "Z", box: [PAD, PAD, 168, 120], title: "連江縣（馬祖）" },
+  { id: "W", box: [PAD, PAD + 136, 168, 112], title: "金門縣" },
 ];
 
 const out = { width: WIDTH, height: HEIGHT, outline: "", insets: [], counties: [] };
@@ -89,8 +89,8 @@ for (const inset of INSETS) {
   const [x0, y0, w, h] = inset.box;
   const projection = geoMercator().fitExtent(
     [
-      [x0 + 10, y0 + 22],
-      [x0 + w - 10, y0 + h - 8],
+      [x0 + 14, y0 + 34],
+      [x0 + w - 14, y0 + h - 12],
     ],
     f,
   );

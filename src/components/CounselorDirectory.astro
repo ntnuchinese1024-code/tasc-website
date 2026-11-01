@@ -32,6 +32,23 @@ const sorted = [...profiles].sort((a, b) => a.name.localeCompare(b.name, "zh-Han
 const countBy: Record<string, number> = {};
 for (const p of sorted) for (const r of p.regions) countBy[r] = (countBy[r] ?? 0) + 1;
 
+/** 地圖配色：每個區域一個學會標誌色（北藍、中綠、南橙、東洋紅、離島金黃）。 */
+const GROUP_CLASS: Record<string, string> = {
+  北部: "g-north",
+  中部: "g-central",
+  南部: "g-south",
+  東部: "g-east",
+  離島: "g-island",
+};
+
+const MAP_LEGEND = [
+  { label: "北部", cls: "g-north" },
+  { label: "中部", cls: "g-central" },
+  { label: "南部", cls: "g-south" },
+  { label: "東部", cls: "g-east" },
+  { label: "離島", cls: "g-island" },
+];
+
 const level = (n: number) => (n === 0 ? 0 : n === 1 ? 1 : n <= 3 ? 2 : n <= 6 ? 3 : 4);
 
 /** 專長篩選選單：範本的順序在前，自填的排後面。 */
@@ -116,8 +133,8 @@ const SHOWN_SPECIALTIES = 6;
         {/* 金門、馬祖的小框 */}
         {map.insets.map((inset) => (
           <g class="tw-inset" aria-hidden="true">
-            <rect x={inset.x} y={inset.y} width={inset.w} height={inset.h} rx="10" />
-            <text x={inset.x + 10} y={inset.y + 15} class="tw-inset-title">{inset.title}</text>
+            <rect x={inset.x} y={inset.y} width={inset.w} height={inset.h} rx="14" />
+            <text x={inset.x + 14} y={inset.y + 24} class="tw-inset-title">{inset.title}</text>
           </g>
         ))}
         <g class="tw-depth" aria-hidden="true">
@@ -134,7 +151,8 @@ const SHOWN_SPECIALTIES = 6;
             return (
               <path
                 d={c.d}
-                class={`tw-county lv-${level(n)}`}
+                class={`tw-county ${GROUP_CLASS[region?.group ?? ""] ?? "g-north"} lv-${level(n)}`}
+                data-group={GROUP_CLASS[region?.group ?? ""] ?? "g-north"}
                 data-code={c.code}
                 data-label={region?.label ?? c.code}
                 data-cx={c.cx}
@@ -179,12 +197,12 @@ const SHOWN_SPECIALTIES = 6;
     </div>
 
     <div class="cd-legend" aria-hidden="true">
-      <span class="cd-legend-label">人數</span>
-      <span class="sw lv-0"></span><span>0</span>
-      <span class="sw lv-1"></span><span>1</span>
-      <span class="sw lv-2"></span><span>2–3</span>
-      <span class="sw lv-3"></span><span>4–6</span>
-      <span class="sw lv-4"></span><span>7+</span>
+      <span class="cd-legend-regions">
+        {MAP_LEGEND.map((g) => (
+          <span class={`cd-legend-item ${g.cls}`}><span class="sw"></span>{g.label}</span>
+        ))}
+      </span>
+      <span class="cd-legend-note">顏色越深，人數越多；圓圈裡是人數</span>
     </div>
 
     <button type="button" class="cd-online" data-online aria-pressed="false">
@@ -378,151 +396,226 @@ const SHOWN_SPECIALTIES = 6;
   .cd-stage {
     position: relative;
     width: 100%;
-    max-width: 480px;
-    perspective: 1500px;
+    max-width: 500px;
+    perspective: 1600px;
+    border-radius: 28px;
     background:
-      radial-gradient(ellipse 70% 55% at 55% 52%, color-mix(in srgb, var(--blue) 9%, transparent), transparent 70%);
-    border-radius: 24px;
+      radial-gradient(ellipse 62% 48% at 58% 56%, rgba(0, 159, 232, 0.13), transparent 72%),
+      radial-gradient(ellipse 40% 30% at 22% 22%, rgba(255, 240, 0, 0.08), transparent 70%);
   }
 
   @media (max-width: 900px) {
     .cd-stage {
-      max-width: 380px;
+      max-width: 400px;
     }
   }
 
+  /* 整張圖固定往後傾斜，不隨滑鼠晃動；會動的只有被指到的那個縣市 */
   .tw-map {
     display: block;
     width: 100%;
     height: auto;
     overflow: visible;
-    transform: rotateX(28deg) rotateZ(-3deg) scale(0.98);
+    transform: rotateX(24deg) rotateZ(-3deg);
     transform-origin: 50% 60%;
-    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
-  .cd-stage:hover .tw-map,
-  .cd-stage:focus-within .tw-map {
-    transform: rotateX(22deg) rotateZ(-2deg) scale(1);
+  /* ---- 每個區域一個標誌色。--c 原色、--deep 深色、--side 抬起來時看到的側面 ---- */
+  .g-north {
+    --c: #009fe8;
+    --deep: #046492;
+    --side: #0a5d86;
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .tw-map,
-    .tw-county {
-      transition: none !important;
-    }
+  .g-central {
+    --c: #1eab39;
+    --deep: #0f7325;
+    --side: #0e5f22;
+  }
+  .g-south {
+    --c: #eb5613;
+    --deep: #a33d0f;
+    --side: #8a3510;
+  }
+  .g-east {
+    --c: #e71374;
+    --deep: #a20e53;
+    --side: #860c46;
+  }
+  .g-island {
+    --c: #f2b705;
+    --deep: #9a6f00;
+    --side: #7d5b00;
   }
 
   .tw-depth use {
-    fill: #cfc4ab;
+    fill: #d8ccb3;
   }
 
   .tw-depth use.tw-depth-bottom {
-    fill: #b3a68a;
-    filter: drop-shadow(0 10px 10px rgba(33, 27, 20, 0.22));
+    fill: #bfb08f;
+    filter: drop-shadow(0 14px 14px rgba(33, 27, 20, 0.2));
   }
 
   .tw-inset rect {
-    fill: color-mix(in srgb, var(--card) 70%, transparent);
-    stroke: var(--line);
-    stroke-dasharray: 4 3;
+    fill: rgba(255, 255, 255, 0.72);
+    stroke: color-mix(in srgb, var(--c, #f2b705) 45%, var(--line));
+    stroke-width: 1.4;
+    stroke-dasharray: 5 4;
   }
 
   .tw-inset-title {
-    font-size: 10.5px;
-    font-weight: 700;
-    fill: var(--ink-faint);
+    font-size: 15px;
+    font-weight: 800;
+    fill: #7d5b00;
+    letter-spacing: 0.04em;
   }
 
   .tw-county {
     stroke: #fffdf7;
-    stroke-width: 1.1;
+    stroke-width: 1.3;
     stroke-linejoin: round;
     cursor: pointer;
     outline: none;
     transform-box: fill-box;
-    transition: transform 0.22s ease, fill 0.25s ease, filter 0.22s ease;
+    transform-origin: 50% 100%;
+    fill: color-mix(in srgb, var(--c) 16%, #fbf8f1);
+    transition:
+      transform 0.42s cubic-bezier(0.34, 1.7, 0.5, 1),
+      fill 0.25s ease,
+      filter 0.3s ease,
+      opacity 0.25s ease;
   }
 
-  .tw-county.lv-0,
-  .sw.lv-0 {
-    fill: #ece5d4;
+  /* 有人數的縣市：越多越飽和 */
+  .tw-county.lv-1 {
+    fill: color-mix(in srgb, var(--c) 42%, #fbf8f1);
   }
-  .tw-county.lv-1,
-  .sw.lv-1 {
-    fill: #b9dff3;
+  .tw-county.lv-2 {
+    fill: color-mix(in srgb, var(--c) 60%, #fbf8f1);
   }
-  .tw-county.lv-2,
-  .sw.lv-2 {
-    fill: #74c1e9;
+  .tw-county.lv-3 {
+    fill: color-mix(in srgb, var(--c) 78%, #fbf8f1);
   }
-  .tw-county.lv-3,
-  .sw.lv-3 {
-    fill: #2a9fd8;
-  }
-  .tw-county.lv-4,
-  .sw.lv-4 {
-    fill: #0b78ac;
+  .tw-county.lv-4 {
+    fill: var(--c);
   }
 
-  .tw-county:hover,
-  .tw-county:focus-visible,
-  .tw-county.is-hover {
-    transform: translateY(-5px);
-    filter: drop-shadow(0 5px 0 #b3a68a) brightness(1.04);
+  /* 指到（還沒點）：整塊彈跳起來，下面露出側面與影子 */
+  .tw-county.is-up {
+    transform: translateY(-11px) scale(1.02);
+    fill: color-mix(in srgb, var(--c) 55%, #ffffff);
+    filter:
+      drop-shadow(0 2px 0 var(--side))
+      drop-shadow(0 3px 0 var(--side))
+      drop-shadow(0 4px 0 var(--side))
+      drop-shadow(0 12px 10px rgba(33, 27, 20, 0.28));
+  }
+
+  .tw-county.lv-3.is-up,
+  .tw-county.lv-4.is-up {
+    fill: color-mix(in srgb, var(--c) 92%, #ffffff);
   }
 
   .tw-county:focus-visible {
     stroke: var(--ink);
-    stroke-width: 1.6;
+    stroke-width: 2;
   }
 
+  /* 點選後：維持抬起，換成深色 */
   .tw-county.is-selected {
-    fill: var(--orange);
-    transform: translateY(-8px);
-    filter: drop-shadow(0 8px 0 var(--orange-deep));
+    fill: var(--deep);
+    transform: translateY(-11px) scale(1.02);
+    filter:
+      drop-shadow(0 2px 0 var(--side))
+      drop-shadow(0 3px 0 var(--side))
+      drop-shadow(0 4px 0 var(--side))
+      drop-shadow(0 12px 10px rgba(33, 27, 20, 0.3));
   }
 
-  .tw-map.has-selection .tw-county:not(.is-selected) {
-    opacity: 0.72;
+  .tw-map.has-selection .tw-county:not(.is-selected):not(.is-up) {
+    opacity: 0.55;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tw-county,
+    .tw-label,
+    .tw-badge {
+      transition: none !important;
+    }
   }
 
   .tw-label {
-    font-size: 11.5px;
-    font-weight: 700;
-    fill: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 800;
+    fill: #4a3f33;
     text-anchor: middle;
     dominant-baseline: middle;
     pointer-events: none;
     paint-order: stroke;
-    stroke: rgba(255, 253, 247, 0.85);
-    stroke-width: 3px;
-    transition: opacity 0.2s;
+    stroke: rgba(255, 253, 247, 0.9);
+    stroke-width: 3.5px;
+    stroke-linejoin: round;
+    transition:
+      transform 0.42s cubic-bezier(0.34, 1.7, 0.5, 1),
+      opacity 0.2s;
   }
 
   .tw-label-hover {
     opacity: 0;
   }
 
-  .tw-label.is-active {
+  /* 手機上整張圖縮小了，字要放大才看得清楚 */
+  @media (max-width: 600px) {
+    .tw-label {
+      font-size: 16px;
+    }
+    .tw-inset-title {
+      font-size: 19px;
+    }
+    .tw-badge text {
+      font-size: 14px;
+    }
+  }
+
+  .tw-label.is-active,
+  .tw-label.is-up {
     opacity: 1;
-    fill: var(--ink);
+  }
+
+  .tw-label.is-up {
+    transform: translateY(-11px);
+    font-size: 14px;
+  }
+
+  .tw-label.is-active {
+    fill: #fff;
+    stroke: rgba(33, 27, 20, 0.35);
+    transform: translateY(-11px);
   }
 
   .tw-badge {
     pointer-events: none;
   }
 
+  .tw-badge > * {
+    transition: transform 0.42s cubic-bezier(0.34, 1.7, 0.5, 1);
+  }
+
+  .tw-badge.is-up > * {
+    transform: translateY(-11px);
+  }
+
   .tw-badge circle {
-    fill: var(--card);
-    stroke: var(--blue-deep);
-    stroke-width: 1.5;
+    fill: #fff;
+    stroke: var(--ink);
+    stroke-width: 1.6;
+    filter: drop-shadow(0 2px 2px rgba(33, 27, 20, 0.2));
   }
 
   .tw-badge text {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
-    fill: var(--blue-deep);
+    fill: var(--ink);
     text-anchor: middle;
     font-variant-numeric: tabular-nums;
   }
@@ -530,14 +623,14 @@ const SHOWN_SPECIALTIES = 6;
   .cd-tip {
     position: absolute;
     z-index: 3;
-    transform: translate(-50%, calc(-100% - 12px));
+    transform: translate(-50%, calc(-100% - 16px));
     background: var(--ink);
     color: #fff;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 700;
     line-height: 1.4;
-    padding: 6px 10px;
-    border-radius: 8px;
+    padding: 7px 12px;
+    border-radius: 10px;
     white-space: nowrap;
     pointer-events: none;
     box-shadow: var(--shadow);
@@ -551,26 +644,34 @@ const SHOWN_SPECIALTIES = 6;
 
   .cd-legend {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-    font-size: 0.72rem;
+    gap: 4px;
+    font-size: 0.75rem;
     color: var(--ink-faint);
   }
 
-  .cd-legend-label {
+  .cd-legend-regions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 14px;
+    color: var(--ink-soft);
     font-weight: 700;
-    margin-right: 2px;
+  }
+
+  .cd-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
 
   .sw {
-    width: 14px;
+    width: 22px;
     height: 10px;
-    border-radius: 3px;
+    border-radius: 999px;
     display: inline-block;
-    margin-left: 6px;
-    outline: 1px solid rgba(33, 27, 20, 0.08);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--c) 16%, #fbf8f1), var(--c));
   }
 
   .cd-online {
@@ -1118,7 +1219,14 @@ const SHOWN_SPECIALTIES = 6;
       for (const path of counties) {
         const code = path.dataset.code!;
         const n = counts[code] ?? 0;
-        path.setAttribute("class", `tw-county lv-${level(n)}${state.region === code ? " is-selected" : ""}`);
+        const selected = state.region === code;
+        const up = path.classList.contains("is-up");
+        path.setAttribute(
+          "class",
+          `tw-county ${path.dataset.group} lv-${level(n)}${selected ? " is-selected" : ""}${up ? " is-up" : ""}`,
+        );
+        // 選到的縣市畫在最上層，抬起來時不會被鄰居蓋住
+        if (selected) bringToFront(path);
         path.setAttribute("aria-pressed", String(state.region === code));
         path.setAttribute("aria-label", `${path.dataset.label}，${n} 位性諮商師`);
         const badge = root.querySelector<SVGGElement>(`[data-badge-for="${code}"]`);
@@ -1161,6 +1269,17 @@ const SHOWN_SPECIALTIES = 6;
       }
 
       writeUrl();
+    }
+
+    function bringToFront(path: SVGPathElement) {
+      if (path.parentNode && path.parentNode.lastElementChild !== path) path.parentNode.appendChild(path);
+    }
+
+    /** 縣市、它的名稱、人數圓圈一起抬起或放下。 */
+    function lift(code: string, up: boolean) {
+      root.querySelector(`.tw-county[data-code="${code}"]`)?.classList.toggle("is-up", up);
+      root.querySelector(`[data-label-for="${code}"]`)?.classList.toggle("is-up", up);
+      root.querySelector(`[data-badge-for="${code}"]`)?.classList.toggle("is-up", up);
     }
 
     function setRegion(code: string) {
@@ -1223,7 +1342,6 @@ const SHOWN_SPECIALTIES = 6;
       tip.style.left = `${x}px`;
       tip.style.top = `${y}px`;
       tip.hidden = false;
-      root.querySelector(`[data-label-for="${path.dataset.code}"]`)?.classList.add("is-active");
     }
 
     /** 手機上地圖跟清單是上下排的，點了縣市要帶到結果那裡，不然看不出有變化。 */
@@ -1235,20 +1353,42 @@ const SHOWN_SPECIALTIES = 6;
       }
     }
 
-    function hideTip(path: SVGPathElement) {
+    function hideTip() {
       tip.hidden = true;
-      if (state.region !== path.dataset.code) {
-        root.querySelector(`[data-label-for="${path.dataset.code}"]`)?.classList.remove("is-active");
-      }
+    }
+
+    /**
+     * 指到就跳起來：先把它移到最上層（不然會被南邊的鄰居蓋住），
+     * 下一個畫面再加上 is-up，彈跳的過場才會播出來。
+     */
+    function hoverOn(path: SVGPathElement) {
+      bringToFront(path);
+      requestAnimationFrame(() => lift(path.dataset.code!, true));
+    }
+
+    function hoverOff(path: SVGPathElement) {
+      lift(path.dataset.code!, false);
     }
 
     for (const path of counties) {
-      // 把滑過的縣市移到最上層，抬起來時才不會被南邊的鄰居蓋住
-      path.addEventListener("pointerenter", () => path.parentNode?.appendChild(path));
-      path.addEventListener("pointermove", (e) => showTip(path, e.clientX, e.clientY));
-      path.addEventListener("pointerleave", () => hideTip(path));
-      path.addEventListener("focus", () => showTip(path));
-      path.addEventListener("blur", () => hideTip(path));
+      path.addEventListener("pointerenter", (e) => {
+        if (e.pointerType === "mouse" || e.pointerType === "pen") hoverOn(path);
+      });
+      path.addEventListener("pointermove", (e) => {
+        if (e.pointerType === "mouse" || e.pointerType === "pen") showTip(path, e.clientX, e.clientY);
+      });
+      path.addEventListener("pointerleave", () => {
+        hoverOff(path);
+        hideTip();
+      });
+      path.addEventListener("focus", () => {
+        hoverOn(path);
+        showTip(path);
+      });
+      path.addEventListener("blur", () => {
+        hoverOff(path);
+        hideTip();
+      });
       path.addEventListener("click", () => pickFromMap(path.dataset.code!));
       path.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {

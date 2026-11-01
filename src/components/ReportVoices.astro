@@ -11,9 +11,11 @@
 interface Props {
   title?: string;
   voices: { text: string; who?: string }[];
+  /** 問卷統計，可以不傳 */
+  stats?: { label: string; value: string }[];
 }
 
-const { title = "夥伴們的回饋", voices } = Astro.props;
+const { title = "夥伴們的回饋", voices, stats = [] } = Astro.props;
 
 // 跟重點整理圖卡同一組標誌色；bg 是泡泡的淡底色
 const palette = [
@@ -30,7 +32,18 @@ const icons = ["drop", "heart", "star", "flower", "cloud", "leaf"] as const;
 
 <section class="voices" aria-label={title}>
   <p class="voices-title">{title}</p>
-  <p class="voices-note">以下摘自參加夥伴的匿名回饋，皆經填答者同意引用。</p>
+  <p class="voices-note">以下摘自參加夥伴的匿名回饋，皆經填答者同意引用{stats.length > 0 && "；評分為 5 分制"}。</p>
+
+  {stats.length > 0 && (
+    <dl class="voices-stats" title="評分皆為 1–5 分">
+      {stats.map((s) => (
+        <div>
+          <dt>{s.label}</dt>
+          <dd>{s.value}</dd>
+        </div>
+      ))}
+    </dl>
+  )}
 
   <ul class="voices-list">
     {voices.map((voice, i) => {
@@ -69,7 +82,9 @@ const icons = ["drop", "heart", "star", "flower", "cloud", "leaf"] as const;
 
 <style>
   .voices {
-    margin: 40px 0 8px;
+    margin: 48px 0 8px;
+    padding-top: 36px;
+    border-top: 1px dashed var(--line);
   }
 
   .voices-title {
@@ -96,6 +111,39 @@ const icons = ["drop", "heart", "star", "flower", "cloud", "leaf"] as const;
     font-size: 0.82rem !important;
     color: var(--ink-faint) !important;
     margin: 0 0 22px !important;
+  }
+
+  .voices-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    grid-auto-flow: column;
+    gap: 10px;
+    margin: 0 0 26px;
+  }
+
+  .voices-stats div {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    padding: 14px 8px 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+
+  .voices-stats dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--accent-text);
+  }
+
+  .voices-stats dt {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
   }
 
   .voices-list {

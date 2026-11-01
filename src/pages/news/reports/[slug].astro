@@ -20,7 +20,7 @@ export async function getStaticPaths() {
 
 const {
   slug, source, title, date, speaker, writer, tags, color, colorText, lead,
-  poster, images = [], sections = [], keyPoints, voices, bodyHtml,
+  poster, posterWide, guide, images = [], sections = [], keyPoints, voices, voiceStats, bodyHtml,
 } = Astro.props;
 
 // 第一張圖放文章開頭當主視覺，其餘（少數報導有兩張）擺在文末
@@ -32,11 +32,18 @@ const [cover, ...moreImages] = poster ? [poster, ...images] : images;
   eyebrow="課程報導"
   eyebrowHref="/news/reports"
   date={date}
-  meta={speaker ? [`講師 ${speaker}`] : []}
+  meta={[
+    ...(speaker ? [`講師 ${speaker}`] : []),
+    ...(guide ? [`導覽 ${guide}`] : []),
+  ]}
   accent={color}
   accentText={colorText}
 >
-  {cover && <CoursePoster src={cover} alt={`${title} 課程海報`} />}
+  {cover && (
+    <div class:list={["report-cover", { wide: posterWide }]}>
+      <CoursePoster src={cover} alt={`${title} ${posterWide ? "活動主視覺" : "課程海報"}`} variant={posterWide ? "natural" : "full"} linkToFull />
+    </div>
+  )}
 
   <p class="lead-para">{lead}</p>
   {writer && <p class="byline">撰文・{writer}</p>}
@@ -47,15 +54,16 @@ const [cover, ...moreImages] = poster ? [poster, ...images] : images;
   {bodyHtml ? (
     <div class="report-body" set:html={bodyHtml} />
   ) : (
-    sections.map((s: { heading?: string; paragraphs: string[] }) => (
+    sections.map((s: { heading?: string; paragraphs: string[]; quote?: string }) => (
       <>
-        {s.heading && <h2>{s.heading}</h2>}
+        {s.heading && <h2 class="section-heading">{s.heading}</h2>}
         {s.paragraphs.map((p: string) => <p>{p}</p>)}
+        {s.quote && <blockquote class="pull-quote"><p>{s.quote}</p></blockquote>}
       </>
     ))
   )}
 
-  {voices && voices.length > 0 && <ReportVoices voices={voices} />}
+  {voices && voices.length > 0 && <ReportVoices voices={voices} stats={voiceStats} />}
 
   {moreImages.map((src: string) => (
     <CoursePoster src={src} alt={`${title} 活動照片`} />
@@ -99,6 +107,77 @@ const [cover, ...moreImages] = poster ? [poster, ...images] : images;
 
   .report-body :global(a) {
     color: var(--accent-text);
+  }
+
+  /* 橫式封面：撐滿欄寬、圓角加陰影，像一張活動明信片 */
+  .report-cover.wide {
+    margin: 0 0 32px;
+  }
+
+  .report-cover.wide :global(.poster-frame) {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .report-cover.wide :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* 小標前面一小段主色條，讓長文有段落節奏 */
+  .section-heading::before {
+    content: "";
+    display: inline-block;
+    width: 18px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+    vertical-align: 0.32em;
+    margin-right: 10px;
+  }
+
+  /* 金句：大字、置中、上下各一個引號，不用左邊直線（那是一般引言的樣式） */
+  .pull-quote {
+    position: relative;
+    margin: 32px 0 36px;
+    padding: 30px 24px 26px;
+    text-align: center;
+    background: color-mix(in srgb, var(--accent) 7%, var(--card));
+    border-radius: 16px;
+  }
+
+  .pull-quote::before {
+    content: "“";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-size: 4rem;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .pull-quote p {
+    margin: 0 !important;
+    font-family: var(--font-display);
+    font-size: 1.28rem !important;
+    font-weight: 700;
+    line-height: 1.7 !important;
+    color: var(--accent-text) !important;
+    letter-spacing: 0.03em;
+  }
+
+  @media (max-width: 560px) {
+    .pull-quote {
+      padding: 28px 18px 22px;
+    }
+
+    .pull-quote p {
+      font-size: 1.1rem !important;
+    }
   }
 
   .lead-para {

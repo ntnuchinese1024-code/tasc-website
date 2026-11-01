@@ -7,7 +7,7 @@
  * 秘書處在報名系統後台「性諮商師」頁確認姓名在合格名單內、按通過後，官網重新建置，
  * 名單頁的地圖與搜尋就找得到。
  *
- * 專長：範本（可複選的標籤）＋自由填寫，合計最多 MAX_SPECIALTIES 項。
+ * 專長、服務對象：範本（可複選的標籤）＋自由填寫，各有合計上限（MAX_SPECIALTIES、MAX_AUDIENCES）。
  */
 import { REGISTRATION_ORIGIN } from "../lib/registration-api";
 import {
@@ -126,7 +126,7 @@ import {
       <legend><span class="cp-step">3</span>專長議題 <span class="req">*</span></legend>
       <p class="cp-hint">
         從範本點選，或在下方自由填寫，合計最多 {MAX_SPECIALTIES} 項。民眾可以用專長篩選，建議挑最主要、最有把握的幾項。
-        <span class="cp-counter" data-spec-counter>已選 0 / {MAX_SPECIALTIES}</span>
+        <span class="cp-counter" data-counter="specialties">已選 0 / {MAX_SPECIALTIES}</span>
       </p>
 
       <div class="cp-templates">
@@ -148,7 +148,7 @@ import {
         ))}
       </div>
 
-      <div class="cp-q cp-custom">
+      <div class="cp-q cp-custom" data-custom="specialties">
         <label for="cp-spec-custom" class="cp-label">其他專長（自由填寫）</label>
         <p class="cp-hint">範本沒有的，打完一項按 Enter 或「加入」；每項 30 字以內。</p>
         <div class="cp-custom-row">
@@ -163,7 +163,10 @@ import {
     {/* ---- 4. 服務對象 ---- */}
     <fieldset class="cp-section">
       <legend><span class="cp-step">4</span>服務對象</legend>
-      <p class="cp-hint">可複選，最多 {MAX_AUDIENCES} 項。</p>
+      <p class="cp-hint">
+        從範本點選，或在下方自由填寫，合計最多 {MAX_AUDIENCES} 項。
+        <span class="cp-counter" data-counter="audiences">已選 0 / {MAX_AUDIENCES}</span>
+      </p>
       <div class="cp-chips">
         {AUDIENCE_TEMPLATES.map((a) => (
           <label class="cp-chip">
@@ -171,6 +174,15 @@ import {
             <span>{a}</span>
           </label>
         ))}
+      </div>
+
+      <div class="cp-q cp-custom cp-custom-aud" data-custom="audiences">
+        <label for="cp-aud-custom" class="cp-label">其他服務對象（自由填寫）</label>
+        <div class="cp-custom-row">
+          <input id="cp-aud-custom" type="text" maxlength="30" data-custom-input placeholder="例如：新住民、軍警消、醫療人員" />
+          <button type="button" class="cp-add" data-custom-add>加入</button>
+        </div>
+        <ul class="cp-custom-list" data-custom-list aria-label="自填的服務對象"></ul>
       </div>
       <p class="cp-error" data-error="audiences"></p>
     </fieldset>
@@ -537,6 +549,10 @@ import {
     background: var(--card);
   }
 
+  .cp-custom-aud {
+    margin-top: 16px;
+  }
+
   .cp-custom-row {
     display: flex;
     gap: 8px;
@@ -569,7 +585,8 @@ import {
     gap: 8px;
   }
 
-  .cp-custom-list li {
+  /* li 與按鈕是 JS 產生的，拿不到 Astro 的 scoped 屬性，要用 :global */
+  .cp-custom-list :global(li) {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -580,7 +597,7 @@ import {
     padding: 5px 6px 5px 14px;
   }
 
-  .cp-custom-list button {
+  .cp-custom-list :global(button) {
     font: inherit;
     font-size: 0.85rem;
     line-height: 1;
@@ -712,85 +729,105 @@ import {
     const done = card.querySelector<HTMLElement>("[data-done]")!;
     const statusBox = card.querySelector<HTMLElement>("[data-status]")!;
     const submitBtn = card.querySelector<HTMLButtonElement>("[data-submit]")!;
-    const specCounter = card.querySelector<HTMLElement>("[data-spec-counter]")!;
     const introCounter = card.querySelector<HTMLElement>("[data-intro-counter]")!;
     const intro = form.querySelector<HTMLTextAreaElement>('textarea[name="intro"]')!;
-    const customInput = card.querySelector<HTMLInputElement>("[data-custom-input]")!;
-    const customAdd = card.querySelector<HTMLButtonElement>("[data-custom-add]")!;
-    const customList = card.querySelector<HTMLElement>("[data-custom-list]")!;
 
-    const specBoxes = () => Array.from(form.querySelectorAll<HTMLInputElement>('input[name="specialties"]'));
-    const audBoxes = () => Array.from(form.querySelectorAll<HTMLInputElement>('input[name="audiences"]'));
-    let custom: string[] = [];
+    /**
+     * 「範本勾選＋自由填寫」的標籤組。專長與服務對象各一組，合計上限分開算。
+     */
+    function makeTagGroup(name: "specialties" | "audiences", max: number) {
+      const boxes = () => Array.from(form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`));
+      const block = card.querySelector<HTMLElement>(`[data-custom="${name}"]`)!;
+      const input = block.querySelector<HTMLInputElement>("[data-custom-input]")!;
+      const addBtn = block.querySelector<HTMLButtonElement>("[data-custom-add]")!;
+      const list = block.querySelector<HTMLElement>("[data-custom-list]")!;
+      const counter = card.querySelector<HTMLElement>(`[data-counter="${name}"]`)!;
+      let custom: string[] = [];
 
-    function selectedSpecialties(): string[] {
-      return [...specBoxes().filter((b) => b.checked).map((b) => b.value), ...custom];
+      const selected = () => [...boxes().filter((b) => b.checked).map((b) => b.value), ...custom];
+
+      /** 達到上限時，沒勾的範本與「加入」按鈕先停用，免得送出才被擋。 */
+      function sync() {
+        const n = selected().length;
+        counter.textContent = `已選 ${n} / ${max}`;
+        counter.classList.toggle("is-full", n >= max);
+        for (const box of boxes()) box.disabled = !box.checked && n >= max;
+        addBtn.disabled = n >= max;
+      }
+
+      function render() {
+        list.replaceChildren(
+          ...custom.map((text) => {
+            const li = document.createElement("li");
+            li.append(text);
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.textContent = "×";
+            remove.setAttribute("aria-label", `移除「${text}」`);
+            remove.addEventListener("click", () => {
+              custom = custom.filter((t) => t !== text);
+              render();
+              sync();
+            });
+            li.append(remove);
+            return li;
+          }),
+        );
+      }
+
+      function add() {
+        // 一次貼好幾項也可以：用頓號、逗號或換行分開
+        const items = input.value
+          .split(/[、，,;；\n]/)
+          .map((v) => v.trim().slice(0, 30))
+          .filter(Boolean);
+        const existing = new Set(selected());
+        for (const item of items) {
+          if (existing.has(item) || selected().length >= max) continue;
+          // 跟範本同名的，直接勾範本就好
+          const tpl = boxes().find((b) => b.value === item);
+          if (tpl) tpl.checked = true;
+          else custom.push(item);
+          existing.add(item);
+        }
+        input.value = "";
+        render();
+        sync();
+      }
+
+      addBtn.addEventListener("click", add);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.isComposing) {
+          e.preventDefault();
+          add();
+        }
+      });
+
+      return {
+        selected,
+        sync,
+        /** 送出前：自填欄裡打了字但還沒按「加入」，就幫忙加進去 */
+        flush: () => input.value.trim() && add(),
+        reset: () => {
+          custom = [];
+          render();
+          sync();
+        },
+      };
     }
 
-    /** 達到上限時，沒勾的範本與「加入」按鈕先停用，免得送出才被擋。 */
+    const specialties = makeTagGroup("specialties", maxSpec);
+    const audiences = makeTagGroup("audiences", maxAud);
+
     function syncLimits() {
-      const n = selectedSpecialties().length;
-      specCounter.textContent = `已選 ${n} / ${maxSpec}`;
-      specCounter.classList.toggle("is-full", n >= maxSpec);
-      for (const box of specBoxes()) box.disabled = !box.checked && n >= maxSpec;
-      customAdd.disabled = n >= maxSpec;
-
-      const a = audBoxes().filter((b) => b.checked).length;
-      for (const box of audBoxes()) box.disabled = !box.checked && a >= maxAud;
-
+      specialties.sync();
+      audiences.sync();
       card.querySelectorAll<HTMLDetailsElement>(".cp-tpl").forEach((d) => {
         const count = d.querySelectorAll('input[name="specialties"]:checked').length;
         d.querySelector("[data-group-count]")!.textContent = count > 0 ? String(count) : "";
       });
     }
 
-    function renderCustom() {
-      customList.replaceChildren(
-        ...custom.map((text) => {
-          const li = document.createElement("li");
-          li.append(text);
-          const remove = document.createElement("button");
-          remove.type = "button";
-          remove.textContent = "×";
-          remove.setAttribute("aria-label", `移除「${text}」`);
-          remove.addEventListener("click", () => {
-            custom = custom.filter((t) => t !== text);
-            renderCustom();
-            syncLimits();
-          });
-          li.append(remove);
-          return li;
-        }),
-      );
-    }
-
-    function addCustom() {
-      // 一次貼好幾項也可以：用頓號、逗號或換行分開
-      const items = customInput.value
-        .split(/[、，,;；\n]/)
-        .map((s) => s.trim().slice(0, 30))
-        .filter(Boolean);
-      const existing = new Set(selectedSpecialties());
-      for (const item of items) {
-        if (existing.has(item) || selectedSpecialties().length >= maxSpec) continue;
-        // 跟範本同名的，直接勾範本就好
-        const tpl = specBoxes().find((b) => b.value === item);
-        if (tpl) tpl.checked = true;
-        else custom.push(item);
-        existing.add(item);
-      }
-      customInput.value = "";
-      renderCustom();
-      syncLimits();
-    }
-
-    customAdd.addEventListener("click", addCustom);
-    customInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.isComposing) {
-        e.preventDefault();
-        addCustom();
-      }
-    });
     form.addEventListener("change", syncLimits);
     intro.addEventListener("input", () => {
       introCounter.textContent = `${intro.value.length} / 300`;
@@ -826,7 +863,7 @@ import {
       if (val("name").length < 2) errors.name = ["請填寫姓名（需與合格名單上的姓名相同）。"];
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val("email"))) errors.email = ["請填寫正確的 Email，秘書處會用它通知你審核結果。"];
       if (new FormData(form).getAll("regions").length === 0) errors.regions = ["請至少勾選一個工作地區。"];
-      if (selectedSpecialties().length === 0) errors.specialties = ["請至少選擇或填寫一項專長。"];
+      if (specialties.selected().length === 0) errors.specialties = ["請至少選擇或填寫一項專長。"];
       if (new FormData(form).get("consent") !== "yes") errors.consent = ["請勾選同意，我們才能把資料公開在官網上。"];
       return errors;
     }
@@ -836,8 +873,8 @@ import {
       clearErrors();
       setError("");
 
-      // 自填欄裡打了字但還沒按「加入」，就幫忙加進去
-      if (customInput.value.trim()) addCustom();
+      specialties.flush();
+      audiences.flush();
 
       const errors = localCheck();
       if (Object.keys(errors).length > 0) {
@@ -854,8 +891,8 @@ import {
         title: val("title"),
         organization: val("organization"),
         regions: data.getAll("regions").map(String),
-        specialties: selectedSpecialties(),
-        audiences: data.getAll("audiences").map(String),
+        specialties: specialties.selected(),
+        audiences: audiences.selected(),
         intro: val("intro"),
         websiteUrl: val("websiteUrl"),
         otherUrl: val("otherUrl"),
@@ -876,8 +913,8 @@ import {
 
         if (result.ok) {
           form.reset();
-          custom = [];
-          renderCustom();
+          specialties.reset();
+          audiences.reset();
           syncLimits();
           introCounter.textContent = "0 / 300";
           form.hidden = true;

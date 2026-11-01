@@ -70,6 +70,7 @@ const searchBlob = (p: CounselorProfile) =>
     p.name,
     p.title,
     p.organization,
+    p.location_note,
     p.intro,
     ...p.specialties,
     ...p.audiences,
@@ -273,6 +274,13 @@ const SHOWN_SPECIALTIES = 6;
                     <li class={r === "online" ? "is-online" : undefined}>{REGION_BY_CODE[r]?.label ?? r}</li>
                   ))}
                 </ul>
+
+                {p.location_note && (
+                  <p class="cd-place">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15s5-4.6 5-8.5a5 5 0 0 0-10 0C3 10.4 8 15 8 15Z" /><circle cx="8" cy="6.5" r="1.8" /></svg>
+                    <span class="sr-only">執業地點：</span>{p.location_note}
+                  </p>
+                )}
 
                 {p.specialties.length > 0 && (
                   <ul class="cd-tags" aria-label="專長">
@@ -807,6 +815,26 @@ const SHOWN_SPECIALTIES = 6;
   .cd-regions li.is-online {
     color: var(--green-deep);
     background: color-mix(in srgb, var(--green) 12%, var(--card));
+  }
+
+  .cd-place {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 8px 0 0;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .cd-place svg {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin-top: 0.2em;
+    fill: none;
+    stroke: var(--orange-deep);
+    stroke-width: 1.5;
   }
 
   .cd-tags li {

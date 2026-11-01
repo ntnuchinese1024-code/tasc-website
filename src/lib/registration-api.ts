@@ -185,6 +185,8 @@ export interface CounselorProfile {
   regions: string[];
   specialties: string[];
   audiences: string[];
+  /** 執業地點說明（選填），例如「臺北市大安區，近捷運科技大樓站」。舊資料或未填時是 null。 */
+  location_note?: string | null;
   intro: string | null;
   website_url: string | null;
   other_url: string | null;

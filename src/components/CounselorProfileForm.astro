@@ -119,6 +119,16 @@ import {
         ))}
       </div>
       <p class="cp-error" data-error="regions"></p>
+
+      <div class="cp-q cp-location">
+        <label for="cp-location" class="cp-label">執業地點說明</label>
+        <p class="cp-hint">
+          選填，會顯示在你的卡片上，也搜尋得到。想寫多細由你決定：可以寫到行政區、附近的捷運站，
+          也可以只寫「地址於預約後提供」。<span class="cp-counter" data-location-counter>0 / 80</span>
+        </p>
+        <input id="cp-location" name="locationNote" type="text" maxlength="80" placeholder="例如：臺北市大安區，近捷運科技大樓站" />
+        <p class="cp-error" data-error="locationNote"></p>
+      </div>
     </fieldset>
 
     {/* ---- 3. 專長 ---- */}
@@ -489,6 +499,12 @@ import {
     }
   }
 
+  .cp-location {
+    margin: 18px 0 0;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+  }
+
   .cp-templates {
     display: flex;
     flex-direction: column;
@@ -731,6 +747,8 @@ import {
     const submitBtn = card.querySelector<HTMLButtonElement>("[data-submit]")!;
     const introCounter = card.querySelector<HTMLElement>("[data-intro-counter]")!;
     const intro = form.querySelector<HTMLTextAreaElement>('textarea[name="intro"]')!;
+    const locationInput = form.querySelector<HTMLInputElement>('input[name="locationNote"]')!;
+    const locationCounter = card.querySelector<HTMLElement>("[data-location-counter]")!;
 
     /**
      * 「範本勾選＋自由填寫」的標籤組。專長與服務對象各一組，合計上限分開算。
@@ -829,6 +847,9 @@ import {
     }
 
     form.addEventListener("change", syncLimits);
+    locationInput.addEventListener("input", () => {
+      locationCounter.textContent = `${locationInput.value.length} / 80`;
+    });
     intro.addEventListener("input", () => {
       introCounter.textContent = `${intro.value.length} / 300`;
     });
@@ -893,6 +914,7 @@ import {
         regions: data.getAll("regions").map(String),
         specialties: specialties.selected(),
         audiences: audiences.selected(),
+        locationNote: val("locationNote"),
         intro: val("intro"),
         websiteUrl: val("websiteUrl"),
         otherUrl: val("otherUrl"),
@@ -917,6 +939,7 @@ import {
           audiences.reset();
           syncLimits();
           introCounter.textContent = "0 / 300";
+          locationCounter.textContent = "0 / 80";
           form.hidden = true;
           done.hidden = false;
           card.scrollIntoView({ behavior: "smooth", block: "start" });

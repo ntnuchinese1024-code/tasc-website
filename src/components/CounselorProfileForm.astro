@@ -8,6 +8,10 @@
  * 名單頁的地圖與搜尋就找得到。
  *
  * 專長、服務對象：範本（可複選的標籤）＋自由填寫，各有合計上限（MAX_SPECIALTIES、MAX_AUDIENCES）。
+ *
+ * 專屬更新連結（/counselors/profile?edit=...）：資料通過審核時，報名系統會寄信給本人附上這個連結。
+ * 打開時表單會帶入目前的資料；送出後照常待審核，連結隨即失效（新版通過時會再寄新的）。
+ * 連結一年內有效；一年後如有異動，直接重新填寫這份表單即可。
  */
 import { REGISTRATION_ORIGIN } from "../lib/registration-api";
 import {
@@ -25,7 +29,7 @@ import {
     <p class="cp-state-title">已收到你的資料，謝謝你！</p>
     <p>
       秘書處確認後就會公開在<a href="/counselors#find">性諮商師名單</a>的地圖上，通常需要幾個工作天。
-      之後想更新內容，回到這一頁重新填寫送出即可，新的資料通過後，舊的會自動下架。
+      通過時你會收到一封信，裡面有你的<strong>專屬更新連結</strong>，之後想修改資料，打開連結就會帶入目前的內容。
     </p>
     <button type="button" class="cp-link-btn" data-again>再填一份</button>
   </div>
@@ -38,6 +42,18 @@ import {
       </p>
       <p>標示 <span class="req">*</span> 的為必填。Email 與證書字號只供秘書處聯絡、核對，不會公開。</p>
     </div>
+
+    <div class="cp-edit-banner" data-edit-banner hidden></div>
+
+    <details class="cp-howto">
+      <summary>之後想更新或下架資料，怎麼做？</summary>
+      <ul>
+        <li><strong>更新資料</strong>：資料通過審核時，你會收到一封附有<strong>專屬更新連結</strong>的信。打開連結，表單會帶入你目前的資料，改完送出即可；秘書處確認後就會換上新內容，並再寄一封附新連結的信給你。</li>
+        <li><strong>連結一年內有效</strong>：一年後如有異動，回到這一頁重新填寫一份就好，新資料通過後，舊的會自動下架。</li>
+        <li><strong>找不到信或連結失效</strong>：來信 <span class="cp-mail">tasc.tw@gmail.com</span>，秘書處可以重新寄給你，或直接幫你修改小地方（例如錯字）。</li>
+        <li><strong>想從名單上下架</strong>：來信告知即可，秘書處會協助處理。</li>
+      </ul>
+    </details>
 
     {/* 蜜罐：名稱刻意無語意，避免被密碼管理器自動填入 */}
     <div class="cp-hp" aria-hidden="true">
@@ -255,6 +271,59 @@ import {
 
   .cp-card [hidden] {
     display: none !important;
+  }
+
+  .cp-edit-banner {
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: var(--blue-deep);
+    background: color-mix(in srgb, var(--blue) 10%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--blue) 30%, var(--line));
+  }
+
+  .cp-edit-banner.is-error {
+    color: var(--red-deep);
+    background: color-mix(in srgb, var(--red) 8%, var(--card));
+    border-color: color-mix(in srgb, var(--red) 30%, var(--line));
+  }
+
+  .cp-howto {
+    margin: 0 0 22px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-size: 0.86rem;
+    line-height: 1.8;
+    color: var(--ink-soft);
+  }
+
+  .cp-howto summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .cp-howto ul {
+    margin: 0;
+    padding: 0 18px 14px 34px;
+  }
+
+  .cp-howto li {
+    margin-bottom: 6px;
+  }
+
+  .cp-howto strong {
+    color: var(--ink);
+  }
+
+  .cp-mail {
+    font-weight: 700;
+    color: var(--blue-deep);
+    user-select: all;
   }
 
   .cp-intro {
@@ -831,6 +900,17 @@ import {
           render();
           sync();
         },
+        /** 帶入舊資料：跟範本同名的勾範本，其他的放進自填 */
+        load: (values: string[]) => {
+          custom = [];
+          for (const value of values) {
+            const tpl = boxes().find((b) => b.value === value);
+            if (tpl) tpl.checked = true;
+            else custom.push(value);
+          }
+          render();
+          sync();
+        },
       };
     }
 
@@ -847,6 +927,64 @@ import {
     }
 
     form.addEventListener("change", syncLimits);
+
+    // ---- 專屬更新連結：帶入目前的資料 ----------------------------------------
+    const editBanner = card.querySelector<HTMLElement>("[data-edit-banner]")!;
+    const editToken = new URLSearchParams(location.search).get("edit") ?? "";
+    const SUBMIT_LABEL = editToken ? "送出更新" : "送出資料";
+    submitBtn.textContent = SUBMIT_LABEL;
+
+    function showBanner(text: string, isError = false) {
+      editBanner.textContent = text;
+      editBanner.classList.toggle("is-error", isError);
+      editBanner.hidden = false;
+    }
+
+    async function prefill(token: string) {
+      showBanner("正在讀取你目前的資料…");
+      try {
+        const res = await fetch(`${card.dataset.origin}/api/counselor-profiles/edit?token=${encodeURIComponent(token)}`);
+        const data = await res.json().catch(() => ({}));
+        if (!data.ok || !data.profile) {
+          showBanner(
+            "這個更新連結已經失效（可能已經用過，或超過一年）。你可以直接在下面重新填寫一份，或來信 tasc.tw@gmail.com 請秘書處重新寄給你。",
+            true,
+          );
+          return;
+        }
+        const p = data.profile;
+        const setVal = (name: string, value: string | null) => {
+          const el = form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`);
+          if (el) el.value = value ?? "";
+        };
+        setVal("name", p.name);
+        setVal("email", p.email);
+        setVal("certNumber", p.cert_number);
+        setVal("title", p.title);
+        setVal("organization", p.organization);
+        setVal("locationNote", p.location_note);
+        setVal("intro", p.intro);
+        setVal("websiteUrl", p.website_url);
+        setVal("otherUrl", p.other_url);
+        form.querySelectorAll<HTMLInputElement>('input[name="regions"]').forEach((b) => {
+          b.checked = (p.regions ?? []).includes(b.value);
+        });
+        specialties.load(p.specialties ?? []);
+        audiences.load(p.audiences ?? []);
+        locationCounter.textContent = `${locationInput.value.length} / 80`;
+        introCounter.textContent = `${intro.value.length} / 300`;
+        syncLimits();
+        // 有勾到的範本分類展開，才看得到勾了什麼
+        card.querySelectorAll<HTMLDetailsElement>(".cp-tpl").forEach((d) => {
+          if (d.querySelector('input[name="specialties"]:checked')) d.open = true;
+        });
+        showBanner(`正在更新「${p.name}」的資料：下面已經帶入你目前的內容，改完勾選同意、按「送出更新」即可。秘書處確認後就會換上新內容。`);
+      } catch {
+        showBanner("讀取資料時網路出了問題，請重新整理頁面再試一次。", true);
+      }
+    }
+
+    if (editToken) prefill(editToken);
     locationInput.addEventListener("input", () => {
       locationCounter.textContent = `${locationInput.value.length} / 80`;
     });
@@ -919,6 +1057,7 @@ import {
         websiteUrl: val("websiteUrl"),
         otherUrl: val("otherUrl"),
         consent: data.get("consent"),
+        editToken,
         hp_check: data.get("hp_check"),
       };
 
@@ -941,6 +1080,7 @@ import {
           introCounter.textContent = "0 / 300";
           locationCounter.textContent = "0 / 80";
           form.hidden = true;
+          editBanner.hidden = true;
           done.hidden = false;
           card.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
@@ -953,7 +1093,7 @@ import {
         statusBox.scrollIntoView({ behavior: "smooth", block: "center" });
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = "送出資料";
+        submitBtn.textContent = SUBMIT_LABEL;
       }
     });
 

@@ -205,11 +205,17 @@ const SHOWN_SPECIALTIES = 6;
       <span class="cd-legend-note">顏色越深，人數越多；圓圈裡是人數</span>
     </div>
 
-    <button type="button" class="cd-online" data-online aria-pressed="false">
-      <span class="cd-online-dot" aria-hidden="true"></span>
-      提供線上諮商
-      <span class="cd-online-n" data-online-count>{countBy.online ?? 0}</span>
-    </button>
+    <div class="cd-map-actions">
+      <button type="button" class="cd-online" data-online aria-pressed="false">
+        <span class="cd-online-dot" aria-hidden="true"></span>
+        提供線上諮商
+        <span class="cd-online-n" data-online-count>{countBy.online ?? 0}</span>
+      </button>
+      <button type="button" class="cd-reset" data-reset-map disabled>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 1 0 1.7-4" /><path d="M2.5 2.5v3h3" /></svg>
+        重置地圖
+      </button>
+    </div>
   </div>
 
   {/* ---- 搜尋與結果 ---------------------------------------------------- */}
@@ -672,6 +678,49 @@ const SHOWN_SPECIALTIES = 6;
     border-radius: 999px;
     display: inline-block;
     background: linear-gradient(90deg, color-mix(in srgb, var(--c) 16%, #fbf8f1), var(--c));
+  }
+
+  .cd-map-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .cd-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, opacity 0.15s;
+  }
+
+  .cd-reset svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .cd-reset:hover:not(:disabled) {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .cd-reset:disabled {
+    opacity: 0.45;
+    cursor: default;
   }
 
   .cd-online {
@@ -1152,6 +1201,7 @@ const SHOWN_SPECIALTIES = 6;
     const specSel = root.querySelector<HTMLSelectElement>("[data-specialty]")!;
     const summary = root.querySelector<HTMLElement>("[data-summary]")!;
     const clearBtn = root.querySelector<HTMLButtonElement>("[data-clear]")!;
+    const resetBtn = root.querySelector<HTMLButtonElement>("[data-reset-map]")!;
     const onlineBtn = root.querySelector<HTMLButtonElement>("[data-online]")!;
     const onlineCount = root.querySelector<HTMLElement>("[data-online-count]")!;
     const empty = root.querySelector<HTMLElement>("[data-empty]");
@@ -1247,6 +1297,7 @@ const SHOWN_SPECIALTIES = 6;
       // 文字
       const filtered = !!(state.q.trim() || state.region || state.specialty);
       clearBtn.hidden = !filtered;
+      resetBtn.disabled = !filtered;
       if (total > 0) {
         const parts: string[] = [];
         if (state.region) parts.push(LABEL[state.region]);
@@ -1275,11 +1326,25 @@ const SHOWN_SPECIALTIES = 6;
       if (path.parentNode && path.parentNode.lastElementChild !== path) path.parentNode.appendChild(path);
     }
 
-    /** 縣市、它的名稱、人數圓圈一起抬起或放下。 */
+    /**
+     * 縣市、它的名稱、人數圓圈一起抬起或放下。
+     *
+     * 同一時間只會有一個縣市是「指到」狀態：抬起新的之前，先把其他的全部放下。
+     * 不能只靠 pointerleave／blur 放下——縣市被移到最上層時，瀏覽器會默默拿掉焦點、
+     * 不發 blur，手機上點過的縣市就會一直浮著，越疊越多。
+     */
     function lift(code: string, up: boolean) {
+      if (up) dropAll(code);
       root.querySelector(`.tw-county[data-code="${code}"]`)?.classList.toggle("is-up", up);
       root.querySelector(`[data-label-for="${code}"]`)?.classList.toggle("is-up", up);
       root.querySelector(`[data-badge-for="${code}"]`)?.classList.toggle("is-up", up);
+    }
+
+    function dropAll(except = "") {
+      root.querySelectorAll<SVGElement>(".is-up").forEach((el) => {
+        const code = el.dataset.code ?? el.dataset.labelFor ?? el.dataset.badgeFor;
+        if (code !== except) el.classList.remove("is-up");
+      });
     }
 
     function setRegion(code: string) {
@@ -1306,12 +1371,16 @@ const SHOWN_SPECIALTIES = 6;
     });
     onlineBtn.addEventListener("click", () => setRegion("online"));
     suggestOnline?.addEventListener("click", () => setRegion("online"));
-    clearBtn.addEventListener("click", () => {
+    function resetAll() {
       state.q = "";
       state.region = "";
       state.specialty = "";
+      dropAll();
+      hideTip();
       apply();
-    });
+    }
+    clearBtn.addEventListener("click", resetAll);
+    resetBtn.addEventListener("click", resetAll);
 
     root.querySelectorAll<HTMLButtonElement>("[data-more]").forEach((btn) =>
       btn.addEventListener("click", () => {
@@ -1370,6 +1439,15 @@ const SHOWN_SPECIALTIES = 6;
       lift(path.dataset.code!, false);
     }
 
+    // 手機上點一下也會觸發 focus。觸控不需要「指到就跳」，點選本身就會抬起，
+    // 所以記住最近一次是用什麼點的，觸控造成的 focus 就不抬。
+    let lastPointer = "mouse";
+    svg.addEventListener("pointerdown", (e) => (lastPointer = e.pointerType));
+    svg.addEventListener("pointerleave", () => {
+      dropAll();
+      hideTip();
+    });
+
     for (const path of counties) {
       path.addEventListener("pointerenter", (e) => {
         if (e.pointerType === "mouse" || e.pointerType === "pen") hoverOn(path);
@@ -1382,6 +1460,7 @@ const SHOWN_SPECIALTIES = 6;
         hideTip();
       });
       path.addEventListener("focus", () => {
+        if (lastPointer === "touch") return;
         hoverOn(path);
         showTip(path);
       });

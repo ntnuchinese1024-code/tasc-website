@@ -4,7 +4,7 @@ import FigureRing from "../components/decor/FigureRing.astro";
 import FigureMark from "../components/decor/FigureMark.astro";
 import ArcField from "../components/decor/ArcField.astro";
 import VideoEmbed from "../components/VideoEmbed.astro";
-import PrideBanner from "../components/PrideBanner.astro";
+import ExhibitCards from "../components/ExhibitCards.astro";
 import { wrapHeadingHtml } from "../lib/wrap-heading";
 import { latestNewsletter, assetBase, formatDate } from "../data/newsletters";
 import {
@@ -90,9 +90,6 @@ const events = (await getOpenCourses())
     </div>
   </header>
 
-  {/* 10 月同志遊行月橫幅。遊行結束想撤掉，把這一行跟 PrideBanner.astro 一起刪掉就好。 */}
-  <PrideBanner />
-
   <section class="pillars">
     <div class="wrap">
       <div class="section-head">
@@ -163,6 +160,20 @@ const events = (await getOpenCourses())
           </a>
         ))}
       </div>
+    </div>
+  </section>
+
+  {/* 互動展覽：線上互動活動結束後的展間，最新的兩個。全部在 /news/exhibits，資料在 src/data/exhibits.ts */}
+  <section class="exhibits">
+    <div class="wrap">
+      <div class="section-head events-head">
+        <div>
+          <span class="eyebrow">互動展覽</span>
+          <h2>大家一起留下的祝福與作品</h2>
+        </div>
+        <a href="/news/exhibits" class="more">逛逛全部展間 →</a>
+      </div>
+      <ExhibitCards limit={2} />
     </div>
   </section>
 
@@ -406,6 +417,10 @@ const events = (await getOpenCourses())
   }
 
   /* ---- 首頁的電子報區塊 ------------------------------------------------ */
+
+  .exhibits {
+    padding: 8px 0 64px;
+  }
 
   .newsletter {
     background: var(--card);

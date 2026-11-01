@@ -1,10 +1,11 @@
 ---
 /**
- * 公關組「同遊前網路串聯」活動頁：2026 臺灣同志遊行。
+ * 公關組「同遊前網路串聯」活動頁：2026 臺灣同志遊行（已結束，轉為回顧展）。
  *
- * 會員在這裡做自己的挺多元圖卡（換頭貼、發文響應），可以把圖卡釘上同遊照片牆，
- * 並一鍵複製活動 hashtag。頁面最下方是遊行報名隊伍：填表留下聯絡方式，
- * 行前通知會另外寄送（報名表單在報名系統，slug: pride-march-2026）。
+ * 2026-11 遊行結束後改成「先看內容、再互動」的展覽式版面：
+ *   照片牆（大家的圖卡）→ 也做一張你的圖卡 → 分享用 hashtag → 那兩天的遊行紀錄
+ * 遊行報名區已拿掉（報名系統的 pride-march-2026 也請在後台關閉報名）。
+ * 這一頁也列在「互動展覽」（/news/exhibits，資料在 src/data/exhibits.ts）。
  *
  * 金句與 hashtag 都在 src/data/pride-2026.ts。照片牆的資料在報名系統
  * （/api/pride-wall，後台 /admin/pride-wall 審核與開關）；報名系統把活動設成
@@ -16,42 +17,43 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHero from "../components/PageHero.astro";
 import PrideCardMaker from "../components/PrideCardMaker.astro";
 import PrideWall from "../components/PrideWall.astro";
-import RegistrationButton from "../components/RegistrationButton.astro";
 import {
   coreHashtags,
   extraHashtags,
   transCoreHashtags,
   transHashtags,
-  captionTemplate,
-  transCaptionTemplate,
   parade,
 } from "../data/pride-2026";
-
-/** 報名系統後台「複製報名連結」裡的網址代稱，秘書處在 /admin/events 建好這場活動後填進來。 */
-const marchSignupSlug = "pride-march-2026";
 ---
 
 <BaseLayout
-  title="我挺同我驕傲・2026 臺灣同志遊行圖卡"
-  description="台灣性諮商學會邀請你一起響應 2026 臺灣同志遊行：放一張照片、選個版型、抽一句話，做一張自己的挺多元圖卡，也可以夾上同遊照片牆。"
+  title="我挺同我驕傲・2026 同遊回顧"
+  description="台灣性諮商學會 2026 臺灣同志遊行同遊回顧：看看夥伴們夾上照片牆的挺多元圖卡，也可以做一張你自己的。"
 >
   <PageHero
-    eyebrow="公關組・同遊前網路串聯"
-    title="做一張你的挺多元圖卡"
-    lead="放一張照片、選個版型、抽一句話，一分鐘就能做好。換上大頭貼、發文響應，或夾上同遊照片牆——10 月 31 日，我們在遊行現場見。"
+    eyebrow="互動展覽・公關組 2026 同遊回顧"
+    title="我挺同我驕傲"
+    lead="10 月 30 日跨性別遊行、10 月 31 日臺灣同志遊行，學會舉旗同遊圓滿結束。這裡收藏了夥伴們做的挺多元圖卡，慢慢欣賞；往下滑，你也可以做一張自己的。"
   />
 
-  <section class="section">
+  {/* 先看大家的作品 */}
+  <PrideWall />
+
+  {/* 再換你動手 */}
+  <section class="section section-maker">
     <div class="wrap">
+      <div class="maker-head">
+        <p class="eyebrow">換你動手</p>
+        <h2>也做一張你的挺多元圖卡</h2>
+        <p class="section-lead">放一張照片、選個版型、抽一句話，一分鐘就能做好，可以下載來換大頭貼或發文。</p>
+      </div>
       <PrideCardMaker />
     </div>
   </section>
 
-  <PrideWall />
-
   <section class="section section-alt">
     <div class="wrap wrap-narrow">
-      <h2>發文時帶上這些 Hashtag</h2>
+      <h2>分享圖卡時帶上這些 Hashtag</h2>
       <p class="section-lead">點一下就能複製，貼進 Facebook 或 Instagram 的貼文裡。</p>
 
       <div class="tag-card">
@@ -82,22 +84,6 @@ const marchSignupSlug = "pride-march-2026";
         </div>
       </div>
 
-      <div class="tag-card">
-        <p class="tag-label">發文範本・10/30 跨性別遊行</p>
-        <pre class="caption">{transCaptionTemplate}</pre>
-        <div class="tag-actions">
-          <button type="button" class="btn btn-ghost" data-copy={transCaptionTemplate}>複製跨性別遊行發文範本</button>
-        </div>
-      </div>
-
-      <div class="tag-card">
-        <p class="tag-label">發文範本・10/31 同志遊行</p>
-        <pre class="caption">{captionTemplate}</pre>
-        <div class="tag-actions">
-          <button type="button" class="btn btn-ghost" data-copy={captionTemplate}>複製同志遊行發文範本</button>
-        </div>
-      </div>
-
       <p class="copy-status" data-copy-status aria-live="polite"></p>
       <textarea class="manual-copy" data-manual-copy readonly rows="3" hidden aria-label="要複製的文字"></textarea>
     </div>
@@ -105,7 +91,7 @@ const marchSignupSlug = "pride-march-2026";
 
   <section class="section section-alt">
     <div class="wrap wrap-narrow">
-      <h2>跟學會旗一起走上街頭</h2>
+      <h2>那兩天，我們跟著學會旗走上街頭</h2>
       <p class="section-lead">
         在諮商室裡，我們練習不帶評價地聽見每一種慾望、親密與認同；走上街頭，
         是把同一份練習帶到陽光下。學會舉旗同遊，不只是響應一場遊行，
@@ -119,7 +105,7 @@ const marchSignupSlug = "pride-march-2026";
         <h3>第 8 屆台灣跨性別遊行</h3>
         <p class="march-meta">18:30 集合・台大醫院捷運站前</p>
         <p class="march-note">
-          尋找學會旗幟與彩虹旗，現場找林沛辰會長（行前通知會另寄 Email／LINE 說明細節）。
+          學會舉著旗幟與彩虹旗同行。
         </p>
       </div>
 
@@ -128,22 +114,12 @@ const marchSignupSlug = "pride-march-2026";
         <h3>第 24 屆臺灣同志遊行</h3>
         <p class="march-meta">13:00 集合・紫色大隊</p>
         <p class="march-note">
-          尋找學會旗幟與彩虹旗，現場找林沛辰會長（行前通知會另寄 Email／LINE 說明細節）。
-          今年主題是「聲做伙聽，路做伙行」，遊行將於 {parade.date}在{parade.place}舉行。
-        </p>
-      </div>
-
-      <div class="march-cta">
-        <RegistrationButton slug={marchSignupSlug} label="我要加入學會遊行隊伍" />
-        <p class="march-cta-note">
-          填一下姓名與聯絡方式、勾選想參加哪一天，行前通知就會寄到你的信箱。
-          兩場遊行本身都免報名、當天直接到現場也能加入；填表只是方便我們在現場找到彼此、
-          及時傳遞集合地點變動等消息。
+          今年主題是「聲做伙聽，路做伙行」，{parade.date}在{parade.place}舉行，學會舉著旗幟與彩虹旗同行。
         </p>
       </div>
 
       <p class="section-lead march-links">
-        詳細流程與路線：
+        活動紀錄：
         <a href={parade.url} target="_blank" rel="noopener">臺灣同志遊行官方網站</a>
         ・
         <a href="https://hotline.org.tw/civicrm/event/info?id=965&reset=1" target="_blank" rel="noopener">
@@ -229,6 +205,18 @@ const marchSignupSlug = "pride-march-2026";
 </script>
 
 <style>
+  .section-maker {
+    padding-top: 56px;
+  }
+
+  .maker-head {
+    margin-bottom: 22px;
+  }
+
+  .maker-head h2 {
+    margin: 6px 0 8px;
+  }
+
   .section {
     padding: 44px 0;
   }
@@ -295,19 +283,6 @@ const marchSignupSlug = "pride-march-2026";
     font-size: 0.9rem;
     line-height: 1.75;
     color: var(--ink-soft);
-  }
-
-  .march-cta {
-    margin-top: 24px;
-    text-align: center;
-  }
-
-  .march-cta-note {
-    margin: 0.75rem auto 0;
-    max-width: 34rem;
-    font-size: 0.85rem;
-    line-height: 1.75;
-    color: var(--ink-faint);
   }
 
   .march-links {

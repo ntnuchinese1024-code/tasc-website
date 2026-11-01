@@ -1,0 +1,40 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import ExhibitCards from "../../components/ExhibitCards.astro";
+---
+
+<BaseLayout
+  title="互動展覽"
+  description="台灣性諮商學會的線上互動活動回顧：會慶留言席、同遊照片牆……大家一起留下的祝福與作品，都收藏在這裡。"
+>
+  <PageHero
+    eyebrow="最新消息・互動展覽"
+    title="大家一起留下的祝福與作品"
+    lead="學會辦過的線上互動活動，結束後都會留在這裡。像逛展覽一樣慢慢看；有些展間還開放參與，看完也可以留下你的。"
+  />
+
+  <section class="section">
+    <div class="wrap">
+      <ExhibitCards />
+      <p class="back"><a href="/news">← 回到最新消息</a></p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .section {
+    padding: 40px 0 64px;
+  }
+
+  .back {
+    margin: 28px 0 0;
+    font-size: 0.88rem;
+  }
+
+  .back a {
+    color: var(--blue-deep);
+    font-weight: 700;
+    text-decoration: none;
+  }
+</style>

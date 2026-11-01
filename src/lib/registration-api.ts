@@ -205,6 +205,15 @@ export async function getCounselorProfiles(): Promise<CounselorProfile[]> {
   return Array.isArray(data.items) ? data.items : [];
 }
 
+/**
+ * 互動展覽卡片上的數字（例如照片牆有幾張、留言席有幾則）。
+ * 讀那支 API 回傳的 count；抓不到就回 null，卡片就不顯示數字。
+ */
+export async function getExhibitCount(path: string): Promise<number | null> {
+  const data = await fetchJson<{ count?: unknown } | null>(path, null);
+  return typeof data?.count === "number" ? data.count : null;
+}
+
 /** 單一課程的完整內容。找不到時回 null，呼叫端自行處理。 */
 export async function getEventDetail(slug: string): Promise<EventDetail | null> {
   const data = await fetchJson<EventDetail | { error: string } | null>(

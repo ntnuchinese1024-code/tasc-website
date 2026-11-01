@@ -1,0 +1,158 @@
+---
+/**
+ * 互動展覽的卡片。首頁（最新的幾個）與 /news/exhibits（全部）共用。
+ * 資料在 src/data/exhibits.ts；數字在建置時從報名系統抓，抓不到就不顯示。
+ */
+import { exhibits, type Exhibit } from "../data/exhibits";
+import { getExhibitCount } from "../lib/registration-api";
+
+interface Props {
+  /** 只顯示前幾個；不給就全部 */
+  limit?: number;
+}
+
+const { limit } = Astro.props;
+const list: Exhibit[] = limit ? exhibits.slice(0, limit) : exhibits;
+
+const counts = await Promise.all(list.map((e) => (e.statsPath ? getExhibitCount(e.statsPath) : Promise.resolve(null))));
+---
+
+<ul class="ex-grid">
+  {list.map((e, i) => (
+    <li>
+      <a class="ex-card" href={e.href} style={`--g1: ${e.gradient[0]}; --g2: ${e.gradient[1]}`}>
+        <div class="ex-art" aria-hidden="true">
+          <span class="ex-emoji">{e.emoji}</span>
+          {counts[i] !== null && counts[i]! > 0 && (
+            <span class="ex-count">
+              <strong>{counts[i]}</strong> {e.statsUnit}
+            </span>
+          )}
+        </div>
+        <div class="ex-body">
+          <span class="ex-eyebrow">{e.eyebrow}・{e.period}</span>
+          <h3>{e.title}</h3>
+          <p>{e.description}</p>
+          <span class="ex-go">
+            進入展間 →
+            {e.stillOpen && <span class="ex-open">也可以參與</span>}
+          </span>
+        </div>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .ex-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+  }
+
+  .ex-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .ex-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+  }
+
+  .ex-art {
+    position: relative;
+    aspect-ratio: 16 / 7;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.28), transparent 45%),
+      linear-gradient(135deg, var(--g1), var(--g2));
+  }
+
+  .ex-emoji {
+    font-size: 3.2rem;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+    transition: transform 0.35s cubic-bezier(0.34, 1.7, 0.5, 1);
+  }
+
+  .ex-card:hover .ex-emoji {
+    transform: translateY(-6px) scale(1.08);
+  }
+
+  .ex-count {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    font-size: 0.75rem;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(4px);
+    border-radius: 999px;
+    padding: 4px 10px;
+  }
+
+  .ex-count strong {
+    font-size: 0.9rem;
+  }
+
+  .ex-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    padding: 18px 20px 20px;
+  }
+
+  .ex-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+
+  .ex-body h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .ex-body p {
+    margin: 0;
+    font-size: 0.86rem;
+    line-height: 1.75;
+    color: var(--ink-soft);
+  }
+
+  .ex-go {
+    margin-top: auto;
+    padding-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+  }
+
+  .ex-open {
+    font-size: 0.7rem;
+    color: var(--green-deep);
+    background: color-mix(in srgb, var(--green) 12%, var(--card));
+    border-radius: 999px;
+    padding: 2px 8px;
+  }
+</style>

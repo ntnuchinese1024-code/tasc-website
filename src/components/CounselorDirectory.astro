@@ -65,13 +65,13 @@ const allSpecialties = Array.from(new Set(sorted.flatMap((p) => p.specialties)))
  * 地圖上不放常駐名稱的縣市（滑過或點選時仍會顯示）：太小、會跟鄰居擠在一起的，
  * 以及小框標題已經寫了名字的金門、馬祖。
  */
-const NO_LABEL = new Set(["taipei", "keelung", "hsinchu-city", "chiayi-city", "kinmen", "lienchiang"]);
+const NO_LABEL = new Set(["hsinchu-city", "chiayi-city", "kinmen", "lienchiang"]);
 
 /** 人數小圓點的位置（相對縣市標籤）。北部縣市擠在一起，個別錯開。 */
 const BADGE_OFFSET: Record<string, [number, number]> = {
-  taipei: [-20, -12],
-  "new-taipei": [26, 16],
-  keelung: [14, -14],
+  taipei: [-24, -6],
+  "new-taipei": [24, 4],
+  keelung: [20, -10],
   "hsinchu-city": [-16, -10],
   "chiayi-city": [-16, -8],
 };
@@ -416,7 +416,7 @@ const SHOWN_SPECIALTIES = 6;
     width: 100%;
     height: auto;
     overflow: visible;
-    transform: rotateX(24deg) rotateZ(-3deg);
+    transform: rotateX(24deg);
     transform-origin: 50% 60%;
   }
 
@@ -545,7 +545,7 @@ const SHOWN_SPECIALTIES = 6;
   }
 
   .tw-label {
-    font-size: 13px;
+    font-size: 14.5px;
     font-weight: 800;
     fill: #4a3f33;
     text-anchor: middle;
@@ -567,7 +567,7 @@ const SHOWN_SPECIALTIES = 6;
   /* 手機上整張圖縮小了，字要放大才看得清楚 */
   @media (max-width: 600px) {
     .tw-label {
-      font-size: 16px;
+      font-size: 17px;
     }
     .tw-inset-title {
       font-size: 19px;
@@ -584,7 +584,7 @@ const SHOWN_SPECIALTIES = 6;
 
   .tw-label.is-up {
     transform: translateY(-11px);
-    font-size: 14px;
+    font-size: 15.5px;
   }
 
   .tw-label.is-active {

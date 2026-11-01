@@ -12,6 +12,8 @@
  *
  * 版面：本島＋澎湖（含綠島、蘭嶼、小琉球、龜山島）用同一個投影；
  * 金門、馬祖離本島太遠，照比例放會讓整張圖縮到看不清楚，所以各畫一個小框放在左上角的海面上。
+ * 馬祖的島很小又散得很開，照實際比例放進小框只剩幾個點，所以每座島以自己的中心放大（ISLAND_ZOOM），
+ * 島與島的相對位置不變——這是離島插圖常用的誇張畫法，只用在小框裡。
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -60,9 +62,22 @@ const mainProjection = geoMercator().fitExtent(
 
 /** 左上角的兩個離島小框。 */
 const INSETS = [
-  { id: "Z", box: [PAD, PAD, 168, 120], title: "連江縣（馬祖）" },
-  { id: "W", box: [PAD, PAD + 136, 168, 112], title: "金門縣" },
+  { id: "Z", box: [PAD, PAD, 206, 156], title: "連江縣（馬祖）", islandZoom: 2 },
+  { id: "W", box: [PAD, PAD + 170, 206, 118], title: "金門縣" },
 ];
+
+/** 把多島縣市的每一座島，以它自己的中心放大 zoom 倍。 */
+function zoomIslands(f, zoom) {
+  if (!zoom || zoom === 1) return f;
+  const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
+  const scaled = polys.map((poly) => {
+    const outer = poly[0];
+    const cx = outer.reduce((sum, p) => sum + p[0], 0) / outer.length;
+    const cy = outer.reduce((sum, p) => sum + p[1], 0) / outer.length;
+    return poly.map((ring) => ring.map(([x, y]) => [cx + (x - cx) * zoom, cy + (y - cy) * zoom]));
+  });
+  return { ...f, geometry: { type: "MultiPolygon", coordinates: scaled } };
+}
 
 const out = { width: WIDTH, height: HEIGHT, outline: "", insets: [], counties: [] };
 
@@ -85,7 +100,7 @@ for (const f of main) {
 }
 
 for (const inset of INSETS) {
-  const f = counties.find((c) => c.properties.COUNTYID === inset.id);
+  const f = zoomIslands(counties.find((c) => c.properties.COUNTYID === inset.id), inset.islandZoom);
   const [x0, y0, w, h] = inset.box;
   const projection = geoMercator().fitExtent(
     [
@@ -102,8 +117,9 @@ for (const inset of INSETS) {
 
 // 標籤位置微調：小縣市的形心會壓在鄰居上，或被其他標籤擠到
 const NUDGE = {
-  keelung: [10, -6],
-  taipei: [-2, 4],
+  keelung: [14, -10],
+  taipei: [-4, 2],
+  "new-taipei": [-6, 30], // 新北的形心落在臺北市裡，名稱移到南邊比較寬的山區
   "hsinchu-city": [-14, 0],
   "chiayi-city": [-6, 0],
 };

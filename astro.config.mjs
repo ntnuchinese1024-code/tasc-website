@@ -17,7 +17,8 @@ export default defineConfig({
       // 既然請 Google 不要收錄，就不該同時把它列在 sitemap 裡要求收錄——
       // 那會在 Search Console 留下一則「已提交的網址標記為 noindex」的警告，
       // 久了會讓真正該注意的錯誤被雜訊蓋掉。
-      filter: (page) => !page.includes("/anniversary"),
+      // /island（政策島嶼）目前是內部預覽，設了 noindex，同理也不列進 sitemap。
+      filter: (page) => !page.includes("/anniversary") && !page.includes("/island"),
     }),
   ],
 });

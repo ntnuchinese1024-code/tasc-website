@@ -1,0 +1,220 @@
+---
+/**
+ * 政策島嶼上的小建築。放在 /island 地圖的 <defs> 裡，地標再用 <use> 叫出來。
+ *
+ * 每一個 symbol 的座標系統都一樣：viewBox="-24 -56 48 60"，**地面在 y = 0**，
+ * 建築往上長（y 是負的），左上角來光，所以右半邊要補一塊陰影面。
+ * `s-accent` / `s-deep` 吃的是地標自己的顏色（`--lm-color` / `--lm-deep`），
+ * 所以同一棟建築放到不同顏色的地標上，顏色會跟著變。
+ *
+ * 要新增一個地標樣式：在這裡加一個 `st-<名字>` 的 symbol，再到
+ * `src/data/island-2026.ts` 的 `IslandGlyph` 加上同一個名字。
+ */
+---
+
+{/* 燈塔・新官網 */}
+<symbol id="st-lighthouse" viewBox="-24 -56 48 60">
+  <path class="s-stone" d="M-13 0h26l-4-9h-18z" />
+  <path class="s-stone-d" d="M1 0h12l-4-9H1z" />
+  <path class="s-lit" d="M-7.5-9-4.6-36h9.2L7.5-9z" />
+  <path class="s-accent" d="M-6.9-16h13.8l-.5-6h-12.8z" />
+  <path class="s-accent" d="M-5.5-28h11l-.4-5h-10.2z" />
+  <path class="s-shade" d="M1-36h3.6L7.5-9H1z" />
+  <path class="s-deep" d="M-6.6-36h13.2l1.4 3h-16z" />
+  <rect class="s-glass" x="-4" y="-45" width="8" height="9" rx="1.5" />
+  <path class="s-deep" d="M-6.4-45 0-52l6.4 7z" />
+  <path class="s-beam" d="M4-42l18-6v11z" />
+</symbol>
+
+{/* 報名港：碼頭與一艘靠岸的船 */}
+<symbol id="st-harbor" viewBox="-24 -56 48 60">
+  <path class="s-wood" d="M-21 0h35v5h-35z" />
+  <path class="s-post" d="M-17 5v8M-3 5v9M11 5v8" />
+  <path class="s-rod" d="M-3-6v-24" />
+  <path class="s-accent" d="M-1-29 11-20-1-13z" />
+  <path class="s-mid" d="M-5-27-15-15l10 3z" />
+  <path class="s-lit" d="M-15-6h25l-4 6h-17z" />
+  <path class="s-shade" d="M-1-6h11l-4 6H-1z" />
+</symbol>
+
+{/* 年會廣場：環狀石階、旗桿與一串小旗 */}
+<symbol id="st-plaza" viewBox="-24 -56 48 60">
+  <ellipse class="s-stone-d" cx="0" cy="0" rx="20" ry="7" />
+  <ellipse class="s-stone" cx="0" cy="-3.5" rx="15" ry="5.4" />
+  <ellipse class="s-lit" cx="0" cy="-7" rx="10" ry="3.8" />
+  <path class="s-rod" d="M0-8v-38" />
+  <path class="s-accent" d="M1.4-45 17-39.5 1.4-34z" />
+  <path class="s-line" d="M-19-18Q0-28 19-18" />
+  <path class="f-red" d="M-13-22.5l5 .8-2.6 5.2z" />
+  <path class="f-orange" d="M-5-25l5 .5-2.3 5.3z" />
+  <path class="f-green" d="M3.5-24.8l5-.6-1.8 5.4z" />
+  <path class="f-blue" d="M11.5-22.3l4.8-1.3-1.3 5.5z" />
+</symbol>
+
+{/* 學術學院：列柱與山牆 */}
+<symbol id="st-academy" viewBox="-24 -56 48 60">
+  <path class="s-stone-d" d="M-19 0h38l-3-5h-32z" />
+  <path class="s-stone" d="M-16-5h32l-1.5-4h-29z" />
+  <path class="s-shade" d="M-14-9h28v-14h-28z" />
+  <path class="s-lit" d="M-12.5-9h4v-14h-4zM-5.5-9h4v-14h-4zM1.5-9h4v-14h-4zM8.5-9h4v-14h-4z" />
+  <path class="s-mid" d="M-16-23h32v-4h-32z" />
+  <path class="s-accent" d="M-18-27 0-38l18 11z" />
+  <path class="s-shade" d="M0-38l18 11H8z" />
+</symbol>
+
+{/* 讀書會：講桌上攤開的一本書 */}
+<symbol id="st-book" viewBox="-24 -56 48 60">
+  <ellipse class="s-wood-d" cx="0" cy="0" rx="11" ry="4" />
+  <path class="s-wood" d="M-3.5 0v-19h7V0z" />
+  <path class="s-lit" d="M-16-22Q0-28 16-22l-1 5Q0-23-15-17z" />
+  <path class="s-mid" d="M0-26v6" />
+</symbol>
+
+{/* 電子報郵局：小屋與郵筒 */}
+<symbol id="st-post" viewBox="-24 -56 48 60">
+  <path class="s-lit" d="M-14 0v-19h28V0z" />
+  <path class="s-shade" d="M4 0v-19h10V0z" />
+  <path class="s-accent" d="M-17.5-19 0-31l17.5 12z" />
+  <path class="s-shade" d="M0-31l17.5 12H8z" />
+  <path class="s-deep" d="M-4.5 0v-11h9V0z" />
+  <rect class="s-glass" x="-11.5" y="-15.5" width="5" height="5" rx="1" />
+  <rect class="s-glass" x="7" y="-15.5" width="5" height="5" rx="1" />
+  <path class="s-post" d="M18 0v-7" />
+  <rect class="s-accent" x="14.5" y="-16" width="7.5" height="10" rx="3.4" />
+  <path class="s-lit" d="M16-12.5h4.5v1.6H16z" />
+</symbol>
+
+{/* 彩虹橋：五道學會標誌色的拱 */}
+<symbol id="st-bridge" viewBox="-24 -56 48 60">
+  <path class="s-stone-d" d="M-22 0h7v5h-7zM15 0h7v5h-7z" />
+  <path class="band f-s-red" d="M-19.5 0a19.5 19.5 0 0 1 39 0" />
+  <path class="band f-s-orange" d="M-15.5 0a15.5 15.5 0 0 1 31 0" />
+  <path class="band f-s-green" d="M-11.5 0a11.5 11.5 0 0 1 23 0" />
+  <path class="band f-s-blue" d="M-7.5 0a7.5 7.5 0 0 1 15 0" />
+  <path class="band f-s-magenta" d="M-3.5 0a3.5 3.5 0 0 1 7 0" />
+</symbol>
+
+{/* 名錄瞭望台：木架、平台與尖頂 */}
+<symbol id="st-lookout" viewBox="-24 -56 48 60">
+  <path class="s-post" d="M-11 0-5.5-26M11 0 5.5-26M-6 0-3-26M6 0 3-26" />
+  <path class="s-line" d="M-9.5-7 9.5-19M9.5-7-9.5-19M-8-13h16" />
+  <path class="s-wood-d" d="M-13-26h26v4h-26z" />
+  <path class="s-wood" d="M-11-30h22v4h-22z" />
+  <path class="s-line" d="M-10-30v-5M-3.5-30v-5M3.5-30v-5M10-30v-5M-11-35h22" />
+  <path class="s-accent" d="M-13.5-36 0-48l13.5 12z" />
+  <path class="s-shade" d="M0-48l13.5 12H6z" />
+</symbol>
+
+{/* 講師驛站：小舞台與布篷 */}
+<symbol id="st-mic" viewBox="-24 -56 48 60">
+  <path class="s-wood-d" d="M-17 0h34v5h-34z" />
+  <path class="s-wood" d="M-17-4h34v4h-34z" />
+  <path class="s-post" d="M-14.5-4v-20M14.5-4v-20" />
+  <path class="s-accent" d="M-20-24Q0-34 20-24l-2 5Q0-28-18-19z" />
+  <path class="s-lit" d="M-13-22.5q4 1.5 8 0-4 4.5-8 0zM-1-25q4 1 8 .4-4 4.6-8-.4z" />
+  <path class="s-rod" d="M0-4v-13" />
+  <circle class="s-mid" cx="0" cy="-19" r="3.6" />
+  <path class="s-deep" d="M8-4v-11h7v11z" />
+</symbol>
+
+{/* 參訪渡口：棧橋與一艘小船 */}
+<symbol id="st-ferry" viewBox="-24 -56 48 60">
+  <path class="s-wood" d="M-22 0h19v6h-19z" />
+  <path class="s-wood-d" d="M-22 6h19v2h-19z" />
+  <path class="s-post" d="M-19 8v9M-8 8v9" />
+  <path class="s-lit" d="M-7-4h25l-4 8H-3z" />
+  <path class="s-shade" d="M6-4h12l-4 8H6z" />
+  <path class="s-mid" d="M-1-4v-12h11v12z" />
+  <rect class="s-glass" x="1" y="-13.5" width="7" height="5" rx="1" />
+  <path class="s-accent" d="M11-6v-13h4.5v13z" />
+  <path class="s-rod" d="M-1-16v-9" />
+  <path class="s-accent" d="M0-24.5 9-21 0-18z" />
+</symbol>
+
+{/* 辦桌廣場：一桌圓桌與頭上的燈串 */}
+<symbol id="st-lantern" viewBox="-24 -56 48 60">
+  <ellipse class="s-stone-d" cx="-15" cy="1" rx="5" ry="2.4" />
+  <ellipse class="s-stone-d" cx="15" cy="1" rx="5" ry="2.4" />
+  <path class="s-accent" d="M-15-9a15 6 0 0 0 30 0v6a15 6 0 0 1-30 0z" />
+  <ellipse class="s-lit" cx="0" cy="-9" rx="15" ry="6" />
+  <ellipse class="s-mid" cx="0" cy="-9.5" rx="7" ry="2.8" />
+  <path class="s-post" d="M-18-6v-30M18-6v-30" />
+  <path class="s-line" d="M-18-35Q0-27 18-35" />
+  <g class="lamps">
+    <ellipse cx="-9" cy="-28.5" rx="3.6" ry="4.4" />
+    <ellipse cx="0" cy="-26.5" rx="3.6" ry="4.4" />
+    <ellipse cx="9" cy="-28.5" rx="3.6" ry="4.4" />
+  </g>
+</symbol>
+
+{/* 讀點新的：地球儀 */}
+<symbol id="st-globe" viewBox="-24 -56 48 60">
+  <path class="s-wood" d="M-9 0h18l-3-4h-12z" />
+  <path class="s-rod" d="M0-4v-8" />
+  <circle class="s-accent" cx="0" cy="-24" r="12" />
+  <path class="s-globe-line" d="M-12-24h24M0-36c6 5.4 6 18.6 0 24M0-36c-6 5.4-6 18.6 0 24" />
+  <path class="s-lit" d="M-7-31a12 12 0 0 1 6-2.6 12 12 0 0 0-8 6.4z" />
+</symbol>
+
+{/* 島上的人家：夜裡窗戶會亮。屋頂顏色吃每座島的 --roof */}
+<symbol id="st-house" viewBox="-24 -56 48 60">
+  <path class="s-lit" d="M-16 0v-20h32v20z" />
+  <path class="s-shade" d="M4 0v-20h12v20z" />
+  <path class="h-roof" d="M-20-20 0-36l20 16z" />
+  <path class="s-shade" d="M0-36 20-20H9z" />
+  <circle class="win-glow" cx="-7.5" cy="-11.5" r="10" filter="url(#blur-lamp)" />
+  <circle class="win-glow" cx="7.5" cy="-11.5" r="10" filter="url(#blur-lamp)" />
+  <rect class="win" x="-11" y="-15" width="7" height="7" rx="1" />
+  <rect class="win" x="4" y="-15" width="7" height="7" rx="1" />
+  <rect class="win-lit" x="-11" y="-15" width="7" height="7" rx="1" />
+  <rect class="win-lit" x="4" y="-15" width="7" height="7" rx="1" />
+  <path class="s-deep" d="M-3 0v-9h6v9z" />
+</symbol>
+
+{/* 一個人：頭＋張開手臂的弧線，跟標誌上的人形同一套語彙 */}
+<symbol id="figure" viewBox="-9 -13 18 20">
+  <path class="fig-halo" d="M-5 1.5Q0-5.5 5 1.5M0-3.5V1.5M0 1.5-2.6 6M0 1.5 2.6 6" />
+  <circle class="fig-halo-head" cx="0" cy="-6.6" r="4.2" />
+  <path class="fig-body" d="M-5 1.5Q0-5.5 5 1.5M0-3.5V1.5M0 1.5-2.6 6M0 1.5 2.6 6" />
+  <circle class="fig-head" cx="0" cy="-6.6" r="2.5" />
+</symbol>
+
+<style is:global>
+  /* 這些類別要套用到 <use> 複製出來的節點上，所以不能是 scoped 樣式 */
+  .s-lit { fill: #FBF7EE; }
+  .s-mid { fill: #E2D8C6; }
+  .s-shade { fill: #2E2A24; opacity: 0.16; }
+  .s-stone { fill: #D9D2C3; }
+  .s-stone-d { fill: #B5AB98; }
+  .s-deep { fill: var(--lm-deep, #574F45); }
+  .s-accent { fill: var(--lm-color, #C8553D); }
+  .s-wood { fill: #B08855; }
+  .s-wood-d { fill: #866440; }
+  .s-glass { fill: #A7CEE0; }
+  .s-beam { fill: #FFF0B8; opacity: calc(0.3 + var(--lamp, 0) * 0.65); transition: opacity 0.45s ease; }
+  /* 窗戶：--lamp 是地圖的時間（0 白天、1 夜晚） */
+  .h-roof { fill: var(--roof, #C8553D); }
+  .win { fill: #9FC3D8; }
+  .win-lit { fill: #FFE2A3; opacity: var(--lamp, 0); transition: opacity 0.45s ease; }
+  .win-glow { fill: #FFD98A; opacity: calc(var(--lamp, 0) * 0.8); transition: opacity 0.45s ease; }
+  .s-line { fill: none; stroke: #6E6558; stroke-width: 1.5; stroke-linecap: round; }
+  .s-post { fill: none; stroke: #866440; stroke-width: 3; stroke-linecap: round; }
+  .s-rod { fill: none; stroke: var(--lm-deep, #574F45); stroke-width: 2.4; stroke-linecap: round; }
+  .s-globe-line { fill: none; stroke: #FBF7EE; stroke-width: 1.4; opacity: 0.85; }
+  .band { fill: none; stroke-width: 4; }
+  .lamps ellipse { fill: #D9452F; stroke: #8E2C1E; stroke-width: 1.2; }
+  /* 人形：底下墊一圈白，不然在草地上會糊成一個黑點 */
+  .fig-halo { fill: none; stroke: #fff; stroke-width: 4.6; stroke-linejoin: round; stroke-linecap: round; opacity: calc(0.9 - var(--lamp, 0) * 0.5); }
+  .fig-halo-head { fill: #fff; opacity: calc(0.9 - var(--lamp, 0) * 0.5); }
+  .fig-body { fill: none; stroke: var(--lm-deep, #574F45); stroke-width: 1.9; stroke-linejoin: round; stroke-linecap: round; }
+  .fig-head { fill: var(--lm-deep, #574F45); }
+  .f-red { fill: var(--red); }
+  .f-orange { fill: var(--orange); }
+  .f-green { fill: var(--green); }
+  .f-blue { fill: var(--blue); }
+  .f-s-red { stroke: var(--red); }
+  .f-s-orange { stroke: var(--orange); }
+  .f-s-green { stroke: var(--green); }
+  .f-s-blue { stroke: var(--blue); }
+  .f-s-magenta { stroke: var(--magenta); }
+</style>

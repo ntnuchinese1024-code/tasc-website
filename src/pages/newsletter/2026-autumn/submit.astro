@@ -3,13 +3,14 @@
  * 各組補資料給第二期電子報：/newsletter/2026-autumn/submit
  *
  * 用途：請各工作小組補上「還沒放到地圖上」的事——已經做完但官網沒寫的、
- * 或是接下來要辦的。填完按一個鍵把內容整理成一段文字，寄（或貼）給秘書處，
- * 秘書處審核後才會進 `src/data/newsletter-2026-autumn.ts`。
+ * 或是接下來要辦的。按「送出給秘書處」會直接寫進報名系統的
+ * `newsletter_items` 資料表，秘書處在 `/admin/newsletter-items` 審，
+ * 採用的才會進 `src/data/newsletter-2026-autumn.ts`。
  *
- * **為什麼不是直接寫進資料庫**：這一版刻意不收進報名系統，因為要先經過秘書處
- * 審核、而且內容會變成公開頁面上的文字。等確定流程要常態化，再把它接成
- * tasc-registration 的一個 API（跟講師邀約、性諮商師資料表一樣的做法），
- * 秘書處就能在後台看。**不要改用 Google 表單。**
+ * 做法跟講師邀約表單一樣：官網是靜態站，表單在瀏覽器端 fetch POST 到
+ * `tasc-registration` 的 `/api/newsletter-items`。送不出去時（網路斷線、
+ * 後台維護）會把整理好的文字留在頁面上，讓填寫人可以複製寄給秘書處，
+ * 不會白填一場。**不要改用 Google 表單。**
  *
  * 跟第二期一樣是內部頁面：noindex，也被 astro.config.mjs 的 sitemap 排除
  * （排除規則比對的是 /newsletter/2026-autumn，這一頁在它底下，所以一起排除）。
@@ -17,6 +18,7 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHero from "../../../components/PageHero.astro";
 import { issueMeta } from "../../../data/newsletter-2026-autumn";
+import { REGISTRATION_ORIGIN } from "../../../lib/registration-api";
 
 /** 秘書處信箱（官網頁尾本來就公開） */
 const SECRETARIAT = "tasc.tw@gmail.com";
@@ -39,7 +41,12 @@ const GROUPS = [
   "其他",
 ];
 
-const KINDS = ["已完成，但官網還沒寫", "即將辦理", "持續進行中"];
+/** value 是資料庫存的代碼，label 是填表的人看到的字 */
+const KINDS = [
+  { value: "DONE", label: "已完成，但官網還沒寫" },
+  { value: "UPCOMING", label: "即將辦理" },
+  { value: "ONGOING", label: "持續進行中" },
+];
 ---
 
 <BaseLayout
@@ -69,8 +76,8 @@ const KINDS = ["已完成，但官網還沒寫", "即將辦理", "持續進行�
         </p>
       </div>
       <ol class="flow">
-        <li>在下面填好，按「<strong>複製全部內容</strong>」。</li>
-        <li>貼進 Email 或 LINE 傳給秘書處（也可以直接按「寄給秘書處」）。</li>
+        <li>在下面填好，按「<strong>送出給秘書處</strong>」。</li>
+        <li>資料直接進秘書處後台，不用再寄信、不用複製貼上。</li>
         <li>秘書處審核，確認可以公開之後放上地圖。</li>
       </ol>
     </div>
@@ -114,7 +121,7 @@ const KINDS = ["已完成，但官網還沒寫", "即將辦理", "持續進行�
               <label>
                 <span>狀態</span>
                 <select name="kind">
-                  {KINDS.map((k) => <option value={k}>{k}</option>)}
+                  {KINDS.map((k) => <option value={k.value}>{k.label}</option>)}
                 </select>
               </label>
             </div>
@@ -148,10 +155,17 @@ const KINDS = ["已完成，但官網還沒寫", "即將辦理", "持續進行�
           </fieldset>
         </template>
 
+        {/* 蜜罐：正常使用者看不到，有填就是機器人 */}
+        <div class="isf-hp" aria-hidden="true">
+          <label>
+            這一欄請留空
+            <input type="text" name="hp_check" tabindex="-1" autocomplete="off" />
+          </label>
+        </div>
+
         <div class="isf-actions">
           <button type="button" class="btn" id="add">＋ 再加一筆</button>
-          <button type="button" class="btn btn-primary" id="copy">複製全部內容</button>
-          <a class="btn" id="mail" href="#">寄給秘書處</a>
+          <button type="button" class="btn btn-primary" id="send">送出給秘書處</button>
           <span class="isf-msg" id="msg" role="status"></span>
         </div>
 
@@ -159,16 +173,26 @@ const KINDS = ["已完成，但官網還沒寫", "即將辦理", "持續進行�
           查不到的日期、名稱、時數請直接寫「<strong>待確認</strong>」，不要推算——寫上去就會變成公開頁面上的字。
         </p>
 
-        <label class="isf-preview">
-          <span>整理出來的內容（也可以直接改這裡再複製）</span>
-          <textarea id="out" rows="14" spellcheck="false"></textarea>
-        </label>
+        <details class="isf-fallback" id="fallback">
+          <summary>送不出去？用複製的也可以</summary>
+          <p class="isf-fallback-note">
+            按「複製全部內容」後貼進 Email 或 LINE 傳給秘書處，或直接按「寄給秘書處」開信件。
+          </p>
+          <div class="isf-actions">
+            <button type="button" class="btn" id="copy">複製全部內容</button>
+            <a class="btn" id="mail" href="#">寄給秘書處</a>
+          </div>
+          <label class="isf-preview">
+            <span>整理出來的內容（也可以直接改這裡再複製）</span>
+            <textarea id="out" rows="14" spellcheck="false"></textarea>
+          </label>
+        </details>
       </form>
     </div>
   </section>
 </BaseLayout>
 
-<script define:vars={{ SECRETARIAT, RANGE, DEADLINE }}>
+<script define:vars={{ SECRETARIAT, RANGE, DEADLINE, REGISTRATION_ORIGIN }}>
   const items = document.getElementById("items");
   const tpl = document.getElementById("item-tpl");
   const out = document.getElementById("out");
@@ -261,6 +285,88 @@ const KINDS = ["已完成，但官網還沒寫", "即將辦理", "持續進行�
   });
 
   form.addEventListener("input", refresh);
+
+  const sendBtn = document.getElementById("send");
+  const fallback = document.getElementById("fallback");
+
+  /** 把畫面上的每一筆整理成 API 要的形狀 */
+  function collect() {
+    const out = [];
+    items.querySelectorAll(".isf-item").forEach((b) => {
+      const title = val(b, "title");
+      const summary = val(b, "summary");
+      if (!title && !summary) return;
+      out.push({
+        title,
+        kind: val(b, "kind") || "DONE",
+        happenedAt: val(b, "date"),
+        who: val(b, "who"),
+        link: val(b, "link"),
+        summary,
+        detail: val(b, "detail"),
+        publishable: (b.querySelector('input[type="radio"]:checked')?.value ?? "可以公開") === "可以公開",
+      });
+    });
+    return out;
+  }
+
+  sendBtn.addEventListener("click", async () => {
+    refresh();
+
+    const payload = {
+      groupName: val(form, "group"),
+      person: val(form, "person"),
+      contact: val(form, "contact"),
+      items: collect(),
+      hp_check: val(form, "hp_check"),
+    };
+
+    if (!payload.groupName || !payload.person) {
+      msg.textContent = "請先選小組、填上你的名字。";
+      msg.className = "isf-msg is-bad";
+      return;
+    }
+    if (payload.items.length === 0) {
+      msg.textContent = "至少要填一筆：名稱和一句話說明。";
+      msg.className = "isf-msg is-bad";
+      return;
+    }
+
+    sendBtn.disabled = true;
+    msg.textContent = "送出中…";
+    msg.className = "isf-msg";
+
+    try {
+      const res = await fetch(`${REGISTRATION_ORIGIN}/api/newsletter-items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.ok) {
+        const skipped = data.skipped ? `（有 ${data.skipped} 筆剛剛已經送過，沒有重複收）` : "";
+        form.querySelector(".isf-done")?.remove();
+        const done = document.createElement("p");
+        done.className = "isf-done";
+        done.textContent = `收到了，已經送出 ${data.inserted} 筆給秘書處${skipped}。還有要補的可以繼續填，再按一次送出。`;
+        sendBtn.closest(".isf-actions").insertAdjacentElement("afterend", done);
+        msg.textContent = "";
+        sendBtn.disabled = false;
+        return;
+      }
+
+      msg.textContent = data.message ?? "送不出去，請改用下面的複製方式寄給秘書處。";
+      msg.className = "isf-msg is-bad";
+      if (fallback) fallback.open = true;
+    } catch {
+      msg.textContent = "連不上系統（可能是網路問題）。請改用下面的複製方式寄給秘書處。";
+      msg.className = "isf-msg is-bad";
+      if (fallback) fallback.open = true;
+    } finally {
+      sendBtn.disabled = false;
+    }
+  });
 
   document.getElementById("copy").addEventListener("click", async () => {
     refresh();
@@ -466,7 +572,54 @@ const KINDS = ["已完成，但官網還沒寫", "即將辦理", "持續進行�
   .isf-msg {
     font-size: 0.86rem;
     font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .isf-msg.is-bad {
+    color: var(--red-deep);
+  }
+
+  /* 送出成功的回條 */
+  .isf-done {
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--green) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--green) 40%, transparent);
+    font-size: 0.9rem;
+    font-weight: 700;
     color: var(--green-deep);
+  }
+
+  /* 蜜罐：螢幕上看不到，但不是 display:none（有些機器人會跳過被隱藏的欄位） */
+  .isf-hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* 送不出去時的備案 */
+  .isf-fallback {
+    margin-top: 10px;
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+  }
+
+  .isf-fallback summary {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+
+  .isf-fallback-note {
+    margin: 10px 0 0;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
   }
 
   .isf-rule {

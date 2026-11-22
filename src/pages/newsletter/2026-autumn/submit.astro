@@ -1,0 +1,497 @@
+---
+/**
+ * 各組補資料給第二期電子報：/newsletter/2026-autumn/submit
+ *
+ * 用途：請各工作小組補上「還沒放到地圖上」的事——已經做完但官網沒寫的、
+ * 或是接下來要辦的。填完按一個鍵把內容整理成一段文字，寄（或貼）給秘書處，
+ * 秘書處審核後才會進 `src/data/newsletter-2026-autumn.ts`。
+ *
+ * **為什麼不是直接寫進資料庫**：這一版刻意不收進報名系統，因為要先經過秘書處
+ * 審核、而且內容會變成公開頁面上的文字。等確定流程要常態化，再把它接成
+ * tasc-registration 的一個 API（跟講師邀約、性諮商師資料表一樣的做法），
+ * 秘書處就能在後台看。**不要改用 Google 表單。**
+ *
+ * 跟第二期一樣是內部頁面：noindex，也被 astro.config.mjs 的 sitemap 排除
+ * （排除規則比對的是 /newsletter/2026-autumn，這一頁在它底下，所以一起排除）。
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHero from "../../../components/PageHero.astro";
+import { issueMeta } from "../../../data/newsletter-2026-autumn";
+
+/** 秘書處信箱（官網頁尾本來就公開） */
+const SECRETARIAT = "tasc.tw@gmail.com";
+
+/** 回覆期限；定了就改這一行，沒定就留「待確認」 */
+const DEADLINE = "待確認";
+
+/** 這一期要收的範圍 */
+const RANGE = "2026 年 4 月中（創刊號之後）～ 12 月";
+
+const GROUPS = [
+  "秘書處",
+  "認證委員會",
+  "倫理委員會",
+  "公關組",
+  "推廣課程組",
+  "認證課程組",
+  "學術組",
+  "理事長／理監事會",
+  "其他",
+];
+
+const KINDS = ["已完成，但官網還沒寫", "即將辦理", "持續進行中"];
+---
+
+<BaseLayout
+  title="各組補資料・第二期電子報｜台灣性諮商學會"
+  description="請各工作小組補上還沒放進第二期電子報的項目。"
+  noindex={true}
+>
+  <PageHero
+    eyebrow={`${issueMeta.issue}電子報・內部作業`}
+    title="各組補資料"
+    lead="第二期電子報把這半年學會做的事畫成一張地圖。有些事官網上還沒寫，地圖就長不出來——請各組把漏掉的補給秘書處。"
+    decor={false}
+  />
+
+  <section class="brief">
+    <div class="wrap brief-grid">
+      <div>
+        <h2>要補什麼</h2>
+        <ul>
+          <li><strong>已經做完、但官網還沒寫的</strong>：課程、會議、合作、對外發言、小組內部的進展都可以。</li>
+          <li><strong>接下來要辦的</strong>：已經確定的時間、講師、報名方式。還在討論的就先不要填。</li>
+          <li><strong>持續進行中的</strong>：像讀書會、長期專案這種還在跑的。</li>
+        </ul>
+        <p class="note">
+          收錄範圍：<strong>{RANGE}</strong>。<br />
+          回覆期限：<strong>{DEADLINE}</strong>。預計 <strong>12 月</strong>開放給會員瀏覽。
+        </p>
+      </div>
+      <ol class="flow">
+        <li>在下面填好，按「<strong>複製全部內容</strong>」。</li>
+        <li>貼進 Email 或 LINE 傳給秘書處（也可以直接按「寄給秘書處」）。</li>
+        <li>秘書處審核，確認可以公開之後放上地圖。</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="form-wrap">
+    <div class="wrap">
+      <form class="isf" id="isf" novalidate>
+        <fieldset class="isf-block">
+          <legend>你是誰</legend>
+          <div class="isf-row">
+            <label>
+              <span>小組／單位</span>
+              <select name="group" required>
+                <option value="">請選擇</option>
+                {GROUPS.map((g) => <option value={g}>{g}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>填寫人</span>
+              <input type="text" name="person" placeholder="你的名字" required />
+            </label>
+            <label>
+              <span>聯絡方式</span>
+              <input type="text" name="contact" placeholder="Email 或 LINE，方便秘書處回問" />
+            </label>
+          </div>
+        </fieldset>
+
+        <div id="items"></div>
+
+        <template id="item-tpl">
+          <fieldset class="isf-block isf-item">
+            <legend>第 <span class="isf-no">1</span> 筆</legend>
+            <button type="button" class="isf-del" aria-label="刪掉這一筆">刪掉這一筆</button>
+            <div class="isf-row">
+              <label class="wide">
+                <span>這件事叫什麼</span>
+                <input type="text" name="title" placeholder="例：性諮商倫理工作坊（第二場）" />
+              </label>
+              <label>
+                <span>狀態</span>
+                <select name="kind">
+                  {KINDS.map((k) => <option value={k}>{k}</option>)}
+                </select>
+              </label>
+            </div>
+            <div class="isf-row">
+              <label>
+                <span>日期或期間</span>
+                <input type="text" name="date" placeholder="例：2026 年 9 月 5 日／2027 年 1 月起" />
+              </label>
+              <label>
+                <span>講師或負責人（選填）</span>
+                <input type="text" name="who" placeholder="例：王小明 心理師" />
+              </label>
+              <label>
+                <span>相關連結（選填）</span>
+                <input type="text" name="link" placeholder="官網、報名頁或臉書貼文網址" />
+              </label>
+            </div>
+            <label class="wide">
+              <span>一句話說明</span>
+              <input type="text" name="summary" placeholder="一句話講完這是什麼，給沒參加過的人看" />
+            </label>
+            <label class="wide">
+              <span>補充說明（選填）</span>
+              <textarea name="detail" rows="3" placeholder="一點一句就好，例如人數、地點、合作單位、後續規劃"></textarea>
+            </label>
+            <div class="isf-public">
+              <span class="isf-public-q">可以公開寫在電子報上嗎？</span>
+              <label class="radio"><input type="radio" name="public" value="可以公開" checked /> 可以公開</label>
+              <label class="radio"><input type="radio" name="public" value="要再確認" /> 要再確認</label>
+            </div>
+          </fieldset>
+        </template>
+
+        <div class="isf-actions">
+          <button type="button" class="btn" id="add">＋ 再加一筆</button>
+          <button type="button" class="btn btn-primary" id="copy">複製全部內容</button>
+          <a class="btn" id="mail" href="#">寄給秘書處</a>
+          <span class="isf-msg" id="msg" role="status"></span>
+        </div>
+
+        <p class="isf-rule">
+          查不到的日期、名稱、時數請直接寫「<strong>待確認</strong>」，不要推算——寫上去就會變成公開頁面上的字。
+        </p>
+
+        <label class="isf-preview">
+          <span>整理出來的內容（也可以直接改這裡再複製）</span>
+          <textarea id="out" rows="14" spellcheck="false"></textarea>
+        </label>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script define:vars={{ SECRETARIAT, RANGE, DEADLINE }}>
+  const items = document.getElementById("items");
+  const tpl = document.getElementById("item-tpl");
+  const out = document.getElementById("out");
+  const msg = document.getElementById("msg");
+  const mail = document.getElementById("mail");
+  const form = document.getElementById("isf");
+
+  let seq = 0;
+
+  /** 加一筆空白的項目 */
+  function addItem() {
+    const node = tpl.content.firstElementChild.cloneNode(true);
+    // 每一筆的「可否公開」要自己一組，不然全部同名會互搶（只有一顆選得起來）
+    seq += 1;
+    node.querySelectorAll('input[type="radio"]').forEach((r) => {
+      r.name = `public-${seq}`;
+    });
+    items.appendChild(node);
+    renumber();
+    node.querySelector('input[name="title"]').focus();
+  }
+
+  function renumber() {
+    const blocks = items.querySelectorAll(".isf-item");
+    blocks.forEach((b, i) => {
+      b.querySelector(".isf-no").textContent = String(i + 1);
+      b.querySelector(".isf-del").hidden = blocks.length === 1;
+    });
+  }
+
+  const val = (root, name) => (root.querySelector(`[name="${name}"]`)?.value ?? "").trim();
+
+  /** 把表單整理成一段好讀、好貼的文字 */
+  function build() {
+    const lines = [];
+    lines.push("【第二期電子報・補充資料】");
+    lines.push(`小組／單位：${val(form, "group") || "（未填）"}`);
+    lines.push(`填寫人：${val(form, "person") || "（未填）"}`);
+    const contact = val(form, "contact");
+    if (contact) lines.push(`聯絡方式：${contact}`);
+    lines.push(`收錄範圍：${RANGE}`);
+    lines.push(`回覆期限：${DEADLINE}`);
+    lines.push("");
+
+    let n = 0;
+    items.querySelectorAll(".isf-item").forEach((b) => {
+      const title = val(b, "title");
+      const summary = val(b, "summary");
+      if (!title && !summary) return;
+      n += 1;
+      lines.push(`${n}. ${title || "（沒有填名稱）"}`);
+      lines.push(`   狀態：${val(b, "kind")}`);
+      lines.push(`   時間：${val(b, "date") || "待確認"}`);
+      if (val(b, "who")) lines.push(`   講師／負責人：${val(b, "who")}`);
+      lines.push(`   說明：${summary || "（沒有填）"}`);
+      const detail = val(b, "detail");
+      if (detail) {
+        detail.split("\n").forEach((d, i) => {
+          if (d.trim()) lines.push(`   ${i === 0 ? "補充：" : "　　　"}${d.trim()}`);
+        });
+      }
+      if (val(b, "link")) lines.push(`   連結：${val(b, "link")}`);
+      const pub = b.querySelector('input[type="radio"]:checked')?.value ?? "";
+      lines.push(`   可否公開：${pub}`);
+      lines.push("");
+    });
+
+    if (n === 0) lines.push("（還沒填任何一筆）");
+    return lines.join("\n");
+  }
+
+  function refresh() {
+    out.value = build();
+    const subject = `第二期電子報補充資料－${val(form, "group") || "（小組）"}`;
+    mail.href = `mailto:${SECRETARIAT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(out.value)}`;
+  }
+
+  document.getElementById("add").addEventListener("click", () => {
+    addItem();
+    refresh();
+  });
+
+  items.addEventListener("click", (e) => {
+    const del = e.target.closest(".isf-del");
+    if (!del) return;
+    del.closest(".isf-item").remove();
+    if (!items.querySelector(".isf-item")) addItem();
+    renumber();
+    refresh();
+  });
+
+  form.addEventListener("input", refresh);
+
+  document.getElementById("copy").addEventListener("click", async () => {
+    refresh();
+    try {
+      await navigator.clipboard.writeText(out.value);
+      msg.textContent = "已經複製了，貼給秘書處就可以。";
+    } catch {
+      out.select();
+      msg.textContent = "複製不了，請手動選取下面那一塊文字複製。";
+    }
+    window.setTimeout(() => (msg.textContent = ""), 6000);
+  });
+
+  addItem();
+  refresh();
+</script>
+
+<style>
+  .brief {
+    padding: 26px 0 6px;
+  }
+
+  .brief-grid {
+    display: grid;
+    gap: 22px;
+    align-items: start;
+  }
+
+  @media (min-width: 900px) {
+    .brief-grid {
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: 40px;
+    }
+  }
+
+  .brief h2 {
+    margin: 0 0 12px;
+    font-size: 1.1rem;
+  }
+
+  .brief ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .brief li {
+    margin-bottom: 8px;
+    font-size: 0.92rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+
+  .brief strong {
+    color: var(--ink);
+  }
+
+  .note {
+    margin: 14px 0 0;
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--ink-soft);
+  }
+
+  .flow {
+    margin: 0;
+    padding: 18px 20px 18px 38px;
+    background: var(--bg-alt);
+    border-radius: 16px;
+  }
+
+  .flow li {
+    font-size: 0.9rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  /* ---- 表單 ---- */
+
+  .form-wrap {
+    padding: 20px 0 56px;
+  }
+
+  .isf-block {
+    position: relative;
+    margin: 0 0 18px;
+    padding: 18px 20px 20px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+  }
+
+  .isf-block legend {
+    padding: 0 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .isf-row {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  @media (min-width: 760px) {
+    .isf-row {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .isf-row .wide {
+      grid-column: span 2;
+    }
+  }
+
+  .isf label {
+    display: block;
+  }
+
+  .isf label.wide {
+    margin-bottom: 14px;
+  }
+
+  .isf label > span {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .isf input[type="text"],
+  .isf select,
+  .isf textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font: inherit;
+    font-size: 0.92rem;
+    color: var(--ink);
+    background: var(--bg);
+  }
+
+  .isf textarea {
+    resize: vertical;
+    line-height: 1.7;
+  }
+
+  .isf input:focus,
+  .isf select:focus,
+  .isf textarea:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+
+  .isf-del {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    cursor: pointer;
+  }
+
+  .isf-del:hover {
+    color: var(--red-deep);
+    text-decoration: underline;
+  }
+
+  .isf-public {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+  }
+
+  .isf-public-q {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .isf .radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+
+  .isf-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    margin: 4px 0 14px;
+  }
+
+  .isf-msg {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--green-deep);
+  }
+
+  .isf-rule {
+    margin: 0 0 18px;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  .isf-preview span {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .isf-preview textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.84rem;
+    line-height: 1.8;
+    background: var(--bg-alt);
+    color: var(--ink);
+  }
+</style>

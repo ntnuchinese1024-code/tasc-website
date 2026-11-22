@@ -16,6 +16,36 @@ marked.setOptions({
   breaks: false, // 單行換行不強制斷行；要分段請空一行，跟一般寫作習慣一致
 });
 
+/**
+ * 秘書處從 Word／LINE／信件貼過來的稿子，常常是**每一段只換一行、沒有空行**。
+ * Markdown 把單一換行當成同一段，整篇就會黏成一大塊字牆
+ * （2026-11-22 的「月經平權」那篇實際發生過）。
+ *
+ * 所以這裡做一件事：整篇**完全沒有空行**、卻有好幾行的時候，自動把每一行
+ * 當成一段。已經正確用空行分段的稿子不會被動到；連續的清單、引言、標題
+ * 之間也不插空行，免得把清單拆散。
+ */
+function normalizeParagraphs(markdown: string): string {
+  const text = markdown.replace(/\r\n?/g, "\n");
+  if (/\n[ \t]*\n/.test(text)) return text; // 已經有空行分段，照原樣
+
+  const lines = text.split("\n");
+  if (lines.length < 3) return text;
+
+  const isBlock = (line: string) => /^\s*(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||```)/.test(line);
+
+  const out: string[] = [];
+  lines.forEach((line, i) => {
+    out.push(line);
+    const next = lines[i + 1];
+    if (next === undefined) return;
+    if (line.trim() === "" || next.trim() === "") return;
+    if (isBlock(line) && isBlock(next)) return;
+    out.push("");
+  });
+  return out.join("\n");
+}
+
 /** 移除原始 HTML 標籤，避免貼上來的內容破壞版面。 */
 function stripRawHtml(markdown: string): string {
   return markdown.replace(/<\/?[a-zA-Z][^>]*>/g, "");
@@ -23,7 +53,7 @@ function stripRawHtml(markdown: string): string {
 
 export function renderMarkdown(markdown: string | null | undefined): string {
   if (!markdown) return "";
-  return marked.parse(stripRawHtml(markdown), { async: false }) as string;
+  return marked.parse(normalizeParagraphs(stripRawHtml(markdown)), { async: false }) as string;
 }
 
 /**

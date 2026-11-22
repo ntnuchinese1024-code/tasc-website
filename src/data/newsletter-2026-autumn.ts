@@ -354,7 +354,7 @@ export const landmarks: Landmark[] = [
     kind: "線上講座",
     status: "已完成",
     date: "2026 年 5 月、9 月",
-    summary: "兩場線上講座：一場走進性產業的真實世界，一場談月經平權。",
+    summary: "兩場線上講座：一場走進性產業的真實世界，一場談月經平權，兩篇都有課程報導。",
     children: [
       {
         name: "個案・性產業探索——性諮商實務中需面對的真實世界之一",
@@ -365,10 +365,11 @@ export const landmarks: Landmark[] = [
       },
       {
         name: "當身體遇見社會：讓月經，被好好說出來——臺灣月經平權的推廣與現況",
-        status: "已完成",
+        status: "已完成・有報導",
         date: "9 月 5 日",
-        summary: "講師：鄭涵馨（社團法人全球小紅帽協會倡議總監）。線上舉辦。",
-        href: "/news/upcoming/menstrual-equity-2026",
+        summary:
+          "講師：鄭涵馨（社團法人全球小紅帽協會倡議總監）。談月經貧窮、校園月經教育與倡議行動，課程報導已經上線。",
+        href: "/news/reports/menstrual-equity-2026",
       },
     ],
     color: "green",

@@ -2,6 +2,25 @@
 
 TASC（Taiwan Association of Sexuality Counseling）官網原始碼與內容。取代原本即將到期的 Weebly 網站（`tasctaiwan.weebly.com`）。
 
+
+## ⚠️ 每次改動完，記得備份學會的資料
+
+官網本身的內容都在 Git 裡（等於隨時有版本紀錄），但**報名系統的資料庫只有一份**
+——Supabase 目前是免費方案，沒有任何自動備份。報名名冊、性諮商師資料、回饋問卷
+都存在那裡。
+
+所以**只要這一輪動到學會的東西，結束前請跑一次備份**：
+
+```
+cd ~/Desktop/07_學會與社群/tasc-registration && node scripts/backup-export.mjs
+```
+
+存放原則（含個資，絕對不能進 git）與被攻擊時的還原步驟，寫在私有 repo 的
+`tasc-registration/docs/資安與備援.md`。
+
+> 給協作的 AI：**每一次改動結束時都要主動提醒維護者備份**，不要等他想起來。
+
+
 ## 這是什麼、為什麼長這樣
 
 這個網站刻意選擇「純靜態網站＋Git 版本紀錄」的做法，而不是 Wix / Weebly / Squarespace 這類拖拉式平台，原因跟這次要重做網站的起因一樣：**平台到期或政策改變時，內容要能完整帶著走，不被鎖住。**

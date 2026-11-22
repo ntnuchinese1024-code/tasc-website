@@ -52,10 +52,17 @@ const navLinks = [
     z-index: 40;
   }
 
+  /*
+   * 頁首比內文寬：站上其他地方的 .wrap 是 1080px，但選單八項加標誌加按鈕
+   * 大約要 1000px 以上才排得下，擠在 1080 裡只剩不到 20px 餘裕——使用者
+   * 只要把瀏覽器字級調大一點，標誌就會壓到第一個選單項目上。
+   */
   .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
+    max-width: 1280px;
     padding-top: 14px;
     padding-bottom: 14px;
   }
@@ -65,6 +72,8 @@ const navLinks = [
     align-items: center;
     gap: 10px;
     text-decoration: none;
+    /* 不要被選單擠扁 */
+    flex: 0 0 auto;
   }
 
   .brand-word {
@@ -76,13 +85,20 @@ const navLinks = [
     white-space: nowrap;
   }
 
+  /*
+   * 選單項目本身永遠不斷字（white-space: nowrap），但整個選單允許換行：
+   * 萬一使用者的字級特別大、或之後又多加了項目，最壞情況是選單掉到第二行，
+   * 而不是疊在標誌上面。2026-11 兩種情形都實際發生過。
+   */
   .nav-desktop {
     display: none;
     align-items: center;
-    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    row-gap: 4px;
+    gap: 6px;
     font-size: 0.9rem;
-    /* 一列排不下時寧可讓它溢出被我們提早換成漢堡選單，也不要每一項各自斷成兩行 */
-    flex-wrap: nowrap;
+    min-width: 0;
   }
 
   .nav-desktop a:not(.btn) {
@@ -169,12 +185,12 @@ const navLinks = [
   }
 
   /*
-   * 主選單有八項加一顆「會員申請」，一列大約要 1060px 才排得下。
+   * 主選單有八項加一顆「會員申請」，加上標誌大約要 1000px 才排得下。
    * 2026-11 以前斷點設在 940px，結果 940～1100px 之間每一項都被擠成兩行
-   * （「關於我 / 們」），標誌的全名也跟著斷。寧可多用一段漢堡選單，
-   * 也不要擠成那樣。之後若增減選單項目，這個數字要跟著調。
+   * （「關於我 / 們」），標誌的全名也跟著斷。寧可多用一段漢堡選單。
+   * 之後若增減選單項目，這個數字要跟著調。
    */
-  @media (min-width: 1100px) {
+  @media (min-width: 1180px) {
     .nav-desktop {
       display: flex;
     }

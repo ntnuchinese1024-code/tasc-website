@@ -1,7 +1,8 @@
 /**
  * 「政策島嶼」——把學會 115（2026）年度的新發展畫成一片串聯起來的漂浮群島。
  *
- * 這個檔案只負責「島上有什麼」，畫面長怎樣在 `src/pages/island.astro`。
+ * 這個檔案只負責「島上有什麼」，畫面長怎樣在 `src/components/island/IslandMap.astro`，
+ * 頁面是 `src/pages/island.astro`。同一個元件也畫第二期電子報（`src/data/newsletter-2026-autumn.ts`）。
  * 要加一個新發展、改文案、換位置，改這裡就好，頁面會自動跟著變。
  *
  * 結構分兩層：
@@ -19,107 +20,25 @@
  *     `labelAbove: true`，標籤會改放在圖示上方。改完一定要在瀏覽器上看一眼。
  *   - `color` 只能用學會標誌色（見 `src/styles/global.css`）。文字會自動用對應的
  *     `-deep` 版本，確保對比度夠。
- *   - `glyph` 是地標的圖示，可用的清單寫在 island.astro 的 <defs> 裡；
- *     要新的圖示就去那邊加一個 <symbol>。
+ *   - `glyph` 是地標的圖示，可用的清單在 `src/lib/island-types.ts` 的 `IslandGlyph`；
+ *     要新的圖示就去 `src/components/island/Structures.astro` 加一個 <symbol>。
  *   - 同一個地標底下附屬的小項目（例如學術組辦的各個讀書會）放進 `children`，
  *     不要各自佔一個地標。島上的地標數量要克制，擠在一起標籤就會疊。
  */
 
-/**
- * 島的地貌。每一種在 `src/lib/island-art.ts` 裡有自己的岸線起伏、岩塊剖面、配色
- * 與樹種，在 island.astro 裡還會多畫自己的地景（石階廣場、棧橋、山丘、小徑、燈串）。
- * 換一座島的 terrain，整座島的長相就會跟著換。
- */
-export type Terrain =
-  | "terrace" /* 環狀石階的廣場台地 */
-  | "harbor" /* 灰藍岩的港灣，島外伸出棧橋 */
-  | "highland" /* 針葉林高地，底下垂一道瀑布 */
-  | "meadow" /* 明亮草原，有小徑與水塘 */
-  | "festival" /* 兩瓣的熱鬧島，掛著燈串 */;
+import type {
+  IslandColor,
+  IslandGlyph,
+  IslandMeta,
+  Landmark,
+  Region,
+  Route,
+} from "../lib/island-types";
 
-/** 標誌色票裡可以用在島與地標上的顏色 */
-export type IslandColor = "blue" | "red" | "green" | "orange" | "magenta";
-
-/** 地標圖示；對應 island.astro <defs> 裡的 <symbol id="glyph-...">  */
-export type IslandGlyph =
-  | "lighthouse"
-  | "harbor"
-  | "plaza"
-  | "academy"
-  | "book"
-  | "post"
-  | "bridge"
-  | "lookout"
-  | "mic"
-  | "ferry"
-  | "lantern"
-  | "globe";
-
-/** 一座島＝一個主題區塊 */
-export interface Region {
-  id: string;
-  /** 島名，會標在島的上方 */
-  name: string;
-  /** 一句話說明這座島是什麼，顯示在下方清單的分段標題旁 */
-  note: string;
-  color: IslandColor;
-  /** 地貌：決定島的形狀、配色、樹種與島上的地景 */
-  terrain: Terrain;
-  /** 島中心（整張圖的座標） */
-  cx: number;
-  cy: number;
-  /** 島的半徑；ry 比 rx 小很多，才有從斜上方看下去的感覺 */
-  rx: number;
-  ry: number;
-  /** 島的厚度（草地到岩層底之間的那一圈土） */
-  depth: number;
-  /** 決定island輪廓起伏的亂數種子；同一個數字每次畫出來都一樣 */
-  seed: number;
-}
-
-/** 掛在某個地標底下的小項目，只出現在說明卡裡，不在地圖上另外佔一個點 */
-export interface SubItem {
-  name: string;
-  /** 目前進度，例如「招募中」 */
-  status: string;
-  /** 時間；查不到就寫「待確認」 */
-  date: string;
-  summary: string;
-  href?: string;
-}
-
-export interface Landmark {
-  /** 錨點與 DOM id，用英文小寫加連字號 */
-  id: string;
-  /** 所屬島嶼的 id */
-  region: string;
-  /** 島上的地標名稱（比喻用的名字，可以活潑一點） */
-  name: string;
-  /** 這件事實際上是什麼，例如「組織」「會員服務」 */
-  kind: string;
-  /** 目前進度，例如「已啟用」「招募中」 */
-  status: string;
-  /** 發生或啟用的時間；查不到就寫「待確認」 */
-  date: string;
-  /** 一句話說明這個新發展是什麼 */
-  summary: string;
-  /** 補充說明，一點一句，沒有就不寫 */
-  details?: string[];
-  /** 附屬在這個地標底下的小項目，沒有就不寫 */
-  children?: SubItem[];
-  /** 官網上對應的頁面，沒有對應頁面就不寫 */
-  href?: string;
-  color: IslandColor;
-  glyph: IslandGlyph;
-  /** 相對於所屬島中心的位移 */
-  dx: number;
-  dy: number;
-  /** 標籤改放在圖示上方（同一座島標籤會撞在一起時才用） */
-  labelAbove?: boolean;
-}
+export type { IslandColor, IslandGlyph, Landmark, Region, SubItem, Terrain } from "../lib/island-types";
 
 /** 島的標題區文字 */
-export const islandMeta = {
+export const islandMeta: IslandMeta = {
   year: "115 年度",
   title: "政策島嶼",
   lead: "學會這一年長出來的新東西，分成五座島排在這片海上，島跟島之間有橋相通。點一個地標，看看它是什麼。",
@@ -129,7 +48,7 @@ export const islandMeta = {
  * 島跟島之間的航線。`bend` 是彎曲程度，正負決定往哪一邊鼓出去；
  * 照順序接成一圈，不要連成一團蜘蛛網。
  */
-export const routes: { from: string; to: string; bend: number }[] = [
+export const routes: Route[] = [
   { from: "infra", to: "annual", bend: -0.14 },
   { from: "annual", to: "academy", bend: -0.14 },
   { from: "academy", to: "public", bend: -0.16 },
@@ -210,7 +129,7 @@ export const landmarks: Landmark[] = [
   {
     id: "website",
     region: "infra",
-    name: "燈塔・新官網",
+    name: "新官網",
     kind: "基礎建設",
     status: "已啟用",
     date: "2026 年 8 月",
@@ -229,7 +148,7 @@ export const landmarks: Landmark[] = [
   {
     id: "registration",
     region: "infra",
-    name: "報名港",
+    name: "報名系統",
     kind: "基礎建設",
     status: "營運中",
     date: "2026 年",
@@ -250,7 +169,7 @@ export const landmarks: Landmark[] = [
   {
     id: "annual-2026",
     region: "annual",
-    name: "年會廣場",
+    name: "2026 年會",
     kind: "年度大會",
     status: "已完成",
     date: "2026 年 6 月 6 日",
@@ -267,7 +186,7 @@ export const landmarks: Landmark[] = [
   {
     id: "academic-group",
     region: "academy",
-    name: "學術學院",
+    name: "新成立的學術組",
     kind: "組織",
     status: "新設",
     date: "2026 年 10 月 11 日",
@@ -303,7 +222,7 @@ export const landmarks: Landmark[] = [
   {
     id: "directory",
     region: "service",
-    name: "名錄瞭望台",
+    name: "性諮商師名錄",
     kind: "會員服務",
     status: "上線",
     date: "2026 年 11 月",
@@ -322,7 +241,7 @@ export const landmarks: Landmark[] = [
   {
     id: "invite",
     region: "service",
-    name: "講師驛站",
+    name: "講師邀約",
     kind: "對外服務",
     status: "開放中",
     date: "2026 年",
@@ -336,7 +255,7 @@ export const landmarks: Landmark[] = [
   {
     id: "newsletter",
     region: "service",
-    name: "電子報郵局",
+    name: "電子報創刊",
     kind: "對外溝通",
     status: "創刊",
     date: "2026 年 4 月 14 日",
@@ -353,7 +272,7 @@ export const landmarks: Landmark[] = [
   {
     id: "pride-2026",
     region: "public",
-    name: "彩虹橋・同遊照片牆",
+    name: "同遊・照片牆",
     kind: "公眾參與",
     status: "展出中",
     date: "2026 年 10 月",
@@ -367,7 +286,7 @@ export const landmarks: Landmark[] = [
   {
     id: "anniversary-2026",
     region: "public",
-    name: "辦桌廣場・時光留言席",
+    name: "會慶・時光留言席",
     kind: "公眾參與",
     status: "展出中",
     date: "2026 年 9 月",
@@ -382,10 +301,10 @@ export const landmarks: Landmark[] = [
   {
     id: "museum-visit",
     region: "public",
-    name: "參訪渡口",
+    name: "月經博物館參訪",
     kind: "專業活動",
     status: "已完成",
-    date: "2026 年 10 月 8 日",
+    date: "2026 年 10 月 18 日",
     summary: "2026 秋季專業參訪：月經博物館。",
     color: "green",
     glyph: "ferry",

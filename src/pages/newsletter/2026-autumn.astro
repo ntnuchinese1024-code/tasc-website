@@ -1,0 +1,291 @@
+---
+/**
+ * 第二期電子報（2026 秋冬）：/newsletter/2026-autumn
+ *
+ * 跟創刊號不一樣，這一期不是 PDF 翻書，而是一張「政策島嶼」——地圖本體是
+ * `src/components/island/IslandMap.astro`，內容在 `src/data/newsletter-2026-autumn.ts`。
+ *
+ * 「報名亭」這個地標底下的課，是建置時去報名系統抓現在還開著報名的場次
+ * （所以秘書處後台一上架新課，下一次建置這一期就會跟著更新）。抓不到就整個
+ * 地標不出現，不會讓建置失敗。
+ *
+ * 目前是**內部預覽**：設了 noindex、也從 sitemap 排除、/newsletter 那一頁還沒掛連結。
+ * 定稿要公開時三個地方一起改：這裡的 noindex、astro.config.mjs 的 sitemap 排除、
+ * /newsletter 的入口（或 src/data/newsletters.ts）。
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import IslandMap from "../../components/island/IslandMap.astro";
+import {
+  islandMeta,
+  issueMeta,
+  landmarks,
+  regions,
+  routes,
+  signupLandmark,
+} from "../../data/newsletter-2026-autumn";
+import type { Landmark, SubItem } from "../../lib/island-types";
+import {
+  REGISTRATION_LABEL,
+  eventTimeText,
+  getOpenCourses,
+  type EventSummary,
+} from "../../lib/registration-api";
+
+const title = `${issueMeta.issue}電子報・${islandMeta.title}｜台灣性諮商學會`;
+const description = islandMeta.lead;
+
+// ---------------------------------------------------------------------------
+// 報名亭：還開著報名的課
+// ---------------------------------------------------------------------------
+// 已經上過的課不算（報名系統上架後不會馬上下架，要留著寫報導），
+// 判斷用台北時間的當天凌晨，當天的課整天都還算「即將開課」。
+const todayStart = new Date(
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Taipei" }).format(new Date()) + "T00:00:00+08:00",
+);
+
+const upcoming: EventSummary[] = (await getOpenCourses())
+  .filter((c) => c.starts_at === null || new Date(c.starts_at) >= todayStart)
+  .sort((a, b) => (a.starts_at ?? "9999").localeCompare(b.starts_at ?? "9999"));
+
+const toSubItem = (c: EventSummary): SubItem => ({
+  name: c.title,
+  status: REGISTRATION_LABEL[c.registration.status] ?? "報名中",
+  date: eventTimeText(c),
+  summary: [c.instructor ? `講師：${c.instructor}` : "", c.location ?? ""].filter(Boolean).join("・"),
+  href: `/news/upcoming/${c.slug}`,
+});
+
+const signup: Landmark | null = upcoming.length
+  ? {
+      ...signupLandmark,
+      summary:
+        upcoming.length === 1
+          ? "現在有一堂課開著報名，點進去就可以報名。"
+          : `現在有 ${upcoming.length} 堂課開著報名，點進去就可以報名。`,
+      children: upcoming.map(toSubItem),
+    }
+  : null;
+
+const allLandmarks = signup ? [...landmarks, signup] : landmarks;
+
+const devCount = allLandmarks.reduce((acc, l) => acc + 1 + (l.children?.length ?? 0), 0);
+
+const badges = [
+  issueMeta.period,
+  `${regions.length} 座島・${devCount} 件事`,
+  upcoming.length ? `${upcoming.length} 堂課報名中` : "",
+].filter(Boolean);
+---
+
+<BaseLayout title={title} description={description} noindex={true}>
+  <PageHero
+    eyebrow={`台灣性諮商學會電子報・${issueMeta.issue}`}
+    title={islandMeta.title}
+    lead={islandMeta.lead}
+    decor={false}
+  >
+    <div class="plate">
+      <p class="plate-issue">
+        <span class="plate-no">{issueMeta.issue}</span>
+        <span class="plate-name">{issueMeta.title}</span>
+      </p>
+      <ul class="plate-badges">
+        {badges.map((b) => <li>{b}</li>)}
+      </ul>
+      <p class="plate-links">
+        <a href="/newsletter">電子報專區 →</a>
+        <a href="/newsletter/2026-spring">看創刊號 →</a>
+      </p>
+    </div>
+  </PageHero>
+
+  <section class="intro">
+    <div class="wrap intro-grid">
+      <div class="intro-text">
+        <h2>這一期是什麼</h2>
+        <p>
+          這是台灣性諮商學會的<strong>第二期電子報</strong>，把創刊號（2026 年 4 月 14 日）之後
+          到十一月底、這半年學會做的事整理給會員與關心學會的人。
+        </p>
+        <p>
+          這半年開了課、辦了年會、做了新官網與性諮商師名錄、成立了學術組，也把會慶和同遊
+          做成了可以一直參與的互動展覽。與其條列成一長串清單，我們把它畫成一張地圖：
+          一座島是一個方向，島上的每個地標都是一件真的做出來的事。
+        </p>
+      </div>
+      <ul class="intro-how">
+        <li><strong>點地標</strong>　旁邊就會跳出說明、日期與連結，點連結可以看完整那一頁。</li>
+        <li><strong>左下角可以換時間</strong>　白天、黃昏、夜晚，夜裡島上的窗戶和路燈會亮。</li>
+        <li><strong>「現在可以報名的課」</strong>　直接接學會的報名系統，開了新課就會跟著更新。</li>
+        <li><strong>往下捲有完整清單</strong>　不想點地圖的話，底下照島分段列出了每一件事。</li>
+      </ul>
+    </div>
+  </section>
+
+  <IslandMap meta={islandMeta} regions={regions} routes={routes} landmarks={allLandmarks} />
+
+  <section class="colophon">
+    <div class="wrap">
+      <p>
+        這一期沒有 PDF，整份就是上面那張地圖。島上的地標對應的都是官網上查得到的事；
+        「現在可以報名的課」底下是還開著報名的課，每次網站重新建置都會更新。
+      </p>
+      <p class="colophon-meta">
+        台灣性諮商學會・{issueMeta.title}（{issueMeta.issue}）・出刊日 {issueMeta.date}
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* 開頭的說明：先講清楚這是第二期電子報，再進地圖 */
+  .intro {
+    padding: 28px 0 4px;
+  }
+
+  .intro-grid {
+    display: grid;
+    gap: 22px;
+    align-items: start;
+  }
+
+  @media (min-width: 900px) {
+    .intro-grid {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: 40px;
+    }
+  }
+
+  .intro-text h2 {
+    margin: 0 0 12px;
+    font-size: 1.15rem;
+  }
+
+  .intro-text p {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+    line-height: 1.95;
+    color: var(--ink-soft);
+  }
+
+  .intro-text strong {
+    color: var(--ink);
+  }
+
+  .intro-how {
+    margin: 0;
+    padding: 18px 20px;
+    list-style: none;
+    background: var(--bg-alt);
+    border-radius: 16px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .intro-how li {
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: var(--ink-soft);
+  }
+
+  .intro-how strong {
+    color: var(--ink);
+  }
+
+  /* 報頭：讓人一眼知道這是第幾期電子報 */
+  .plate {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 20px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  .plate-issue {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0;
+  }
+
+  .plate-no {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #fff;
+    background: var(--blue-deep);
+    border-radius: 999px;
+    padding: 4px 14px;
+    letter-spacing: 0.04em;
+  }
+
+  .plate-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .plate-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .plate-badges li {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: var(--bg-alt);
+    border-radius: 999px;
+    padding: 5px 12px;
+  }
+
+  .plate-links {
+    margin: 0 0 0 auto;
+    display: flex;
+    gap: 16px;
+  }
+
+  .plate-links a {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+    text-decoration: none;
+  }
+
+  .plate-links a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 760px) {
+    .plate-links {
+      margin-left: 0;
+    }
+  }
+
+  /* 版權頁 */
+  .colophon {
+    padding: 8px 0 48px;
+  }
+
+  .colophon p {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    line-height: 1.9;
+  }
+
+  .colophon-meta {
+    margin-top: 10px !important;
+    font-size: 0.78rem !important;
+    color: var(--ink-faint);
+  }
+</style>

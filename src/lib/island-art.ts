@@ -13,7 +13,7 @@
  *   - 所有起伏都用 `seed` 算（不是 `Math.random`），每次建置畫出來都一樣。
  *   - 島上的東西（草叢、樹、小房子、路燈）都要先過 `insideHex` 檢查，否則會長到海裡。
  */
-import type { Region, Terrain } from "../data/island-2026";
+import type { Region, Terrain } from "./island-types";
 
 export const n = (v: number) => Math.round(v * 10) / 10;
 
@@ -35,6 +35,8 @@ export interface TerrainSkin {
   tuft: string;
   /** 小房子的屋頂 */
   roof: string;
+  /** 街區的屋頂：三種輪流用，一整排才不會同一個顏色 */
+  roofs: [string, string, string];
 }
 
 export const skins: Record<Terrain, TerrainSkin> = {
@@ -47,6 +49,7 @@ export const skins: Record<Terrain, TerrainSkin> = {
     treeDark: "#4E7A3B",
     tuft: "#86AE5F",
     roof: "#C8553D",
+    roofs: ["#C8553D", "#D98C4A", "#8C6E57"],
   },
   // 基礎建設島：冷調草地配灰藍岩
   harbor: {
@@ -57,6 +60,7 @@ export const skins: Record<Terrain, TerrainSkin> = {
     treeDark: "#3F7459",
     tuft: "#74A98A",
     roof: "#3B7CA8",
+    roofs: ["#3B7CA8", "#5E93B5", "#7E8A93"],
   },
   // 學術島：深綠針葉林配帶紫的岩
   highland: {
@@ -67,6 +71,7 @@ export const skins: Record<Terrain, TerrainSkin> = {
     treeDark: "#2C5C3C",
     tuft: "#6E9E63",
     roof: "#8E4C86",
+    roofs: ["#8E4C86", "#6E5A94", "#8A7F72"],
   },
   // 服務島：最亮的草原，米黃砂岩
   meadow: {
@@ -77,6 +82,7 @@ export const skins: Record<Terrain, TerrainSkin> = {
     treeDark: "#538040",
     tuft: "#8CB763",
     roof: "#D98033",
+    roofs: ["#D98033", "#C2683A", "#8B7B62"],
   },
   // 參與島：熱鬧一點的亮綠
   festival: {
@@ -87,6 +93,7 @@ export const skins: Record<Terrain, TerrainSkin> = {
     treeDark: "#467F46",
     tuft: "#83BB74",
     roof: "#4E9B5B",
+    roofs: ["#4E9B5B", "#3E8470", "#9A7F5C"],
   },
 };
 
@@ -257,40 +264,119 @@ export interface Tree extends Spot {
   kind: TreeKind;
 }
 
-/** 樹：避開地標，由遠而近排序（後畫的蓋住先畫的） */
-export function treeSpots(r: Region, marks: { x: number; y: number }[]) {
+/** 樹：避開地標與房子，由遠而近排序（後畫的蓋住先畫的） */
+export function treeSpots(r: Region, marks: { x: number; y: number }[], avoid: Spot[] = []) {
   const kinds = treeKinds[r.terrain];
-  const want = r.terrain === "highland" ? 10 : 8;
+  const want = r.rx > 190 ? 13 : r.rx > 150 ? 11 : 9;
   const out: Tree[] = [];
-  scatter(r, 30, 3, 0.92).forEach((p, i) => {
+  scatter(r, 44, 3, 0.95).forEach((p, i) => {
     if (out.length >= want) return;
     if (!insideHex(r, p.x, p.y, 0.8)) return;
     if (marks.some((m) => Math.hypot((m.x - p.x) / 1.1, (m.y - p.y) * 1.5) < 56)) return;
-    if (out.some((t) => Math.hypot(t.x - p.x, (t.y - p.y) * 1.6) < 32)) return;
+    if (avoid.some((b) => Math.hypot(b.x - p.x, (b.y - p.y) * 1.7) < 24)) return;
+    if (out.some((t) => Math.hypot(t.x - p.x, (t.y - p.y) * 1.6) < 30)) return;
     out.push({ ...p, s: 0.7 + 0.34 * Math.abs(Math.sin(r.seed * 1.7 + i)), kind: kinds[i % kinds.length] });
   });
   return out.sort((a, b) => a.y - b.y);
 }
 
-/** 島上的小房子：代表島上的人家，夜裡窗戶會亮 */
-export function houses(r: Region, marks: { x: number; y: number }[], trees: Spot[]) {
-  const out: Spot[] = [];
-  scatter(r, 26, 11, 0.86).forEach((p) => {
-    if (out.length >= (r.rx > 170 ? 6 : 4)) return;
-    if (!insideHex(r, p.x, p.y, 0.72)) return;
-    if (marks.some((m) => Math.hypot((m.x - p.x) / 1.1, (m.y - p.y) * 1.5) < 62)) return;
-    if (trees.some((t) => Math.hypot(t.x - p.x, (t.y - p.y) * 1.6) < 30)) return;
-    if (out.some((h) => Math.hypot(h.x - p.x, (h.y - p.y) * 1.6) < 46)) return;
-    out.push({ ...p, s: 0.46 + 0.1 * (p.s - 0.7) });
-  });
+/* ---- 城鎮：道路、街區、站著的市民 -------------------------------- */
+
+export interface RoadNet {
+  /** 環島主幹道（人與建築都沿著它排） */
+  main: string;
+  /** 從主幹道岔出去的小路 */
+  spurs: string[];
+}
+
+/** 島上的道路。環狀主幹道加兩條岔路，街區就沿著它長。 */
+export function roads(r: Region): RoadNet {
+  const rx = r.rx * 0.62;
+  const ry = r.ry * 0.5;
+  const cy = r.cy + r.ry * 0.16;
+  const main =
+    `M ${n(r.cx - rx)} ${n(cy)} A ${n(rx)} ${n(ry)} 0 1 0 ${n(r.cx + rx)} ${n(cy)} ` +
+    `A ${n(rx)} ${n(ry)} 0 1 0 ${n(r.cx - rx)} ${n(cy)}`;
+  const spur = (a: number, k: number) => {
+    const x0 = r.cx + Math.cos(a) * rx;
+    const y0 = cy + Math.sin(a) * ry;
+    const x1 = r.cx + Math.cos(a) * r.rx * k;
+    const y1 = cy + Math.sin(a) * r.ry * k * 0.86;
+    return `M ${n(x0)} ${n(y0)} Q ${n((x0 + x1) / 2 + 8)} ${n((y0 + y1) / 2)} ${n(x1)} ${n(y1)}`;
+  };
+  return { main, spurs: [spur(r.seed % 1.2 + 0.4, 0.86), spur(Math.PI + (r.seed % 1.5), 0.82)] };
+}
+
+export type BuildingKind = "house" | "shop" | "block" | "tower";
+
+export interface Building extends Spot {
+  kind: BuildingKind;
+  /** 門面朝哪邊（1 朝右、-1 朝左），同一排才不會全部長得一樣 */
+  flip: 1 | -1;
+}
+
+/**
+ * 街區：沿著環狀道路的內外兩側排房子，不是隨機灑點。
+ * 四種量體交錯（透天、店舖、街屋、小高樓），看起來才像個鎮。
+ */
+export function cityBlocks(r: Region, marks: { x: number; y: number }[], trees: Spot[] = []): Building[] {
+  const want = r.rx > 190 ? 14 : r.rx > 150 ? 12 : 9;
+  const kinds: BuildingKind[] = ["house", "shop", "block", "house", "tower", "shop", "house", "block"];
+  const out: Building[] = [];
+  const ringRy = r.ry * 0.5;
+  const ringCy = r.cy + r.ry * 0.16;
+  // 沿著主幹道的內側、外側與更外圈各排一列，房子才會成片
+  const lanes = [0.72, 1.28, 1.62];
+  for (let i = 0; i < 72 && out.length < want; i++) {
+    const a = r.seed * 0.9 + i * 2.39996;
+    const k = lanes[i % lanes.length];
+    const x = r.cx + Math.cos(a) * r.rx * 0.62 * k;
+    const y = ringCy + Math.sin(a) * ringRy * k;
+    if (!insideHex(r, x, y, 0.84)) continue;
+    if (marks.some((m) => Math.hypot((m.x - x) / 1.2, (m.y - y) * 1.6) < 46)) continue;
+    if (trees.some((t) => Math.hypot(t.x - x, (t.y - y) * 1.7) < 22)) continue;
+    if (out.some((b) => Math.hypot(b.x - x, (b.y - y) * 1.8) < 26)) continue;
+    const kind = kinds[(i + Math.round(r.seed)) % kinds.length];
+    out.push({
+      x,
+      y,
+      s: (kind === "tower" ? 0.86 : 0.98) + 0.14 * Math.abs(Math.sin(r.seed + i * 1.3)),
+      kind,
+      flip: Math.cos(a) < 0 ? -1 : 1,
+    });
+  }
   return out.sort((a, b) => a.y - b.y);
 }
 
-/** 路燈：夜裡會亮的小光點，放在島的前緣 */
+/**
+ * 站著的市民：兩三個人湊成一小群，站在路邊聊天（跟沿路走動的人不一樣，這些不動）。
+ * 有人站著、有人走，島上才像有人住。
+ */
+export function crowdSpots(r: Region, marks: { x: number; y: number }[], builds: Spot[]) {
+  const out: { x: number; y: number; s: number; face: 1 | -1 }[] = [];
+  for (let i = 0; i < 60 && out.length < 12; i++) {
+    const a = r.seed * 2.1 + i * 2.39996;
+    const rad = 0.3 + ((i * 7) % 5) * 0.12;
+    const x = r.cx + Math.cos(a) * r.rx * rad;
+    const y = r.cy + r.ry * 0.16 + Math.sin(a) * r.ry * rad * 0.9;
+    if (!insideHex(r, x, y, 0.72)) continue;
+    if (marks.some((m) => Math.hypot((m.x - x) / 1.2, (m.y - y) * 1.6) < 40)) continue;
+    if (builds.some((b) => Math.hypot(b.x - x, (b.y - y) * 1.8) < 18)) continue;
+    if (out.some((c) => Math.hypot(c.x - x, (c.y - y) * 1.8) < 22)) continue;
+    out.push({ x, y, s: 0.72 + 0.12 * Math.abs(Math.sin(r.seed + i)), face: i % 2 === 0 ? 1 : -1 });
+  }
+  return out.sort((a, b) => a.y - b.y);
+}
+
+/** 路燈：沿著環狀道路站一圈，夜裡會亮 */
 export function lampSpots(r: Region) {
-  return [-0.46, 0.2, 0.62]
-    .map((k) => ({ x: r.cx + r.rx * k, y: r.cy + r.ry * (0.52 - Math.abs(k) * 0.12), s: 1 }))
-    .filter((p) => insideHex(r, p.x, p.y, 0.86));
+  return [0.5, 1.5, 2.6, 4.1, 5.2]
+    .map((a) => ({
+      x: r.cx + Math.cos(a + r.seed) * r.rx * 0.62 * 1.08,
+      y: r.cy + r.ry * 0.16 + Math.sin(a + r.seed) * r.ry * 0.5 * 1.08,
+      s: 1,
+    }))
+    .filter((p) => insideHex(r, p.x, p.y, 0.8));
 }
 
 /* ------------------------------------------------------------------ */
@@ -377,56 +463,130 @@ export function lanternString(r: Region) {
 export interface Bridge {
   /** 橋面的中心線，人就沿著這條走 */
   deck: string;
+  /** 橋面底下那一層（畫在 deck 下面，橋才有厚度） */
+  under: string;
+  /** 橋面上的木板紋 */
+  planks: string;
   /** 橋的左右兩條欄杆 */
   rails: [string, string];
-  /** 橋墩 */
+  /** 欄杆下面的小立柱 */
+  balusters: string[];
+  /** 橋墩：從橋面插到水裡 */
   posts: string[];
+  /** 橋墩入水處的漣漪 */
+  piles: { x: number; y: number; rx: number }[];
+  /** 兩端接上島的引道（梯形，讓橋真的踩在島上） */
+  landings: [string, string];
   /** 落在水面上的影子 */
   shadow: string;
 }
 
 /**
- * 兩座島之間的拱橋。從 a 的邊緣拉到 b 的邊緣（不是中心），
- * `bend` 是拱起來的幅度。
+ * 六角島邊緣上的點：從島中心往 (dx, dy) 的方向走到島緣。
+ * `k` 小於 1 會停在島裡面（引道用），大於 1 會跑到島外。
  */
-export function bridge(a: Region, b: Region, bend: number): Bridge {
-  const ax0 = a.cx;
-  const ay0 = a.cy + a.ry * 0.5;
-  const bx0 = b.cx;
-  const by0 = b.cy + b.ry * 0.5;
-  const dx = bx0 - ax0;
-  const dy = by0 - ay0;
-  const len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len;
-  const uy = dy / len;
-  // 從島中心往對方的方向退到島緣，橋才不會插進島裡
-  const inset = (r: Region) => Math.min(r.rx, r.ry * 1.6) * 0.82;
-  const ax = ax0 + ux * inset(a);
-  const ay = ay0 + uy * inset(a);
-  const bx = bx0 - ux * inset(b);
-  const by = by0 - uy * inset(b);
-  const mx = (ax + bx) / 2;
-  const my = (ay + by) / 2 - Math.abs(len) * Math.abs(bend);
-  const curve = (ox: number, oy: number) =>
-    `M ${n(ax + ox)} ${n(ay + oy)} Q ${n(mx + ox)} ${n(my + oy)} ${n(bx + ox)} ${n(by + oy)}`;
-  const posts = [0.22, 0.5, 0.78].map((t) => {
-    const x = (1 - t) ** 2 * ax + 2 * (1 - t) * t * mx + t * t * bx;
-    const y = (1 - t) ** 2 * ay + 2 * (1 - t) * t * my + t * t * by;
-    return `M ${n(x)} ${n(y + 4)} V ${n(y + 26 + t * 6)}`;
-  });
+export function hexEdge(r: Region, dx: number, dy: number, k = 1) {
+  const s = 0.866;
+  // 六角形的邊界就是 f(u, v) = s；f 是一次齊次函式，所以沿著方向走多遠可以直接算
+  const u = dx / r.rx;
+  const v = dy / r.ry;
+  const f = Math.max(Math.abs(v), Math.abs(u * s + v * 0.5), Math.abs(u * s - v * 0.5)) || 1;
+  const t = ((s / f) * k) || 0;
+  return { x: r.cx + dx * t, y: r.cy + dy * t };
+}
+
+/** 二次貝茲曲線上的點 */
+function qPoint(ax: number, ay: number, mx: number, my: number, bx: number, by: number, t: number) {
+  const it = 1 - t;
   return {
-    deck: curve(0, 0),
-    rails: [curve(0, -7), curve(0, 4)],
-    posts,
-    shadow: curve(4, 26),
+    x: it * it * ax + 2 * it * t * mx + t * t * bx,
+    y: it * it * ay + 2 * it * t * my + t * t * by,
   };
 }
 
-/** 島上散步用的環狀路徑 */
+/**
+ * 兩座島之間的拱橋。
+ *
+ * 端點是**算出來的島緣**（`hexEdge`），而且刻意往島裡多踩一點，
+ * 所以橋一定接得到島上，不會浮在半空（2026-11 修過一次：原本用固定的
+ * inset 從島中心退，方向一斜就會留一道縫）。
+ */
+export function bridge(a: Region, b: Region, bend: number): Bridge {
+  const dx = b.cx - a.cx;
+  const dy = b.cy - a.cy;
+  const len = Math.hypot(dx, dy) || 1;
+
+  // 端點：島緣再往裡面收一點點，接縫會被島的草地蓋住
+  const pa = hexEdge(a, dx, dy, 0.92);
+  const pb = hexEdge(b, -dx, -dy, 0.92);
+  // 引道：從島緣再往島內延伸，像一段上橋的坡道
+  const ia = hexEdge(a, dx, dy, 0.6);
+  const ib = hexEdge(b, -dx, -dy, 0.6);
+
+  const ax = pa.x;
+  const ay = pa.y;
+  const bx = pb.x;
+  const by = pb.y;
+  const mx = (ax + bx) / 2;
+  const my = (ay + by) / 2 - len * Math.abs(bend);
+
+  const curve = (ox: number, oy: number) =>
+    `M ${n(ax + ox)} ${n(ay + oy)} Q ${n(mx + ox)} ${n(my + oy)} ${n(bx + ox)} ${n(by + oy)}`;
+
+  // 橋墩：避開兩端，落在水面上
+  const postTs = [0.26, 0.5, 0.74];
+  const posts: string[] = [];
+  const piles: { x: number; y: number; rx: number }[] = [];
+  postTs.forEach((t) => {
+    const p = qPoint(ax, ay, mx, my, bx, by, t);
+    const drop = 26 + Math.sin(t * Math.PI) * 14;
+    posts.push(`M ${n(p.x)} ${n(p.y + 5)} V ${n(p.y + drop)}`);
+    piles.push({ x: p.x, y: p.y + drop, rx: 9 + Math.sin(t * Math.PI) * 3 });
+  });
+
+  // 欄杆下的小立柱
+  const balusters = [0.12, 0.26, 0.4, 0.54, 0.68, 0.82, 0.94].map((t) => {
+    const p = qPoint(ax, ay, mx, my, bx, by, t);
+    return `M ${n(p.x)} ${n(p.y - 8)} V ${n(p.y - 1)}`;
+  });
+
+  /** 引道：從橋頭往島裡攤開的梯形 */
+  const ramp = (edge: { x: number; y: number }, inner: { x: number; y: number }) => {
+    const ex = edge.x;
+    const ey = edge.y;
+    const ix = inner.x;
+    const iy = inner.y;
+    const vx = ix - ex;
+    const vy = iy - ey;
+    const vl = Math.hypot(vx, vy) || 1;
+    // 垂直於引道方向的半寬：橋頭窄、島上那端寬
+    const px = (-vy / vl) * 7;
+    const py = (vx / vl) * 7;
+    const qx = (-vy / vl) * 13;
+    const qy = (vx / vl) * 13;
+    return `M ${n(ex + px)} ${n(ey + py)} L ${n(ix + qx)} ${n(iy + qy)} L ${n(ix - qx)} ${n(
+      iy - qy
+    )} L ${n(ex - px)} ${n(ey - py)} Z`;
+  };
+
+  return {
+    deck: curve(0, 0),
+    under: curve(0, 5),
+    planks: curve(0, 0),
+    rails: [curve(0, -8), curve(0, 3)],
+    balusters,
+    posts,
+    piles,
+    landings: [ramp(pa, ia), ramp(pb, ib)],
+    shadow: curve(5, 30),
+  };
+}
+
+/** 島上散步用的環狀路徑：沿著 `roads()` 的主幹道，人才會走在路上 */
 export function strollPath(r: Region, k: number) {
-  const rx = r.rx * (0.34 + k * 0.14);
-  const ry = r.ry * (0.26 + k * 0.11);
-  const cy = r.cy + r.ry * 0.18;
+  const rx = r.rx * 0.62 * (0.84 + k * 0.16);
+  const ry = r.ry * 0.5 * (0.84 + k * 0.16);
+  const cy = r.cy + r.ry * 0.16;
   return `M ${n(r.cx - rx)} ${n(cy)} A ${n(rx)} ${n(ry)} 0 1 0 ${n(r.cx + rx)} ${n(cy)} A ${n(rx)} ${n(
     ry
   )} 0 1 0 ${n(r.cx - rx)} ${n(cy)}`;
@@ -436,4 +596,56 @@ export function strollPath(r: Region, k: number) {
 export function isletPath(cx: number, cy: number, rx: number, ry: number) {
   const pts = hexPoints(cx, cy, rx, ry);
   return roundedPoly(pts, 10);
+}
+
+/* ------------------------------------------------------------------ */
+/* 海上                                                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 船走的航道：在沒有島的那幾塊空海面上找位置，所以換一張地圖、島的位置變了，
+ * 船也不會壓到島上。回傳的是一段一段的淺弧線。
+ */
+export function seaLanes(regions: Region[], w: number, h: number, count = 3): string[] {
+  const spots: [number, number][] = [
+    [0.12, 0.83],
+    [0.84, 0.14],
+    [0.5, 0.95],
+    [0.14, 0.14],
+    [0.9, 0.86],
+    [0.08, 0.5],
+    [0.93, 0.52],
+    [0.33, 0.94],
+    [0.7, 0.06],
+    [0.26, 0.08],
+    [0.74, 0.95],
+    [0.5, 0.5],
+  ];
+  const clear = (x: number, y: number) =>
+    regions.every((r) => {
+      const dx = (x - r.cx) / (r.rx * 1.22);
+      const dy = (y - r.cy) / (r.ry * 1.95);
+      return dx * dx + dy * dy > 1;
+    });
+  const lanes: string[] = [];
+  const len = Math.min(w, h) * 0.2;
+  for (const [fx, fy] of spots) {
+    if (lanes.length >= count) break;
+    const x = fx * w;
+    const y = fy * h;
+    const x0 = x - len / 2;
+    const x1 = x + len / 2;
+    if (x0 < 12 || x1 > w - 12 || y < 24 || y > h - 16) continue;
+    if (!clear(x, y) || !clear(x0, y) || !clear(x1, y)) continue;
+    lanes.push(`M ${n(x0)} ${n(y)} Q ${n(x)} ${n(y - 16)} ${n(x1)} ${n(y)}`);
+  }
+  return lanes;
+}
+
+/** 天上的鳥：從畫面一邊慢慢飄到另一邊 */
+export function birdPaths(w: number, h: number) {
+  return [
+    { d: `M ${n(-40)} ${n(h * 0.1)} Q ${n(w * 0.5)} ${n(h * 0.04)} ${n(w + 40)} ${n(h * 0.12)}`, dur: 96, begin: -12, s: 1 },
+    { d: `M ${n(w + 40)} ${n(h * 0.33)} Q ${n(w * 0.45)} ${n(h * 0.26)} ${n(-40)} ${n(h * 0.36)}`, dur: 128, begin: -54, s: 0.78 },
+  ];
 }

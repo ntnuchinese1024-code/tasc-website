@@ -92,7 +92,7 @@ export const regions: Region[] = [
   {
     id: "infra",
     name: "基礎建設島",
-    note: "官網與報名系統，八月之後真的對外開著的那個地基。",
+    note: "八月之後，會員在網路上遇到學會的地方。",
     color: "blue",
     terrain: "harbor",
     cx: 230,
@@ -233,6 +233,12 @@ export const landmarks: Landmark[] = [
   },
 
   // ---- 基礎建設島 ----
+  /*
+   * 這座島刻意從**會員的角度**寫，不是從維護者的角度。
+   * 原本有「報名系統供稿」「每天自動重建」兩個地標，那是做網站的人才在意的事；
+   * 會員真正有感的是「報名變簡單了」「上完課可以回饋」。技術細節收進 details，
+   * 想知道的人點開看得到，不想知道的人不會被擋住。
+   */
   {
     id: "website-live",
     region: "infra",
@@ -240,11 +246,11 @@ export const landmarks: Landmark[] = [
     kind: "基礎建設",
     status: "正式上線",
     date: "2026 年 8 月 21 日",
-    summary: "新官網正式對外公開，網址定為 tasctaiwan.tw，取代到期的 Weebly 舊站。",
+    summary: "學會有了自己的新官網 tasctaiwan.tw：課程、報導、章程、認證辦法、性諮商師名錄，全部在同一個地方，手機也看得到。",
     details: [
-      "內容與程式碼都能完整搬遷，不再被平台綁住；舊站內容完整備份在 repo 裡。",
-      "同一天補上 sitemap、Open Graph 與組織結構化資料，搜尋引擎與社群分享才看得懂這個站。",
-      "維護者不需要工程背景，也能透過 AI 協作編輯內容。",
+      "取代到期的 Weebly 舊站，舊站內容完整搬過來，沒有東西消失。",
+      "課程表每天自動更新一次，上過的課會自己歸到「已結束」，不會再看到過期資訊。",
+      "網站的內容與程式碼都能完整搬遷，不再被平台綁住——這是當初重做網站最主要的原因。",
     ],
     href: "/",
     color: "blue",
@@ -253,17 +259,17 @@ export const landmarks: Landmark[] = [
     dy: -20,
   },
   {
-    id: "registration-feed",
+    id: "registration",
     region: "infra",
-    name: "報名系統供稿",
-    kind: "基礎建設",
+    name: "線上報名",
+    kind: "會員服務",
     status: "營運中",
     date: "2026 年 8 月起",
-    summary: "課程與報導改由報名系統後台供稿：秘書處按下發布，官網就自己多一張卡片。",
+    summary: "報名學會的課不用再填外部表單：在官網上就看得到時間、地點、費用與剩餘名額，直接報名。",
     details: [
-      "報名、問卷、會員資料都收在學會自己的系統裡，不用 Google 表單。",
-      "課程海報完整呈現，名額與價格跟著一起顯示；人數沒公開時就不顯示數字。",
-      "10 月 18 日起每一場活動都有自己的回饋問卷頁，可以做成 QR code 貼進報導或群組。",
+      "會員價、非會員價、學生價都寫在課程頁上，不用再問。",
+      "報名完會收到通知信；秘書處那邊同步看得到名冊，不會漏掉。",
+      "報名、問卷、名冊都收在學會自己的系統裡，不經過 Google 表單。",
     ],
     href: "/news",
     color: "blue",
@@ -272,16 +278,21 @@ export const landmarks: Landmark[] = [
     dy: -4,
   },
   {
-    id: "auto-rebuild",
+    id: "feedback",
     region: "infra",
-    name: "每天自己重建",
-    kind: "基礎建設",
+    name: "課後回饋問卷",
+    kind: "會員服務",
     status: "已啟用",
-    date: "2026 年 8 月 23 日",
-    summary: "官網每天自動重建一次，過期的課程會自己從「近期活動」歸位到「已結束」。",
-    details: ["9 月 3 日再加上 llms.txt，給 AI 一份精簡的網站內容地圖。"],
+    date: "2026 年 10 月 18 日",
+    summary: "上完課可以匿名回饋，講得好的、覺得可以更好的都說得出口。",
+    details: [
+      "每一場活動都有自己的問卷網址，課後會貼在群組或做成 QR code。",
+      "同意引用的回饋，會成為課程報導裡「夥伴們的回饋」那一段——月經博物館參訪那篇就是第一次這樣做。",
+      "不同意引用的不會出現在任何地方。",
+    ],
+    href: "/news/reports/event-260820-f2nk",
     color: "blue",
-    glyph: "globe",
+    glyph: "post",
     dx: -4,
     dy: 50,
   },
@@ -387,7 +398,7 @@ export const landmarks: Landmark[] = [
     details: ["創刊號（2026 春季電子報，4 月 14 日出刊）收在裡面；你正在看的這一份就是第二期。"],
     href: "/newsletter",
     color: "orange",
-    glyph: "post",
+    glyph: "globe",
     dx: -4,
     dy: 44,
   },

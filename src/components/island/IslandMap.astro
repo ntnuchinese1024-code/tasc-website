@@ -547,7 +547,7 @@ const modes = [
           {/* 橋：島跟島之間的往來。畫在島之後，橋頭才壓得到草地上，不會露出一道縫 */}
           <g class="bridges">
             {bridges.map((b, i) => (
-              <>
+              <g class={`bridge tone-${i % 3}`}>
                 <path class="bridge-landing" d={b.landings[0]} />
                 <path class="bridge-landing" d={b.landings[1]} />
                 <path class="bridge-shadow" d={b.shadow} />
@@ -599,7 +599,7 @@ const modes = [
                     <use href={look(i + 4).href} x="-6.8" y="-12.8" width="13.6" height="17.4" />
                   </g>
                 </g>
-              </>
+              </g>
             ))}
           </g>
 
@@ -958,55 +958,82 @@ const modes = [
 
   /* ---- 橋 ------------------------------------------------------------ */
 
+  /*
+   * 橋的配色。2026-11 調過一次：原本整組深棕色，12 座橋一起出現太重也太暗，
+   * 改成三種淺木頭色輪流（暖木／灰木／淺橡木），線也細一點。
+   * 顏色掛在每座橋外層的 .tone-* 上，裡面的線條吃變數。
+   */
+  .bridges .bridge {
+    --deck: #D9BD90;
+    --under: #B08A5F;
+    --rail: #F3E5CB;
+    --post: #AC8D66;
+  }
+
+  .bridges .tone-1 {
+    --deck: #D4C8B5;
+    --under: #A79C8A;
+    --rail: #F1EBE0;
+    --post: #9E9484;
+  }
+
+  .bridges .tone-2 {
+    --deck: #E3CEAA;
+    --under: #BB9D77;
+    --rail: #F8EFDC;
+    --post: #B49778;
+  }
+
   .bridge-shadow {
     fill: none;
     stroke: #0E3C55;
-    stroke-width: 10;
-    opacity: 0.16;
+    stroke-width: 9;
+    opacity: 0.1;
     stroke-linecap: round;
   }
 
   /* 橋面底下那一層，橋才有厚度 */
   .bridge-under {
     fill: none;
-    stroke: #6E4F31;
-    stroke-width: 12;
+    stroke: var(--under);
+    stroke-width: 10.5;
     stroke-linecap: round;
   }
 
   .bridge-deck {
     fill: none;
-    stroke: #B98C56;
-    stroke-width: 11;
+    stroke: var(--deck);
+    stroke-width: 9.5;
     stroke-linecap: round;
   }
 
   /* 橋面上的木板：用虛線畫，不用一塊塊排 */
   .bridge-plank {
     fill: none;
-    stroke: #8A6740;
-    stroke-width: 11;
-    stroke-dasharray: 1.5 7;
-    opacity: 0.5;
+    stroke: var(--under);
+    stroke-width: 9.5;
+    stroke-dasharray: 1.2 7.5;
+    opacity: 0.32;
   }
 
   .bridge-rail {
     fill: none;
-    stroke: #C9A273;
-    stroke-width: 2.2;
+    stroke: var(--rail);
+    stroke-width: 2;
     stroke-linecap: round;
   }
 
   /* 後面那條欄杆壓在橋面下，顏色深一點 */
   .bridge-rail.is-back {
-    stroke: #E0C197;
+    stroke: var(--rail);
+    opacity: 0.85;
   }
 
   .bridge-baluster {
     fill: none;
-    stroke: #C9A273;
-    stroke-width: 1.5;
-    opacity: 0.85;
+    stroke: var(--rail);
+    stroke-width: 1.3;
+    opacity: 0.7;
   }
 
   /* 橋墩入水的漣漪 */
@@ -1019,18 +1046,18 @@ const modes = [
 
   /* 橋頭接上島的引道 */
   .bridge-landing {
-    fill: #C9B48A;
-    stroke: #A58F68;
-    stroke-width: 1;
-    opacity: 0.95;
+    fill: var(--deck);
+    stroke: var(--under);
+    stroke-width: 0.8;
+    opacity: 0.88;
   }
 
   .bridge-post {
     fill: none;
-    stroke: #7E5C38;
-    stroke-width: 3.4;
+    stroke: var(--post);
+    stroke-width: 3;
     stroke-linecap: round;
-    opacity: 0.9;
+    opacity: 0.72;
   }
 
   /* ---- 島 ------------------------------------------------------------ */
@@ -1407,10 +1434,14 @@ const modes = [
 
   /* ---- 說明卡（點地標跳出來的彈窗） ---------------------------------- */
 
+  /*
+   * 電腦上盡量讓說明一次看完：卡片放寬到 420px、高度放到視窗的 76%。
+   * 真的太長（像同遊那張有六個子項目）才會出現捲軸。手機維持底部卡片。
+   */
   .lm-pop {
     position: absolute;
     z-index: 6;
-    width: min(330px, 78%);
+    width: min(420px, 52%);
     transform: translate(-50%, -100%);
     filter: drop-shadow(0 14px 28px rgba(16, 36, 52, 0.28));
   }
@@ -1423,8 +1454,28 @@ const modes = [
     transform: translate(-50%, 0);
   }
 
+  /* 底下的小項目超過三個時，卡片放寬成兩欄，才不用捲 */
+  .lm-pop.is-wide {
+    width: min(660px, 80%);
+  }
+
+  .lm-pop.is-wide .lm-subs ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 22px;
+  }
+
+  .lm-pop.is-wide .lm-subs li {
+    margin: 0;
+  }
+
+  .lm-pop.is-wide .lm-details {
+    columns: 2;
+    column-gap: 22px;
+  }
+
   .pop-scroll {
-    max-height: min(56vh, 400px);
+    max-height: min(84vh, 760px);
     overflow: auto;
     border-radius: 16px;
     overscroll-behavior: contain;
@@ -1783,6 +1834,12 @@ const modes = [
 
       pop.hidden = false;
       pop.classList.remove("is-below");
+
+      // 子項目多就把卡片放寬排兩欄，盡量讓電腦上不用捲
+      const card = cards.find((c) => !c.hidden);
+      const subCount = card?.querySelectorAll(".lm-subs li").length ?? 0;
+      pop.classList.toggle("is-wide", subCount >= 3);
+
       const pw = pop.offsetWidth;
       const ph = pop.offsetHeight;
 

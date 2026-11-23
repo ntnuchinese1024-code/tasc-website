@@ -12,7 +12,7 @@ export function getStaticPaths() {
   }));
 }
 
-const { year, status, date, location, theme, intro, talks, color, colorText, poster, photos = [] } = Astro.props;
+const { year, status, date, location, theme, intro, talks, color, colorText, poster, photos = [], review } = Astro.props;
 ---
 
 {status === "building" ? (
@@ -45,7 +45,7 @@ const { year, status, date, location, theme, intro, talks, color, colorText, pos
 
     {talks.map((talk: any) => (
       <>
-        <h2>{talk.topic}</h2>
+        <h2 id={talk.id}>{talk.topic}</h2>
         <p class="byline">
           講者・{talk.speaker}
           {talk.writer && <>　｜　撰文・{talk.writer}</>}
@@ -54,9 +54,18 @@ const { year, status, date, location, theme, intro, talks, color, colorText, pos
       </>
     ))}
 
+    {review && (
+      <section class="review">
+        <h2 id="review">會後報導</h2>
+        <p class="byline">撰文・{review.writer}</p>
+        {review.paragraphs.map((p: string) => <p>{p}</p>)}
+      </section>
+    )}
+
     <PhotoGallery photos={photos} label={`${year}年會`} />
 
-    {year === 2026 && (
+    {/* 報名表單只在還沒辦的年度出現；辦完之後這一頁的主角是報導，不是報名 */}
+    {(status === "upcoming" || status === "current") && (
       <div class="reg-slot">
         <RegistrationForm courseName={`${year}年會暨主題式工作坊`} courseDate={date} />
       </div>

@@ -1,7 +1,7 @@
 /**
  * 第二期電子報（2026 秋冬）的內容：創刊號之後、到 11 月底的學會更新。
  *
- * 做成「政策島嶼」的樣子——跟 /island 共用
+ * 做成「學會群島」的樣子——跟 /island 共用
  * `src/components/island/IslandMap.astro`，所以這個檔案只寫「島上有什麼」。
  * 頁面在 `src/pages/newsletter/2026-autumn.astro`。
  *
@@ -33,7 +33,7 @@ export const issueMeta = {
 
 export const islandMeta: IslandMeta = {
   year: issueMeta.issue,
-  title: "政策島嶼",
+  title: "學會群島",
   lead:
     "這是學會的第二期電子報。創刊號出刊之後到十一月底，學會做的事分成六座島排在這片海上，島跟島之間有橋相通。點島上任何一個地標，就會跳出那件事的說明和連結。",
   view: { w: 1200, h: 960 },
@@ -41,6 +41,14 @@ export const islandMeta: IslandMeta = {
 
 /** 島跟島之間的航線，照順序接成一圈 */
 export const routes: Route[] = [
+  // 中間的會員心聲島連到每一座島
+  { from: "voice", to: "annual", bend: 0 },
+  { from: "voice", to: "infra", bend: 0 },
+  { from: "voice", to: "org", bend: 0 },
+  { from: "voice", to: "service", bend: 0 },
+  { from: "voice", to: "course", bend: 0 },
+  { from: "voice", to: "public", bend: 0 },
+  // 外圈
   { from: "infra", to: "annual", bend: -0.14 },
   { from: "annual", to: "org", bend: -0.14 },
   { from: "org", to: "service", bend: -0.12 },
@@ -50,6 +58,24 @@ export const routes: Route[] = [
 ];
 
 export const regions: Region[] = [
+  /*
+   * 會員心聲島刻意放在正中央，而且跟周邊六座島都有橋。
+   * 它不是「學會做了什麼」，而是「換你說」——所以地標設了 pulse，
+   * 光圈會一直輕輕發亮，提示這裡可以點。
+   */
+  {
+    id: "voice",
+    name: "會員心聲島",
+    note: "換你說。想對學會說的話、建議、想看到的課，都會被聽見。",
+    color: "magenta",
+    terrain: "terrace",
+    cx: 600,
+    cy: 462,
+    rx: 150,
+    ry: 76,
+    depth: 32,
+    seed: 7.4,
+  },
   {
     id: "annual",
     name: "年會島",
@@ -169,6 +195,29 @@ export const landmarks: Landmark[] = [
     glyph: "plaza",
     dx: 0,
     dy: 2,
+  },
+
+  // ---- 會員心聲島 ----
+  {
+    id: "member-voice",
+    region: "voice",
+    name: "留言亭",
+    kind: "換你說",
+    status: "隨時開放",
+    date: "持續收集",
+    summary: "這一座島不是學會做了什麼，是留給你的。想對學會說的話，我們都會聽進去。",
+    details: [
+      "想看到什麼課、什麼主題，或希望學會多做、少做什麼，都可以說。",
+      "對電子報、官網、報名流程覺得哪裡卡卡的，也歡迎直接講。",
+      "寫下來的每一則都會進到秘書處，由理事長與秘書長一起看。",
+    ],
+    href: "mailto:tasc.tw@gmail.com?subject=%E6%83%B3%E5%B0%8D%E5%AD%B8%E6%9C%83%E8%AA%AA%E7%9A%84%E8%A9%B1",
+    cta: "寫一則給學會",
+    pulse: true,
+    color: "magenta",
+    glyph: "voice",
+    dx: 0,
+    dy: 4,
   },
 
   // ---- 基礎建設島 ----
@@ -478,7 +527,7 @@ export const landmarks: Landmark[] = [
      * 臉書那一週的串聯貼文。連結直接指向學會粉專的原貼文，沒有把圖片或影片
      * 搬到官網——那些是會員自己的作品，要不要重新發表、發表到哪裡，
      * 應該由投稿者決定（2026-11-23 跟維護者確認過這個原則）。
-     * 目前收了維護者提供的四篇；10/28、10/29 如果也有，補連結進來就好。
+     * 六篇都收齊了（10/25 開跑短片、10/26～10/29 四位會員的投稿、10/30 收尾）。
      */
     children: [
       {
@@ -504,6 +553,22 @@ export const landmarks: Landmark[] = [
         summary:
           "旅途中在小攤販隨興抽的一張卡：不同顏色的愛心被暖暖的黃橘色包圍。每個人都有獨一無二的色彩，情感也是。",
         href: "https://www.facebook.com/photo?fbid=1608189488020371&set=a.469998281839503",
+      },
+      {
+        name: "林沛辰《從街頭到組織——我的倡議之路》",
+        status: "會員投稿",
+        date: "10 月 28 日",
+        summary:
+          "從大學時期的自我探索，到研究所時自己做手牌、站在校門口邀人連署，一路走成現在的倡議工作。",
+        href: "https://www.facebook.com/photo?fbid=1609449254561061&set=a.469998281839503",
+      },
+      {
+        name: "鄭瑀柔《在離島撐出一塊柔軟的空間》",
+        status: "會員投稿",
+        date: "10 月 29 日",
+        summary:
+          "連續數年協助召集金門小分隊參與同志大遊行，也和島上的夥伴邀請友善商家插旗響應——守在偏鄉的最前線，為多元性別撐一塊空間。",
+        href: "https://www.facebook.com/photo?fbid=1610577124448274&set=a.469998281839503",
       },
       {
         name: "一週的最後：讓多元被看見，讓平等持續前行",

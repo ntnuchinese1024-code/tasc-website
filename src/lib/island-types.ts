@@ -1,5 +1,5 @@
 /**
- * 「政策島嶼」共用的型別。
+ * 「學會群島」共用的型別。
  *
  * 一張島嶼圖＝一份資料檔（例如 `src/data/island-2026.ts`、
  * `src/data/newsletter-2026-autumn.ts`）＋ `src/components/island/IslandMap.astro`。
@@ -35,6 +35,7 @@ export type IslandGlyph =
   | "ferry"
   | "lantern"
   | "globe"
+  | "voice"
   | "tent"
   | "screen"
   | "workshop"
@@ -92,8 +93,12 @@ export interface Landmark {
   details?: string[];
   /** 附屬在這個地標底下的小項目，沒有就不寫 */
   children?: SubItem[];
-  /** 官網上對應的頁面，沒有對應頁面就不寫 */
+  /** 官網上對應的頁面，沒有對應頁面就不寫；也可以是 mailto: */
   href?: string;
+  /** 說明卡上那顆按鈕的字，不寫就是「前往這一頁」 */
+  cta?: string;
+  /** 讓地標的光圈一直輕輕脈動，提示這裡可以點（整張圖最多用一個） */
+  pulse?: boolean;
   color: IslandColor;
   glyph: IslandGlyph;
   /** 相對於所屬島中心的位移 */

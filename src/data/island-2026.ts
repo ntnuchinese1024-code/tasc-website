@@ -1,5 +1,5 @@
 /**
- * 「政策島嶼」——把學會 115（2026）年度的新發展畫成一片串聯起來的漂浮群島。
+ * 「學會群島」——把學會 115（2026）年度的新發展畫成一片串聯起來的漂浮群島。
  *
  * 這個檔案只負責「島上有什麼」，畫面長怎樣在 `src/components/island/IslandMap.astro`，
  * 頁面是 `src/pages/island.astro`。同一個元件也畫第二期電子報（`src/data/newsletter-2026-autumn.ts`）。
@@ -40,7 +40,7 @@ export type { IslandColor, IslandGlyph, Landmark, Region, SubItem, Terrain } fro
 /** 島的標題區文字 */
 export const islandMeta: IslandMeta = {
   year: "115 年度",
-  title: "政策島嶼",
+  title: "學會群島",
   lead: "學會這一年長出來的新東西，分成五座島排在這片海上，島跟島之間有橋相通。點一個地標，看看它是什麼。",
 };
 

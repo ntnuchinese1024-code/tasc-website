@@ -1,6 +1,6 @@
 ---
 /**
- * 政策島嶼上的小建築。放在 /island 地圖的 <defs> 裡，地標再用 <use> 叫出來。
+ * 學會群島上的小建築。放在 /island 地圖的 <defs> 裡，地標再用 <use> 叫出來。
  *
  * 每一個 symbol 的座標系統都一樣：viewBox="-24 -56 48 60"，**地面在 y = 0**，
  * 建築往上長（y 是負的），左上角來光，所以右半邊要補一塊陰影面。
@@ -341,14 +341,63 @@
   <path class="bird" d="M8-31q3-2.6 5.8 0" />
 </symbol>
 
-{/* 一個市民：有身體、頭髮與影子的小人。襯衫顏色吃 --cit，所以同一座島上
-    的人不會穿得一模一樣。白描邊墊在底下，才不會在草地上糊成一點。 */}
+{/* 留言亭：會員心聲島上的小亭子，頭上一顆說話泡泡 */}
+<symbol id="st-voice" viewBox="-24 -56 48 60">
+  <ellipse class="s-stone-d" cx="1" cy="1" rx="18" ry="6.4" />
+  <path class="s-stone" d="M-15 0h30l-3-5h-24z" />
+  <path class="s-lit" d="M-12-5v-16h24v16z" />
+  <path class="s-shade" d="M2-5v-16h10v16z" />
+  <path class="s-accent" d="M-16-21 0-30l16 9z" />
+  <path class="s-shade" d="M0-30l16 9H8z" />
+  <path class="s-deep" d="M-4-5v-9h8v9z" />
+  <rect class="s-glass" x="-10" y="-19" width="7" height="6" rx="1" />
+  <path class="s-rod" d="M-12-30v-6" />
+  {/* 說話泡泡 */}
+  <path class="s-bubble" d="M-13-52h26a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4h-14l-6 5v-5h-6a4 4 0 0 1-4-4v-10a4 4 0 0 1 4-4z" />
+  <g class="s-bubble-dots">
+    <circle cx="-6" cy="-43" r="1.9" />
+    <circle cx="0" cy="-43" r="1.9" />
+    <circle cx="6" cy="-43" r="1.9" />
+  </g>
+</symbol>
+
+{/* 一個市民：有身體、頭髮與影子的小人。襯衫顏色吃 --cit、頭髮吃 --hair，
+    所以同一座島上的人不會長得一樣。白描邊墊在底下，才不會在草地上糊成一點。 */}
 <symbol id="figure" viewBox="-9 -17 18 23">
   <ellipse class="cit-shadow" cx="0.6" cy="5.2" rx="4.4" ry="1.8" />
   <path class="cit-halo" d="M-1.9 5.2V0.4M1.9 5.2V0.4M-4.3-6.2-5.8-1M4.3-6.2 5.8-1" />
   <path class="cit-leg" d="M-1.9 5.2V0.4M1.9 5.2V0.4" />
   <path class="cit-body" d="M0-8.2c2.7 0 4.1 1.8 4.1 4.4V1.2H-4.1V-3.8C-4.1-6.4-2.7-8.2 0-8.2z" />
   <path class="cit-arm" d="M-4.3-6.2-5.8-1M4.3-6.2 5.8-1" />
+  <circle class="cit-head" cx="0" cy="-11" r="3.1" />
+  <path class="cit-hair" d="M-3.1-11.3a3.1 3.1 0 0 1 6.2 0 6.4 6.4 0 0 0-6.2 0z" />
+</symbol>
+
+{/* 第二種身形：下襬散開的衣服，加上長一點的頭髮 */}
+<symbol id="figure-skirt" viewBox="-9 -17 18 23">
+  <ellipse class="cit-shadow" cx="0.6" cy="5.2" rx="4.8" ry="1.9" />
+  <path class="cit-halo" d="M-1.9 5.2V1.4M1.9 5.2V1.4M-4.3-6.2-5.8-1.4M4.3-6.2 5.8-1.4" />
+  <path class="cit-leg" d="M-1.9 5.2V1.4M1.9 5.2V1.4" />
+  <path class="cit-body" d="M0-8.2c2.7 0 4.1 1.8 4.1 4.4V-1.4L6.2 1.8H-6.2L-4.1-1.4V-3.8C-4.1-6.4-2.7-8.2 0-8.2z" />
+  <path class="cit-arm" d="M-4.3-6.2-5.8-1.4M4.3-6.2 5.8-1.4" />
+  <circle class="cit-head" cx="0" cy="-11" r="3.1" />
+  <path class="cit-hair" d="M-3.3-11.3a3.3 3.3 0 0 1 6.6 0q0 2.6-1 4.1-0.7-2.3-2.3-2.6-1.6 0.3-2.3 2.6-1-1.5-1-4.1z" />
+</symbol>
+
+{/* 第三種：手上拿一面小彩虹旗 */}
+<symbol id="figure-flag" viewBox="-9 -17 18 23">
+  <ellipse class="cit-shadow" cx="0.6" cy="5.2" rx="4.4" ry="1.8" />
+  <path class="cit-halo" d="M-1.9 5.2V0.4M1.9 5.2V0.4M-4.3-6.2-5.8-1M4.1-6.4 5.6-10.4" />
+  <path class="cit-leg" d="M-1.9 5.2V0.4M1.9 5.2V0.4" />
+  <path class="cit-body" d="M0-8.2c2.7 0 4.1 1.8 4.1 4.4V1.2H-4.1V-3.8C-4.1-6.4-2.7-8.2 0-8.2z" />
+  <path class="cit-arm" d="M-4.3-6.2-5.8-1M4.1-6.4 5.6-10.4" />
+  <path class="cit-pole" d="M5.6-10.8V-16.4" />
+  <g class="cit-flag">
+    <path class="f-red" d="M5.9-16.2h5.6v1.1H5.9z" />
+    <path class="f-orange" d="M5.9-15.1h5.6v1.1H5.9z" />
+    <path class="f-green" d="M5.9-14h5.6v1.1H5.9z" />
+    <path class="f-blue" d="M5.9-12.9h5.6v1.1H5.9z" />
+  </g>
   <circle class="cit-head" cx="0" cy="-11" r="3.1" />
   <path class="cit-hair" d="M-3.1-11.3a3.1 3.1 0 0 1 6.2 0 6.4 6.4 0 0 0-6.2 0z" />
 </symbol>
@@ -408,7 +457,11 @@
   .cit-arm { fill: none; stroke: var(--cit, #3B7CA8); stroke-width: 1.9; stroke-linecap: round; }
   .cit-body { fill: var(--cit, #3B7CA8); stroke: #FFFFFF; stroke-width: 1.2; paint-order: stroke; }
   .cit-head { fill: #F2C9A0; stroke: #FFFFFF; stroke-width: 1.2; paint-order: stroke; }
-  .cit-hair { fill: #4A3A2E; }
+  .cit-hair { fill: var(--hair, #4A3A2E); }
+  .s-bubble { fill: #FFFFFF; stroke: var(--lm-color, #3B7CA8); stroke-width: 2; }
+  .s-bubble-dots circle { fill: var(--lm-color, #3B7CA8); }
+  .cit-pole { fill: none; stroke: #8A7257; stroke-width: 1.1; stroke-linecap: round; }
+  .cit-flag path { stroke: #FFFFFF; stroke-width: 0.5; }
   .f-red { fill: var(--red); }
   .f-orange { fill: var(--orange); }
   .f-green { fill: var(--green); }

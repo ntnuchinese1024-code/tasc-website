@@ -1,0 +1,284 @@
+---
+/**
+ * 寫一則給學會：/newsletter/2026-autumn/voice
+ *
+ * 「學會群島」正中央那座會員心聲島上的留言亭，點進來就是這一頁。
+ *
+ * 刻意只有「想說的話」是必填——想匿名就匿名。留了聯絡方式才代表願意被回覆。
+ * 送出後直接寫進報名系統的 member_voices，秘書處在 /admin/member-voices 看。
+ * **這些留言不公開展示**：有人會寫抱怨、寫私人經驗，公開會讓人不敢說實話。
+ *
+ * 跟第二期電子報一樣是內部頁面：noindex，也被 astro.config.mjs 的 sitemap 排除。
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHero from "../../../components/PageHero.astro";
+import { REGISTRATION_ORIGIN } from "../../../lib/registration-api";
+
+const TOPICS = [
+  { value: "COURSE", label: "想看到的課程或主題" },
+  { value: "ASSOCIATION", label: "對學會的建議" },
+  { value: "WEBSITE", label: "網站或報名流程" },
+  { value: "THANKS", label: "想說一聲謝謝" },
+  { value: "OTHER", label: "其他" },
+];
+---
+
+<BaseLayout
+  title="寫一則給學會｜台灣性諮商學會"
+  description="想對學會說的話、建議、想看到的課程，都可以從這裡說。"
+  noindex={true}
+>
+  <PageHero
+    eyebrow="學會群島・會員心聲島"
+    title="寫一則給學會"
+    lead="想看到什麼課、希望學會多做或少做什麼、對網站或報名流程覺得哪裡卡卡的——都可以直接說。每一則都會進到秘書處，由理事長與秘書長一起看。"
+    decor={false}
+  />
+
+  <section class="mv-wrap">
+    <div class="wrap">
+      <form class="mv" id="mv" novalidate>
+        <p class="mv-note">
+          <strong>可以完全匿名。</strong>底下只有「想說的話」要填，稱呼和聯絡方式都可以空著。
+          留了聯絡方式，代表你願意讓我們回覆你；沒有留也沒關係，一樣會被看見。
+        </p>
+
+        <label class="mv-field">
+          <span>想說的是哪一種</span>
+          <select name="topic">
+            {TOPICS.map((t) => <option value={t.value}>{t.label}</option>)}
+          </select>
+        </label>
+
+        <label class="mv-field">
+          <span>想說的話<em>必填</em></span>
+          <textarea
+            name="message"
+            rows="8"
+            required
+            placeholder="直接寫就好，不用客氣，也不用寫得完整。"
+          ></textarea>
+        </label>
+
+        <div class="mv-row">
+          <label class="mv-field">
+            <span>怎麼稱呼你（可以不填）</span>
+            <input type="text" name="nickname" placeholder="留白就是匿名" />
+          </label>
+          <label class="mv-field">
+            <span>聯絡方式（可以不填）</span>
+            <input type="text" name="contact" placeholder="Email 或 LINE，想要回覆才需要留" />
+          </label>
+        </div>
+
+        <div class="mv-hp" aria-hidden="true">
+          <label>
+            這一欄請留空
+            <input type="text" name="hp_check" tabindex="-1" autocomplete="off" />
+          </label>
+        </div>
+
+        <div class="mv-actions">
+          <button type="submit" class="btn btn-primary" id="mv-send">送出</button>
+          <span class="mv-msg" id="mv-msg" role="status"></span>
+        </div>
+      </form>
+
+      <div class="mv-done" id="mv-done" hidden>
+        <h2>收到了，謝謝你願意說。</h2>
+        <p>你的話已經送到秘書處。如果留了聯絡方式，需要回覆的我們會回信給你。</p>
+        <p class="mv-again"><button type="button" class="btn" id="mv-again">再寫一則</button></p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script define:vars={{ REGISTRATION_ORIGIN }}>
+  const form = document.getElementById("mv");
+  const sendBtn = document.getElementById("mv-send");
+  const msg = document.getElementById("mv-msg");
+  const done = document.getElementById("mv-done");
+
+  const val = (name) => (form.querySelector(`[name="${name}"]`)?.value ?? "").trim();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!val("message")) {
+      msg.textContent = "想說的話還是空的。";
+      msg.className = "mv-msg is-bad";
+      form.querySelector('[name="message"]').focus();
+      return;
+    }
+
+    sendBtn.disabled = true;
+    msg.textContent = "送出中…";
+    msg.className = "mv-msg";
+
+    try {
+      const res = await fetch(`${REGISTRATION_ORIGIN}/api/member-voices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: val("message"),
+          topic: val("topic"),
+          nickname: val("nickname"),
+          contact: val("contact"),
+          hp_check: val("hp_check"),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.ok) {
+        form.hidden = true;
+        done.hidden = false;
+        done.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      msg.textContent = data.message ?? "送不出去，請稍後再試，或直接來信 tasc.tw@gmail.com。";
+      msg.className = "mv-msg is-bad";
+    } catch {
+      msg.textContent = "連不上系統（可能是網路問題）。請稍後再試，或直接來信 tasc.tw@gmail.com。";
+      msg.className = "mv-msg is-bad";
+    } finally {
+      sendBtn.disabled = false;
+    }
+  });
+
+  document.getElementById("mv-again").addEventListener("click", () => {
+    form.reset();
+    form.hidden = false;
+    done.hidden = true;
+    msg.textContent = "";
+    form.querySelector('[name="message"]').focus();
+  });
+</script>
+
+<style>
+  .mv-wrap {
+    padding: 28px 0 56px;
+  }
+
+  .mv {
+    max-width: 680px;
+  }
+
+  .mv-note {
+    margin: 0 0 22px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: var(--bg-alt);
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--ink-soft);
+  }
+
+  .mv-note strong {
+    color: var(--ink);
+  }
+
+  .mv-field {
+    display: block;
+    margin-bottom: 18px;
+  }
+
+  .mv-field > span {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .mv-field em {
+    margin-left: 8px;
+    font-style: normal;
+    font-size: 0.74rem;
+    color: var(--red-deep);
+  }
+
+  .mv input[type="text"],
+  .mv select,
+  .mv textarea {
+    width: 100%;
+    padding: 10px 13px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--bg);
+  }
+
+  .mv textarea {
+    resize: vertical;
+    line-height: 1.9;
+  }
+
+  .mv input:focus,
+  .mv select:focus,
+  .mv textarea:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+
+  @media (min-width: 720px) {
+    .mv-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+  }
+
+  .mv-hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .mv-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin-top: 6px;
+  }
+
+  .mv-msg {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .mv-msg.is-bad {
+    color: var(--red-deep);
+  }
+
+  .mv-done {
+    max-width: 680px;
+    padding: 26px 28px;
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--green) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--green) 38%, transparent);
+  }
+
+  .mv-done h2 {
+    margin: 0 0 10px;
+    font-size: 1.2rem;
+    color: var(--green-deep);
+  }
+
+  .mv-done p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.9;
+    color: var(--ink-soft);
+  }
+
+  .mv-again {
+    margin-top: 18px !important;
+  }
+</style>

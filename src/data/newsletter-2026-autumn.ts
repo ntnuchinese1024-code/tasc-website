@@ -209,9 +209,10 @@ export const landmarks: Landmark[] = [
     details: [
       "想看到什麼課、什麼主題，或希望學會多做、少做什麼，都可以說。",
       "對電子報、官網、報名流程覺得哪裡卡卡的，也歡迎直接講。",
-      "寫下來的每一則都會進到秘書處，由理事長與秘書長一起看。",
+      "可以完全匿名——只有「想說的話」要填，稱呼和聯絡方式都可以空著。",
+      "寫下來的每一則都會進到秘書處，由理事長與秘書長一起看，不會公開展示。",
     ],
-    href: "mailto:tasc.tw@gmail.com?subject=%E6%83%B3%E5%B0%8D%E5%AD%B8%E6%9C%83%E8%AA%AA%E7%9A%84%E8%A9%B1",
+    href: "/newsletter/2026-autumn/voice",
     cta: "寫一則給學會",
     pulse: true,
     color: "magenta",

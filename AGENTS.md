@@ -15,8 +15,14 @@
 報名、問卷、會員、後台在另一個 repo `tasc-registration`（Next.js + Supabase，`tasc-registration.vercel.app`）。
 官網建置時抓它的 `/api/events`（課程與報導）；官網上的表單用 fetch POST 到它的 `/api/...`；秘書處在它的 `/admin/*` 管理。
 **學會要做表單、問卷、報名，一律做進這兩個 repo，不要用 Google 表單。**
-**每一次改動結束時，主動提醒維護者跑一次資料庫備份**（`cd ../tasc-registration && node scripts/backup-export.mjs`）：
-報名系統是 Supabase 免費方案、沒有任何自動備份，學會的資料只有一份。這是維護者 2026-11-22 明確要求的。
+**每一次改動結束時，主動提醒維護者跑一次資料庫備份，而且一定要把指令完整寫出來**
+（不要只說「記得備份」——維護者 2026-11-23 特別要求過，每次提醒都要附上可以直接複製的指令）：
+
+```
+cd ~/Desktop/07_學會與社群/tasc-registration && node scripts/backup-export.mjs
+```
+
+報名系統是 Supabase 免費方案、沒有任何自動備份，學會的資料只有一份。
 報導的 slug 要跟報名系統那場活動一致（例：`event-260820-f2nk`），後台補寫的報導才會覆蓋這裡的同一篇。
 
 換電腦、換帳號或交接時，照 `tasc-registration/docs/搬遷與交接清單.md` 走。推到 `main` 會直接上線，做到一半的內容請推到別的分支。
